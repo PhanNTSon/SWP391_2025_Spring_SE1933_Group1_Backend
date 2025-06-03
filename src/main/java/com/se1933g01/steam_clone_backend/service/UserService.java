@@ -7,6 +7,9 @@ import java.lang.Long;
 import com.se1933g01.steam_clone_backend.entity.user.User;
 import com.se1933g01.steam_clone_backend.repository.UserRepo;
 
+/**
+ * Author: Phan son
+ */
 @Service
 public class UserService {
     private final UserRepo userRepo;

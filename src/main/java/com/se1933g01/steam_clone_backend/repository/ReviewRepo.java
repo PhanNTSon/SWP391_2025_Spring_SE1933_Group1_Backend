@@ -6,6 +6,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.se1933g01.steam_clone_backend.entity.game.Review;
 import com.se1933g01.steam_clone_backend.entity.game.ReviewKey;
+/**
+ * Author: Phan son
+ */
 
 public interface ReviewRepo extends JpaRepository<Review,ReviewKey>{
     List<Review> findByGame_GameId(Long gameId);
