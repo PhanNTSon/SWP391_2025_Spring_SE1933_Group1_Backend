@@ -46,6 +46,6 @@ public class Request {
     private AddingGameRequest addingGameRequest;
 
     @OneToOne(mappedBy = "request")
-    private ReportRequest reportRequest;
+    private Feedback feedback;
 
 }

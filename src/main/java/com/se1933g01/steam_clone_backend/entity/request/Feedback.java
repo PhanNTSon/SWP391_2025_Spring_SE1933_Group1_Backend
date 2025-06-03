@@ -9,8 +9,8 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "ReportRequest")
-public class ReportRequest {
+@Table(name = "Feedback")
+public class Feedback {
     @Id
     @Column(name = "RequestID")
     private long requestId;

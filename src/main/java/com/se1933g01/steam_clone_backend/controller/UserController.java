@@ -19,7 +19,7 @@ public class UserController {
         this.userService = userService;
     }
     @Autowired
-    @GetMapping
+    @GetMapping("/users")
     public User getAllUsers() {
         Long userId = 1L;
         return userService.getUser(userId);
