@@ -13,7 +13,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-
+import lombok.Data;
+@Data
 @Entity
 @Table(name = "Request")
 public class Request {
@@ -33,7 +34,7 @@ public class Request {
 
     @Column(name = "RequestState")
     private int requestState;
-
+    
     // ================ Relationships =============
     @ManyToOne
     @JoinColumn(name = "UserID")
@@ -42,10 +43,14 @@ public class Request {
     @OneToOne(mappedBy = "request")
     private PublisherApplyRequest pAR;
 
-    @OneToOne(mappedBy = "request")
+    @OneToOne(mappedBy = "request",cascade = jakarta.persistence.CascadeType.ALL)
     private AddingGameRequest addingGameRequest;
 
     @OneToOne(mappedBy = "request")
     private Feedback feedback;
+
+    public void setpAR(PublisherApplyRequest pAR) {
+        this.pAR = pAR;
+    }
 
 }
