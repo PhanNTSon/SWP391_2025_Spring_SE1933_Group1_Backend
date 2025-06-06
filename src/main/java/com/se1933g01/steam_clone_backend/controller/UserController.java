@@ -32,7 +32,7 @@ public class UserController {
         this.cartService = cartService;
     }
 
-    @Autowired
+    // @Autowired
     @GetMapping("/users")
     public User getAllUsers() {
         Long userId = 1L;
