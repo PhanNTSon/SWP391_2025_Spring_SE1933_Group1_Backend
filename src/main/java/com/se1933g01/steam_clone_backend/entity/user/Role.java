@@ -1,55 +1,29 @@
 package com.se1933g01.steam_clone_backend.entity.user;
 
-import java.util.List;
-
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
-@Table(name = "Role")
+@Table(name = "Roles")
+@Getter
+@Setter
 public class Role {
+
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "RoleID")
-    private Long roleID;
+    private Integer roleId;
 
-    @Column(name = "Type")
-    private String type;
+    @Column(name = "Role", nullable = false, length = 50)
+    private String roleName; // Đổi tên thuộc tính cho phù hợp Java convention
 
-    // ================ Relationships =============
-    @OneToMany(mappedBy = "role")
-    private List<User> user;
-
-    // ================ Getter & Setter =============
-
-    public Role() {
-    }
-
-    public Long getRoleID() {
-        return roleID;
-    }
-
-    public void setRoleID(Long roleID) {
-        this.roleID = roleID;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public List<User> getUser() {
-        return user;
-    }
-
-    public void setUser(List<User> user) {
-        this.user = user;
-    }
-
+    // Constructors, Getters, Setters (Lombok sẽ tự tạo nếu bạn dùng @Getter
+    // @Setter)
+    // Nếu không dùng Lombok, bạn phải tự viết:
+    // public Role() {}
+    // public Integer getRoleId() { return roleId; }
+    // public void setRoleId(Integer roleId) { this.roleId = roleId; }
+    // public String getRoleName() { return roleName; }
+    // public void setRoleName(String roleName) { this.roleName = roleName; }
 }

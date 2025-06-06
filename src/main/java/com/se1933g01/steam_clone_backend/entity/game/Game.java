@@ -5,7 +5,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
-import com.se1933g01.steam_clone_backend.entity.transaction.TransactionDetail;
+// import com.se1933g01.steam_clone_backend.entity.transaction.TransactionDetail;
 import com.se1933g01.steam_clone_backend.entity.user.Publisher;
 import com.se1933g01.steam_clone_backend.entity.user.User;
 
@@ -37,7 +37,7 @@ public class Game {
     private LocalDate releaseDate;
 
     @Column(name = "State")
-    private boolean state;
+    private Boolean state;
 
     @Column(name = "Price")
     private double price;
@@ -76,8 +76,8 @@ public class Game {
     )
     private Set<Tag> tags;
 
-    @OneToMany(mappedBy = "game")
-    private List<TransactionDetail> transactionDetails;
+    // @OneToMany(mappedBy = "game")
+    // private List<TransactionDetail> transactionDetails;
 
     @ManyToMany(mappedBy = "cartGames")
     private Set<User> cartUsers;
@@ -85,11 +85,11 @@ public class Game {
     @ManyToMany(mappedBy = "games")
     private Set<User> users;
 
-    @OneToMany(mappedBy = "game")
-    private List<Review> reviews;
+    // @OneToMany(mappedBy = "game")
+    // private List<Review> reviews;
 
     @OneToMany(mappedBy = "game")
-    private List<Media> medias;
+    private List<Media> media;
 
     // ================ Getter & Setter =============
 

@@ -1,27 +1,24 @@
 package com.se1933g01.steam_clone_backend.entity.game;
 
-import java.util.Set;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
-@Table(name = "Tag")
+@Table(name = "Tags")
+@Getter
+@Setter
 public class Tag {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long tagId;
+    @Column(name = "TagID")
+    private Integer tagId;
 
-    @Column(name = "TagName")
+    @Column(name = "TagName", nullable = false, unique = true, length = 50)
     private String tagName;
 
-    //================ Relationships =============
-    @ManyToMany(mappedBy = "tags")
-    private Set<Game> games;
-
+    // Mối quan hệ Many-to-Many với Game sẽ được xử lý qua GameTags
+    // @ManyToMany(mappedBy = "tags")
+    // private Set<Game> games;
 }

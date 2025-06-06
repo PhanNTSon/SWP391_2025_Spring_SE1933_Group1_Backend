@@ -23,10 +23,10 @@ import com.se1933g01.steam_clone_backend.entity.game.Game;
 import com.se1933g01.steam_clone_backend.entity.game.Media;
 import com.se1933g01.steam_clone_backend.entity.request.AddingGameRequest;
 import com.se1933g01.steam_clone_backend.entity.request.Request;
-import com.se1933g01.steam_clone_backend.entity.user.User;
 import com.se1933g01.steam_clone_backend.entity.user.Publisher;
+import com.se1933g01.steam_clone_backend.entity.user.User;
 import com.se1933g01.steam_clone_backend.repository.AddingGameRequestRepo;
-import com.se1933g01.steam_clone_backend.repository.GameRepo;
+import com.se1933g01.steam_clone_backend.repository.GameRepository;
 import com.se1933g01.steam_clone_backend.repository.MediaRepo;
 import com.se1933g01.steam_clone_backend.repository.PublisherRepo;
 import com.se1933g01.steam_clone_backend.repository.RequestRepo;
@@ -45,7 +45,7 @@ public class RequestService {
     @Autowired
     private UserRepo userRepo;
     @Autowired
-    private GameRepo gameRepo;
+    private GameRepository gameRepo;
     @Autowired
     private MediaRepo mediaRepo;
     @Autowired 
@@ -70,7 +70,7 @@ public class RequestService {
     public void approveGame(Long requestID, Long userID) {
         Request request = requestRepo.findById(requestID).orElseThrow(()-> new RuntimeException("Request not found"));
         AddingGameRequest addingGameRequest = addingGameRequestRepo.findById(requestID).orElseThrow(()-> new RuntimeException("AddingGameRequest not found"));
-        Publisher publisher = publisherRepo.findById(request.getUser().getUserID()).orElseThrow(()-> new RuntimeException("Publisher not found"));
+        Publisher publisher = publisherRepo.findById(request.getUser().getUserId()).orElseThrow(()-> new RuntimeException("Publisher not found"));
         Game game = new Game();
         game.setPublisher(publisher);
         game.setName(addingGameRequest.getGameName());

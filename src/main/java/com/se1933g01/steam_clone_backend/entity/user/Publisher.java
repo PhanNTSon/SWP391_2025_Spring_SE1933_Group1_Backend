@@ -1,66 +1,38 @@
 package com.se1933g01.steam_clone_backend.entity.user;
 
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.MapsId;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+import java.util.Set;
+
+import com.se1933g01.steam_clone_backend.entity.game.Game;
 
 @Entity
 @Table(name = "Publisher")
+@Getter
+@Setter
 public class Publisher {
+
     @Id
+    // PublisherID là khóa ngoại tham chiếu UserID, không phải IDENTITY
     @Column(name = "PublisherID")
     private Long publisherId;
 
-    @Column(name = "PublisherName")
-    private String publisherName;
-
-    @Column(name = "CardNumber")
-    private String cardNumber;
-    // ================ Relationships =============
-    @OneToOne
-    @MapsId
+    // Mối quan hệ One-to-One với User
+    // PublisherID là PK và cũng là FK tới User.UserID
+    @OneToOne(fetch = FetchType.LAZY)
+    @MapsId // Chỉ định rằng PublisherID lấy giá trị từ User.UserID
     @JoinColumn(name = "PublisherID")
     private User user;
 
-    // ================ Getter & Setter =============
-    public Publisher() {
-    }
+    @Column(name = "Publisher_Name", nullable = false, length = 100)
+    private String publisherName;
 
-    public Long getPublisherId() {
-        return publisherId;
-    }
+    @Column(name = "CardNumber", nullable = false, length = 20)
+    private String cardNumber; // Chú ý vấn đề bảo mật khi lưu trữ thông tin này!
 
-    public void setPublisherId(Long publisherId) {
-        this.publisherId = publisherId;
-    }
-
-    public String getPublisherName() {
-        return publisherName;
-    }
-
-    public void setPublisherName(String publisherName) {
-        this.publisherName = publisherName;
-    }
-
-    public String getCardNumber() {
-        return cardNumber;
-    }
-
-    public void setCardNumber(String cardNumber) {
-        this.cardNumber = cardNumber;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
+    // Mối quan hệ One-to-Many với Game
+    @OneToMany(mappedBy = "publisher", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<Game> games;
 }
