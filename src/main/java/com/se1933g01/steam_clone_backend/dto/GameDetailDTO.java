@@ -1,86 +1,36 @@
 package com.se1933g01.steam_clone_backend.dto;
 
-import java.sql.Date;
-import java.util.List;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
+import java.math.BigDecimal;
+import java.util.Date; // Hoặc LocalDate
+import java.util.Set;
+import java.util.List; // Hoặc Set tùy ý
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class GameDetailDTO {
-    private String gameName;
+    private Integer gameId;
+    private PublisherBasicDTO publisher; // Sử dụng DTO cho publisher
+    private String name;
     private Date releaseDate;
-    private double price;
+    private Boolean state;
+    private BigDecimal price;
     private String shortDescription;
     private String fullDescription;
-    private String publisherName;
-    private List<ReviewDTO> reviewList;
-
-    public GameDetailDTO() {
-    }
-
-    public GameDetailDTO(String gameName, Date releaseDate, double price, String shortDescription,
-            String fullDescription, String publisherName, List<ReviewDTO> reviewList) {
-        this.gameName = gameName;
-        this.releaseDate = releaseDate;
-        this.price = price;
-        this.shortDescription = shortDescription;
-        this.fullDescription = fullDescription;
-        this.publisherName = publisherName;
-        this.reviewList = reviewList;
-    }
-
-    public String getGameName() {
-        return gameName;
-    }
-
-    public void setGameName(String gameName) {
-        this.gameName = gameName;
-    }
-
-    public Date getReleaseDate() {
-        return releaseDate;
-    }
-
-    public void setReleaseDate(Date releaseDate) {
-        this.releaseDate = releaseDate;
-    }
-
-    public double getPrice() {
-        return price;
-    }
-
-    public void setPrice(float price) {
-        this.price = price;
-    }
-
-    public String getShortDescription() {
-        return shortDescription;
-    }
-
-    public void setShortDescription(String shortDescription) {
-        this.shortDescription = shortDescription;
-    }
-
-    public String getFullDescription() {
-        return fullDescription;
-    }
-
-    public void setFullDescription(String fullDescription) {
-        this.fullDescription = fullDescription;
-    }
-
-    public String getPublisherName() {
-        return publisherName;
-    }
-
-    public void setPublisherName(String publisherName) {
-        this.publisherName = publisherName;
-    }
-
-    public List<ReviewDTO> getreviewList() {
-        return reviewList;
-    }
-
-    public void setreviewList(List<ReviewDTO> reviewList) {
-        this.reviewList = reviewList;
-    }
-
-    
+    private Integer totalPurchased;
+    private Set<TagDTO> tags; // Danh sách DTO cho tags
+    // private SystemRequirementDTO systemRequirement; // DTO cho systemRequirement
+    private List<MediaDTO> media; // Danh sách DTO cho media
+    private String os;
+    private String storage;
+    private String processor;
+    private String memory;
+    private String additionalNotes;
+    private String graphics;
 }
