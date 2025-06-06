@@ -33,5 +33,35 @@ public class TransactionDetail {
     private Game game;
 
     //================ Getter & Setter =============
-    
+    public CompositedKey getId() {
+        return id;
+    }
+
+    public void setId(CompositedKey id) {
+        this.id = id;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
+    public Transaction getTransaction() {
+        return transaction;
+    }
+
+    public void setTransaction(Transaction transaction) {
+        this.transaction = transaction;
+    }
+
+    public Game getGame() {
+        return game;
+    }
+
+    public void setGame(Game game) {
+        this.game = game;
+    }
 }

@@ -1,26 +1,32 @@
 package com.se1933g01.steam_clone_backend.service;
 
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import java.lang.Long;
+import com.se1933g01.steam_clone_backend.entity.transaction.Transaction;
 import com.se1933g01.steam_clone_backend.entity.user.User;
 import com.se1933g01.steam_clone_backend.repository.UserRepo;
+import com.se1933g01.steam_clone_backend.repository.TransactionRepo;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-/**
- * Author: Phan son
- */
+import java.util.Optional;
+import java.util.List;
+
 @Service
 public class UserService {
-    private final UserRepo userRepo;
+
     @Autowired
-    public UserService(UserRepo userRepo) {
-        this.userRepo = userRepo;
-    }
-    
-    public User getUser(Long id){
-        return userRepo.findById(id).orElse(null);
+    private UserRepo userRepo;
+    @Autowired
+    private TransactionRepo transactionRepo;
+
+    public User getUser(Long userId) {
+        return userRepo.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
-    
+    public List<Transaction> showTransactions(Long userId) {
+        //Long userId = 1L;
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return transactionRepo.findByUser(user);
+    }
 }
