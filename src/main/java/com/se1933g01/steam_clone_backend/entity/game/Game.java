@@ -22,6 +22,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import lombok.Builder;
 import lombok.Data;
+
 @Data
 @Entity
 public class Game {
@@ -69,11 +70,7 @@ public class Game {
     private Publisher publisher;
 
     @ManyToMany
-    @JoinTable(
-        name = "GameTags",
-        joinColumns = @JoinColumn(name = "GameID"),
-        inverseJoinColumns = @JoinColumn(name = "TagID")
-    )
+    @JoinTable(name = "GameTags", joinColumns = @JoinColumn(name = "GameID"), inverseJoinColumns = @JoinColumn(name = "TagID"))
     private Set<Tag> tags;
 
     // @OneToMany(mappedBy = "game")
