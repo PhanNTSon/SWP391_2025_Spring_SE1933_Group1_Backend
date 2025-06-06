@@ -14,7 +14,7 @@ import com.se1933g01.steam_clone_backend.dto.AddingGameRequestDTO;
 import com.se1933g01.steam_clone_backend.entity.request.AddingGameRequest;
 import com.se1933g01.steam_clone_backend.entity.request.Request;
 import com.se1933g01.steam_clone_backend.service.CloudinaryService;
-import com.se1933g01.steam_clone_backend.service.PublisherService;
+import com.se1933g01.steam_clone_backend.service.RequestService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @RequestMapping("/publisher")
 public class PublisherController {
     @Autowired
-    private PublisherService publisherService;
+    private RequestService publisherService;
 
     @Autowired
     private CloudinaryService cloudinaryService;

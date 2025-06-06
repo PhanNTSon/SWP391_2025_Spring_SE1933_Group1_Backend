@@ -17,5 +17,7 @@ public class AddingGameRequestDTO {
     private String graphics;
     private String storage;
     private String additionalNotes;
+    private String gameUrl;
+    private String iconUrl;
     private List<String> mediaUrls;
 }
