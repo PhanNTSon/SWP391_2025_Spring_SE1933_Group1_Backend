@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/game") // Giữ nguyên hoặc thay đổi base path nếu muốn
+@RequestMapping("/game") 
 public class GameController {
 
     private final GameService gameService;
@@ -23,10 +23,6 @@ public class GameController {
         this.gameService = gameService;
     }
 
-    /**
-     * Endpoint để lấy danh sách tóm tắt tất cả các game.
-     * HTTP GET: /api/v1/games
-     */
     @GetMapping
     public ResponseEntity<List<GameBasicDTO>> getAllGames() {
         List<GameBasicDTO> games = gameService.getAllGamesBasic();

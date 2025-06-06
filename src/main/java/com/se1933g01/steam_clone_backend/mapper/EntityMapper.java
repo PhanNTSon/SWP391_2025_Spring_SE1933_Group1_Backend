@@ -1,11 +1,10 @@
 package com.se1933g01.steam_clone_backend.mapper;
 
 import com.se1933g01.steam_clone_backend.dto.*;
-import com.se1933g01.steam_clone_backend.entity.*;
 import com.se1933g01.steam_clone_backend.entity.game.Game;
 import com.se1933g01.steam_clone_backend.entity.game.Media;
-import com.se1933g01.steam_clone_backend.entity.game.SystemRequirement;
 import com.se1933g01.steam_clone_backend.entity.game.Tag;
+import com.se1933g01.steam_clone_backend.entity.game.SystemRequirement;
 import com.se1933g01.steam_clone_backend.entity.user.Publisher;
 
 import java.math.RoundingMode;

@@ -70,7 +70,7 @@ public class RequestService {
     public void approveGame(Long requestID, Long userID) {
         Request request = requestRepo.findById(requestID).orElseThrow(()-> new RuntimeException("Request not found"));
         AddingGameRequest addingGameRequest = addingGameRequestRepo.findById(requestID).orElseThrow(()-> new RuntimeException("AddingGameRequest not found"));
-        Publisher publisher = publisherRepo.findById(request.getUser().getUserId()).orElseThrow(()-> new RuntimeException("Publisher not found"));
+        Publisher publisher = publisherRepo.findById(request.getUser().getUserID()).orElseThrow(()-> new RuntimeException("Publisher not found"));
         Game game = new Game();
         game.setPublisher(publisher);
         game.setName(addingGameRequest.getGameName());

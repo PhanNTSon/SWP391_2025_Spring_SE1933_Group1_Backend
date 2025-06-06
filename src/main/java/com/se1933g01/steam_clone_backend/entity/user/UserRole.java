@@ -1,6 +1,5 @@
 package com.se1933g01.steam_clone_backend.entity.user;
 
-
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -34,6 +33,6 @@ public class UserRole {
     public UserRole(User user, Role role) {
         this.user = user;
         this.role = role;
-        this.id = new UserRoleId(user.getUserId(), role.getRoleId());
+        this.id = new UserRoleId(user.getUserID(), role.getRoleId());
     }
 }

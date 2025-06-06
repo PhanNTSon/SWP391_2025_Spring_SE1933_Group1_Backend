@@ -1,96 +1,95 @@
 package com.se1933g01.steam_clone_backend.entity.user;
 
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-
-import java.math.BigDecimal;
-import java.util.Date;
+import java.sql.Date;
 import java.util.List;
-import java.util.Set; // Sẽ dùng cho UserRoles
+import java.util.Set;
+
+import com.se1933g01.steam_clone_backend.entity.game.Game;
+import com.se1933g01.steam_clone_backend.entity.request.Request;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import lombok.Data;
 
 import com.se1933g01.steam_clone_backend.entity.game.Game;
 import com.se1933g01.steam_clone_backend.entity.game.Review;
 import com.se1933g01.steam_clone_backend.entity.request.Request;
 import com.se1933g01.steam_clone_backend.entity.transaction.Transaction;
 
+@Data
 @Entity
-@Table(name = "[User]") // Sử dụng dấu ngoặc vuông vì "User" có thể là từ khóa
-@Getter
-@Setter
+@Table(name = "User")
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "UserID")
-    private Long userId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long userID;
 
-    @Column(name = "Email", unique = true, nullable = false, length = 100)
+    @Column(name = "Email")
     private String email;
 
-    @Column(name = "Username", nullable = false, length = 50)
+    @Column(name = "Username")
     private String username;
 
-    @Column(name = "[Password]", nullable = false, length = 255) // Dùng dấu ngoặc vuông
-    private String password; // NHỚ: Luôn lưu trữ mật khẩu đã được hash!
+    @Column(name = "Password")
+    private String password;
 
-    @Column(name = "WalletBalance", precision = 10, scale = 2)
+    @Column(name = "WalletBalance")
     private Double walletBalance;
 
-    @Column(name = "Country", length = 50)
+    @Column(name = "Country")
     private String country;
 
-    @Temporal(TemporalType.DATE) // Quan trọng cho kiểu DATE của SQL
     @Column(name = "DoB")
     private Date dob;
 
-    @Column(name = "Gender", length = 1)
-    private Character gender; // Hoặc String
+    @Column(name = "Gender")
+    private Character gender;
 
-    @Column(name = "ProfileName", length = 50)
+    @Column(name = "ProfileName")
     private String profileName;
 
-    @Lob // Dùng cho kiểu TEXT của SQL
-    @Column(name = "Summary", columnDefinition = "TEXT")
+    @Column(name = "Summary")
     private String summary;
 
     @Column(name = "BanStatus")
-    private Boolean banStatus;
+    private boolean banStatus;
 
-    // Mối quan hệ (sẽ thêm sau, ví dụ UserRoles)
-    // @OneToMany(mappedBy = "user")
-    // private Set<UserRole> userRoles;
- //================ Relationships =============
+    // ================ Relationships =============
     @OneToMany(mappedBy = "user")
     private List<Request> requests;
-    
+
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private Publisher publisher;
-    
+
     @ManyToOne
     @JoinColumn(name = "RoleID")
     private Role role;
 
     @ManyToMany
-    @JoinTable(
-        name = "Cart",
-        joinColumns = @JoinColumn(name = "UserID"),
-        inverseJoinColumns = @JoinColumn(name = "GameID")
-    )
+    @JoinTable(name = "Cart", joinColumns = @JoinColumn(name = "UserID"), inverseJoinColumns = @JoinColumn(name = "GameID"))
     private Set<Game> cartGames;
 
     @ManyToMany
-    @JoinTable(
-        name = "Library",
-        joinColumns = @JoinColumn(name = "UserID"),
-        inverseJoinColumns = @JoinColumn(name = "GameID")
-    )
+    @JoinTable(name = "Library", joinColumns = @JoinColumn(name = "UserID"), inverseJoinColumns = @JoinColumn(name = "GameID"))
     private Set<Game> games;
 
-    @OneToMany(mappedBy = "user")
-    private List<Review> reviews;
+    // @OneToMany(mappedBy = "user")
+    // private List<Review> reviews;
 
-    @OneToMany(mappedBy = "user")
-    private List<Transaction> transaction;
-    // Constructors, Getters, Setters (Lombok)
+    // @OneToMany(mappedBy = "user")
+    // private List<Transaction> transaction;
+
 }
