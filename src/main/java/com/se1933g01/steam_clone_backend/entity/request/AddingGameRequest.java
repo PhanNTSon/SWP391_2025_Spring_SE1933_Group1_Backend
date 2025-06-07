@@ -13,10 +13,16 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
+/**
+ * Author: Phan Son
+ */
 @Data
-
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "AddingGameRequest")
 public class AddingGameRequest {

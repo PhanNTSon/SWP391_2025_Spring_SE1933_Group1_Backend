@@ -19,11 +19,16 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-import lombok.Builder;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
+/**
+ * Author: Phan Son
+ */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 public class Game {
     @Id

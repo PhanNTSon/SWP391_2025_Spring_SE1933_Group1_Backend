@@ -13,6 +13,6 @@ import com.se1933g01.steam_clone_backend.entity.game.ReviewKey;
  * Author: Phan Son
  */
 public interface ReviewRepo extends JpaRepository<Review, ReviewKey>{
-    // @Query("SELECT r FROM Review r JOIN FETCH r.user WHERE r.game.gameId = :gameId")
+    @Query("SELECT r FROM Review r JOIN FETCH r.user WHERE r.game.gameId = :gameId")
     List<Review> findByGame_GameId(@Param("gameId") Long gameId);
 }

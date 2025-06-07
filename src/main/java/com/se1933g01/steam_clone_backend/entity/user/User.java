@@ -20,14 +20,16 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import com.se1933g01.steam_clone_backend.entity.game.Game;
-import com.se1933g01.steam_clone_backend.entity.game.Review;
-import com.se1933g01.steam_clone_backend.entity.request.Request;
-import com.se1933g01.steam_clone_backend.entity.transaction.Transaction;
-
+/**
+ * Author: Phan Son
+ */
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
 @Table(name = "User")
 public class User {
@@ -85,11 +87,5 @@ public class User {
     @ManyToMany
     @JoinTable(name = "Library", joinColumns = @JoinColumn(name = "UserID"), inverseJoinColumns = @JoinColumn(name = "GameID"))
     private Set<Game> games;
-
-    // @OneToMany(mappedBy = "user")
-    // private List<Review> reviews;
-
-    // @OneToMany(mappedBy = "user")
-    // private List<Transaction> transaction;
 
 }

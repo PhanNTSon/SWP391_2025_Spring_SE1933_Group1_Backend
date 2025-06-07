@@ -26,7 +26,7 @@ public class Publisher {
     @JoinColumn(name = "PublisherID")
     private User user;
 
-    @Column(name = "Publisher_Name", nullable = false, length = 100)
+    @Column(name = "PublisherName", nullable = false, length = 100)
     private String publisherName;
 
     @Column(name = "CardNumber", nullable = false, length = 20)

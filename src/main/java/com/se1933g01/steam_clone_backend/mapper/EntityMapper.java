@@ -7,11 +7,13 @@ import com.se1933g01.steam_clone_backend.entity.game.Tag;
 import com.se1933g01.steam_clone_backend.entity.game.SystemRequirement;
 import com.se1933g01.steam_clone_backend.entity.user.Publisher;
 
-import java.math.RoundingMode;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * Author: TS Huy
+ */
 public class EntityMapper {
 
     // --- Tag Mapper ---
