@@ -64,30 +64,8 @@ public class EntityMapper {
         // 2. Xử lý giá và giảm giá
         double originalPrice = game.getPrice(); // Giá gốc từ entity
         dto.setOriginalPrice(originalPrice);
-<<<<<<< Updated upstream
-
-        // *** LOGIC GIẢ LẬP GIẢM GIÁ CHO VÍ DỤ ***
-        // Trong ứng dụng thực tế, logic này sẽ phức tạp hơn, dựa trên promotion, sale
-        // event, etc.
-        double discountPrice = originalPrice; // Mặc định không giảm
-        double currentPrice = originalPrice; // Giá bán hiện tại
-
-        // if (originalPrice != null && originalPrice.compareTo(double.valueOf(20)) > 0) { // Ví dụ: giảm 10% nếu giá >
-        //                                                                                     // 20
-        //     double discountAmount = originalPrice.multiply(double.valueOf(0.10)) // Giảm 10%
-        //             .setScale(2, RoundingMode.HALF_UP);
-        //     discountPrice = originalPrice.subtract(discountAmount);
-        //     currentPrice = discountPrice;
-        // } else if (originalPrice != null && originalPrice.compareTo(double.ZERO) == 0) {
-        //     // Nếu game miễn phí
-        //     discountPrice = double.ZERO;
-        //     currentPrice = double.ZERO;
-        // }
-
-=======
         double discountPrice = originalPrice;
         double currentPrice = originalPrice; 
->>>>>>> Stashed changes
         dto.setDiscountPrice(discountPrice);
         dto.setPrice(currentPrice); // price trong DTO là giá bán hiệu lực
 
