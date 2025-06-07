@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 
 public class EntityMapper {
 
-    // --- Tag Mapper ---
     public static TagDTO toTagDTO(Tag tag) {
         if (tag == null)
             return null;
@@ -26,19 +25,6 @@ public class EntityMapper {
         return new PublisherBasicDTO(publisher.getPublisherId(), publisher.getPublisherName());
     }
 
-    // --- SystemRequirement Mapper ---
-    public static SystemRequirementDTO toSystemRequirementDTO(SystemRequirement sr) {
-        if (sr == null)
-            return null;
-        // Giả sử SystemRequirement entity có các getter tương ứng
-        return new SystemRequirementDTO(
-                sr.getOs(),
-                sr.getStorage(),
-                sr.getProcessor(),
-                sr.getMemory(),
-                sr.getAdditionalNotes(),
-                sr.getGraphics());
-    }
 
     // --- Media Mapper ---
     public static MediaDTO toMediaDTO(Media media) {
@@ -56,9 +42,6 @@ public class EntityMapper {
         GameBasicDTO dto = new GameBasicDTO();
         dto.setId(game.getGameId());
         dto.setTitle(game.getName());
-
-        // 1. Lấy imageUrl (ví dụ: lấy media đầu tiên có type 'image_header' hoặc
-        // 'capsule')
         if (game.getMedia() != null && !game.getMedia().isEmpty()) {
             Optional<Media> headerImage = game.getMedia().stream()
                     .filter(m -> "image_header".equalsIgnoreCase(m.getType()) ||
@@ -67,7 +50,6 @@ public class EntityMapper {
             if (headerImage.isPresent()) {
                 dto.setImageUrl(headerImage.get().getUrl());
             } else {
-                // Hoặc lấy ảnh đầu tiên nếu không có header/capsule
                 game.getMedia().stream().findFirst().ifPresent(m -> dto.setImageUrl(m.getUrl()));
             }
         }
@@ -78,6 +60,7 @@ public class EntityMapper {
         // 2. Xử lý giá và giảm giá
         BigDecimal originalPrice = game.getPrice(); // Giá gốc từ entity
         dto.setOriginalPrice(originalPrice);
+<<<<<<< Updated upstream
 
         // *** LOGIC GIẢ LẬP GIẢM GIÁ CHO VÍ DỤ ***
         // Trong ứng dụng thực tế, logic này sẽ phức tạp hơn, dựa trên promotion, sale
@@ -97,6 +80,10 @@ public class EntityMapper {
             currentPrice = BigDecimal.ZERO;
         }
 
+=======
+        double discountPrice = originalPrice;
+        double currentPrice = originalPrice; 
+>>>>>>> Stashed changes
         dto.setDiscountPrice(discountPrice);
         dto.setPrice(currentPrice); // price trong DTO là giá bán hiệu lực
 
@@ -135,14 +122,7 @@ public class EntityMapper {
             dto.setTags(Collections.emptySet());
         }
 
-        // // Ánh xạ SystemRequirement
-        // if (game.getSystemRequirement() != null) {
-        // // Quan trọng: KHÔNG map ngược lại game từ SystemRequirementDTO để tránh đệ
-        // quy
-        // dto.setSystemRequirement(toSystemRequirementDTO(game.getSystemRequirement()));
-        // }
 
-        // Ánh xạ Media
         if (game.getMedia() != null && !game.getMedia().isEmpty()) {
             dto.setMedia(game.getMedia().stream().map(EntityMapper::toMediaDTO).collect(Collectors.toList()));
         } else {
