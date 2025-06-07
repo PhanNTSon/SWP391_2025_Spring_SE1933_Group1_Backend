@@ -2,7 +2,7 @@ package com.se1933g01.steam_clone_backend.service;
 
 import com.se1933g01.steam_clone_backend.dto.GameBasicDTO;
 import com.se1933g01.steam_clone_backend.dto.GameDetailDTO;
-import com.se1933g01.steam_clone_backend.entity.Game;
+import com.se1933g01.steam_clone_backend.entity.game.Game;
 import com.se1933g01.steam_clone_backend.mapper.EntityMapper; // Import mapper
 import com.se1933g01.steam_clone_backend.repository.GameRepository;
 
@@ -33,7 +33,7 @@ public class GameService {
     }
 
     @Transactional(readOnly = true) // Quan trọng cho việc load các mối quan hệ LAZY
-    public GameDetailDTO getGameDetailsById(Integer gameId) {
+    public GameDetailDTO getGameDetailsById(Long gameId) {
         Game game = gameRepository.findById(gameId)
                 .orElseThrow(() -> new EntityNotFoundException("Game not found with id: " + gameId));
 

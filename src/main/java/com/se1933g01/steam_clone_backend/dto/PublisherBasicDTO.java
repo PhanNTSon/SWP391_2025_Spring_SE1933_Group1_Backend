@@ -10,6 +10,6 @@ import lombok.AllArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PublisherBasicDTO {
-    private Integer publisherId;
+    private Long publisherId;
     private String publisherName;
 }

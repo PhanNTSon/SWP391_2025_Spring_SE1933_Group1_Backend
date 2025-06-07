@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Date; // Hoặc LocalDate
 import java.util.Set;
 import java.util.List; // Hoặc Set tùy ý
@@ -15,12 +16,12 @@ import java.util.List; // Hoặc Set tùy ý
 @NoArgsConstructor
 @AllArgsConstructor
 public class GameDetailDTO {
-    private Integer gameId;
+    private long gameId;
     private PublisherBasicDTO publisher; // Sử dụng DTO cho publisher
     private String name;
-    private Date releaseDate;
+    private LocalDate releaseDate;
     private Boolean state;
-    private BigDecimal price;
+    private double price;
     private String shortDescription;
     private String fullDescription;
     private Integer totalPurchased;

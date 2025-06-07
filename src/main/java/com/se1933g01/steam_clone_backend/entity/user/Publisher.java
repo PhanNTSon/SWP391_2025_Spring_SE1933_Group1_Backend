@@ -1,10 +1,12 @@
-package com.se1933g01.steam_clone_backend.entity;
+package com.se1933g01.steam_clone_backend.entity.user;
 
 
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import java.util.Set;
+
+import com.se1933g01.steam_clone_backend.entity.game.Game;
 
 @Entity
 @Table(name = "Publisher")
@@ -15,7 +17,7 @@ public class Publisher {
     @Id
     // PublisherID là khóa ngoại tham chiếu UserID, không phải IDENTITY
     @Column(name = "PublisherID")
-    private Integer publisherId;
+    private Long publisherId;
 
     // Mối quan hệ One-to-One với User
     // PublisherID là PK và cũng là FK tới User.UserID
@@ -24,7 +26,7 @@ public class Publisher {
     @JoinColumn(name = "PublisherID")
     private User user;
 
-    @Column(name = "Publisher_Name", nullable = false, length = 100)
+    @Column(name = "PublisherName", nullable = false, length = 100)
     private String publisherName;
 
     @Column(name = "CardNumber", nullable = false, length = 20)

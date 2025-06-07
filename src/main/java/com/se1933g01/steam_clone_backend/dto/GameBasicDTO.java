@@ -12,10 +12,10 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GameBasicDTO {
-    private Integer id; // Tương ứng với gameId
+    private long id; // Tương ứng với gameId
     private String title; // Tương ứng với name
     private String imageUrl; // Sẽ lấy từ Media entity
-    private BigDecimal price; // Giá bán hiệu lực (sau khi đã áp dụng giảm giá nếu có)
-    private BigDecimal discountPrice; // Giá sau khi giảm giá (nếu không có giảm giá, có thể bằng originalPrice)
-    private BigDecimal originalPrice; // Giá gốc của sản phẩm (từ game.price)
+    private double price; // Giá bán hiệu lực (sau khi đã áp dụng giảm giá nếu có)
+    private double discountPrice; // Giá sau khi giảm giá (nếu không có giảm giá, có thể bằng originalPrice)
+    private double originalPrice; // Giá gốc của sản phẩm (từ game.price)
 }

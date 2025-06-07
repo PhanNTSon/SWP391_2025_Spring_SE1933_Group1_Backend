@@ -1,14 +1,19 @@
 package com.se1933g01.steam_clone_backend.mapper;
 
 import com.se1933g01.steam_clone_backend.dto.*;
-import com.se1933g01.steam_clone_backend.entity.*;
+import com.se1933g01.steam_clone_backend.entity.game.Game;
+import com.se1933g01.steam_clone_backend.entity.game.Media;
+import com.se1933g01.steam_clone_backend.entity.game.Tag;
+import com.se1933g01.steam_clone_backend.entity.game.SystemRequirement;
+import com.se1933g01.steam_clone_backend.entity.user.Publisher;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * Author: TS Huy
+ */
 public class EntityMapper {
 
     public static TagDTO toTagDTO(Tag tag) {
@@ -30,7 +35,6 @@ public class EntityMapper {
     public static MediaDTO toMediaDTO(Media media) {
         if (media == null)
             return null;
-        // Giả sử Media entity có các getter tương ứng
         return new MediaDTO(media.getMediaId(), media.getUrl(), media.getType());
     }
 
@@ -58,27 +62,27 @@ public class EntityMapper {
         }
 
         // 2. Xử lý giá và giảm giá
-        BigDecimal originalPrice = game.getPrice(); // Giá gốc từ entity
+        double originalPrice = game.getPrice(); // Giá gốc từ entity
         dto.setOriginalPrice(originalPrice);
 <<<<<<< Updated upstream
 
         // *** LOGIC GIẢ LẬP GIẢM GIÁ CHO VÍ DỤ ***
         // Trong ứng dụng thực tế, logic này sẽ phức tạp hơn, dựa trên promotion, sale
         // event, etc.
-        BigDecimal discountPrice = originalPrice; // Mặc định không giảm
-        BigDecimal currentPrice = originalPrice; // Giá bán hiện tại
+        double discountPrice = originalPrice; // Mặc định không giảm
+        double currentPrice = originalPrice; // Giá bán hiện tại
 
-        if (originalPrice != null && originalPrice.compareTo(BigDecimal.valueOf(20)) > 0) { // Ví dụ: giảm 10% nếu giá >
-                                                                                            // 20
-            BigDecimal discountAmount = originalPrice.multiply(BigDecimal.valueOf(0.10)) // Giảm 10%
-                    .setScale(2, RoundingMode.HALF_UP);
-            discountPrice = originalPrice.subtract(discountAmount);
-            currentPrice = discountPrice;
-        } else if (originalPrice != null && originalPrice.compareTo(BigDecimal.ZERO) == 0) {
-            // Nếu game miễn phí
-            discountPrice = BigDecimal.ZERO;
-            currentPrice = BigDecimal.ZERO;
-        }
+        // if (originalPrice != null && originalPrice.compareTo(double.valueOf(20)) > 0) { // Ví dụ: giảm 10% nếu giá >
+        //                                                                                     // 20
+        //     double discountAmount = originalPrice.multiply(double.valueOf(0.10)) // Giảm 10%
+        //             .setScale(2, RoundingMode.HALF_UP);
+        //     discountPrice = originalPrice.subtract(discountAmount);
+        //     currentPrice = discountPrice;
+        // } else if (originalPrice != null && originalPrice.compareTo(double.ZERO) == 0) {
+        //     // Nếu game miễn phí
+        //     discountPrice = double.ZERO;
+        //     currentPrice = double.ZERO;
+        // }
 
 =======
         double discountPrice = originalPrice;

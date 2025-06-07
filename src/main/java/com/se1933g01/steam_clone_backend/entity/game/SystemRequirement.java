@@ -1,4 +1,5 @@
-package com.se1933g01.steam_clone_backend.entity;
+package com.se1933g01.steam_clone_backend.entity.game;
+
 
 import jakarta.persistence.*;
 import lombok.Getter;
