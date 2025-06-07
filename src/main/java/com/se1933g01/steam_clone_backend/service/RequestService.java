@@ -52,6 +52,7 @@ public class RequestService {
     private PublisherRepo publisherRepo;
     @Transactional
     public void addGame(AddingGameRequestDTO addingGameRequestDTO, Long UserID) {
+        System.out.println(addingGameRequestDTO);
         User user = userRepo.findById(UserID).orElseThrow(()-> new RuntimeException("User not found"));
         Request request = new Request();
         request.setUser(user);

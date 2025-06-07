@@ -4,19 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+
+import lombok.Data;
 @Service
+@Data
 public class CloudinaryService {
     private final Cloudinary cloudinary;
-    @Autowired
-    public CloudinaryService(Cloudinary cloudinary) {
-        this.cloudinary = cloudinary;
-    }
     public List<String> uploadFiles(MultipartFile[] files){
         List<String> urls = new ArrayList<>();
         for(MultipartFile file: files){

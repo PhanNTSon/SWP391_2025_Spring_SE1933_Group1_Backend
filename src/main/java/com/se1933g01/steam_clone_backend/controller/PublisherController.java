@@ -1,10 +1,14 @@
 package com.se1933g01.steam_clone_backend.controller;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,8 +18,10 @@ import com.se1933g01.steam_clone_backend.dto.AddingGameRequestDTO;
 import com.se1933g01.steam_clone_backend.entity.request.AddingGameRequest;
 import com.se1933g01.steam_clone_backend.entity.request.Request;
 import com.se1933g01.steam_clone_backend.service.CloudinaryService;
+import com.se1933g01.steam_clone_backend.service.GoogleDriveService;
 import com.se1933g01.steam_clone_backend.service.RequestService;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -30,9 +36,13 @@ public class PublisherController {
     @Autowired
     private CloudinaryService cloudinaryService;
     
+    @Autowired
+    private GoogleDriveService googleDriveService;
+
     @PostMapping("/addGame")
     public ResponseEntity<Map<String,String>> addGame(@RequestBody AddingGameRequestDTO addingGameRequestDTO) {
         try {
+            System.out.println(addingGameRequestDTO);
             publisherService.addGame(addingGameRequestDTO,2L);
             Map<String,String> map = Map.of("message","Game added successfully");
             return ResponseEntity.ok(map);
@@ -57,5 +67,20 @@ public class PublisherController {
             return ResponseEntity.badRequest().body(response);
         }
     }
+
+    @PostMapping("/upload")
+    public ResponseEntity<Map<String, String>> uploadFile(@RequestParam("file") MultipartFile file) throws IOException {
+        String fileId = googleDriveService.uploadFile(file);
+        googleDriveService.makeFilePublic(fileId);
+        return ResponseEntity.ok(Map.of("message", "Upload Successful!", "fileId", fileId));
+    }
+
+    @GetMapping("/download/{fileId}")
+    public ResponseEntity<String> downloadFile(@PathVariable("fileId") String fileId) throws IOException {
+        String downloadUrl = googleDriveService.generateDownloadUrl(fileId);
+        System.out.println(downloadUrl);
+        return ResponseEntity.ok(downloadUrl);
+    }
+    
     
 }
