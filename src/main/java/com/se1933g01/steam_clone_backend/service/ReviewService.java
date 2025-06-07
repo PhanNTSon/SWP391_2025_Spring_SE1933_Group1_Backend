@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.se1933g01.steam_clone_backend.dto.Review.CreateReviewDTO;
+import com.se1933g01.steam_clone_backend.dto.Review.PatchReviewDTO;
 import com.se1933g01.steam_clone_backend.dto.Review.ReviewDTO;
 import com.se1933g01.steam_clone_backend.entity.game.Game;
 import com.se1933g01.steam_clone_backend.entity.game.Review;
@@ -41,6 +42,7 @@ public class ReviewService {
 
     /**
      * Create new Review
+     * 
      * @param userId
      * @param gameId
      * @param reviewContent
@@ -71,6 +73,7 @@ public class ReviewService {
 
     /**
      * Get list of Reviews of a Game.
+     * 
      * @param gameId
      * @return
      */
@@ -94,6 +97,22 @@ public class ReviewService {
             return null;
         }
 
+    }
+
+    @Transactional
+    public PatchReviewDTO putReview(long gameId, long userId, long helpful, long notHelpful) {
+        ReviewKey key = new ReviewKey(gameId, userId);
+        Review target = reviewRepo.findById(key).orElse(null);
+        if (target != null) {
+            target.setHelpful(helpful);
+            target.setNotHelpful(notHelpful);
+
+            reviewRepo.save(target);
+
+            return new PatchReviewDTO(userId, helpful, notHelpful);
+        } else {
+            return null;
+        }
     }
 
 }
