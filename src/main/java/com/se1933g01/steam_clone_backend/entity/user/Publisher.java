@@ -1,38 +1,66 @@
 package com.se1933g01.steam_clone_backend.entity.user;
 
 
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import java.util.Set;
-
-import com.se1933g01.steam_clone_backend.entity.game.Game;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.MapsId;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "Publisher")
-@Getter
-@Setter
 public class Publisher {
-
     @Id
-    // PublisherID là khóa ngoại tham chiếu UserID, không phải IDENTITY
     @Column(name = "PublisherID")
     private Long publisherId;
 
-    // Mối quan hệ One-to-One với User
-    // PublisherID là PK và cũng là FK tới User.UserID
-    @OneToOne(fetch = FetchType.LAZY)
-    @MapsId // Chỉ định rằng PublisherID lấy giá trị từ User.UserID
+    @Column(name = "PublisherName")
+    private String publisherName;
+
+    @Column(name = "CardNumber")
+    private String cardNumber;
+    // ================ Relationships =============
+    @OneToOne
+    @MapsId
     @JoinColumn(name = "PublisherID")
     private User user;
 
-    @Column(name = "PublisherName", nullable = false, length = 100)
-    private String publisherName;
+    // ================ Getter & Setter =============
+    public Publisher() {
+    }
 
-    @Column(name = "CardNumber", nullable = false, length = 20)
-    private String cardNumber; // Chú ý vấn đề bảo mật khi lưu trữ thông tin này!
+    public Long getPublisherId() {
+        return publisherId;
+    }
 
-    // Mối quan hệ One-to-Many với Game
-    @OneToMany(mappedBy = "publisher", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Game> games;
+    public void setPublisherId(Long publisherId) {
+        this.publisherId = publisherId;
+    }
+
+    public String getPublisherName() {
+        return publisherName;
+    }
+
+    public void setPublisherName(String publisherName) {
+        this.publisherName = publisherName;
+    }
+
+    public String getCardNumber() {
+        return cardNumber;
+    }
+
+    public void setCardNumber(String cardNumber) {
+        this.cardNumber = cardNumber;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
 }
