@@ -1,8 +1,10 @@
 package com.se1933g01.steam_clone_backend.service;
 
 import com.se1933g01.steam_clone_backend.dto.CartDTO;
+import com.se1933g01.steam_clone_backend.entity.CompositedKey;
 import com.se1933g01.steam_clone_backend.entity.game.Game;
 import com.se1933g01.steam_clone_backend.entity.transaction.Transaction;
+import com.se1933g01.steam_clone_backend.entity.transaction.TransactionDetail;
 import com.se1933g01.steam_clone_backend.entity.user.User;
 import com.se1933g01.steam_clone_backend.repository.GameRepo;
 import com.se1933g01.steam_clone_backend.repository.TransactionRepo;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.List;
 
 @Service
 public class CartService {
@@ -55,6 +58,10 @@ public class CartService {
         if (user.getCartGames() == null) {
             user.setCartGames(new HashSet<>());
         }
+        // Check if user already owns the game
+        if (user.getGames() != null && user.getGames().stream().anyMatch(g -> g.getGameId().equals(gameId))) {
+            throw new RuntimeException("You already own this game");
+        }
         if (user.getCartGames().stream().anyMatch(g -> g.getGameId().equals(gameId))) {
             throw new RuntimeException("Game already in cart");
         }
@@ -88,7 +95,17 @@ public class CartService {
     public CartDTO checkout(Long userId) {
         User user = userRepo.findByIdWithCartGames(userId);
         if (user == null) throw new RuntimeException("User not found");
-        double total = calculateCartTotal(userId);
+        if (user.getCartGames().isEmpty())
+            throw new RuntimeException("Cart is empty");
+        // Only checkout games not already owned
+        java.util.Set<Game> ownedGames = user.getGames() != null ? user.getGames() : new java.util.HashSet<>();
+        List<Game> gamesToBuy = user.getCartGames().stream()
+            .filter(game -> ownedGames.stream().noneMatch(owned -> owned.getGameId().equals(game.getGameId())))
+            .toList();
+        if (gamesToBuy.isEmpty()) {
+            throw new RuntimeException("All games in cart are already owned");
+        }
+        double total = gamesToBuy.stream().mapToDouble(Game::getPrice).sum();
         if (user.getWalletBalance() < total) {
             throw new RuntimeException("Insufficient balance");
         }
@@ -96,16 +113,33 @@ public class CartService {
         double oldBalance = user.getWalletBalance();
         // Trừ tiền
         user.setWalletBalance(oldBalance - total);
-        // Tạo transaction cho từng game
-        for (Game game : user.getCartGames()) {
+        // Tạo transaction cho từng game chưa sở hữu
+        for (Game game : gamesToBuy) {
             Transaction transaction = new Transaction();
             transaction.setUser(user);
-            transaction.setGame(game);
             transaction.setTotalAmount(game.getPrice());
             transaction.setCreatedAt(LocalDate.now());
+            // Save transaction first to generate ID
+            transaction = transactionRepo.save(transaction);
+            // Always create a new ArrayList for transactionDetails
+            List<TransactionDetail> transactionDetails = new java.util.ArrayList<>();
+            TransactionDetail detail = new TransactionDetail();
+            CompositedKey key = new CompositedKey();
+            key.setKey1(transaction.getTransactionId()); // Map to TransactionID
+            key.setKey2(game.getGameId()); // Map to GameID
+            detail.setId(key);
+            detail.setTransaction(transaction);
+            detail.setGame(game);
+            detail.setPrice(game.getPrice());
+            transactionDetails.add(detail);
+            transaction.setTransactionDetail(transactionDetails);
             transactionRepo.save(transaction);
+            // Add game to user's library
+            ownedGames.add(game);
         }
-        user.getCartGames().clear();
+        // Remove only the games that were just bought from cart
+        user.getCartGames().removeAll(gamesToBuy);
+        user.setGames(ownedGames);
         userRepo.save(user);
         return getCart(userId);
     }

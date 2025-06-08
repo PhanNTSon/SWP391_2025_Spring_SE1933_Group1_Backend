@@ -96,7 +96,7 @@ public class UserController {
 
 
     // Add games to cart
-    @PostMapping("/{userId}/cart/add")
+    @GetMapping("/{userId}/cart/add")//post
     public ResponseEntity<Map<String, Object>> addGameToCart(
             @PathVariable(value = "userId") Long userId,
             @RequestParam Long gameId) {
@@ -124,7 +124,7 @@ public class UserController {
     }
 
     // Remove games from cart
-    @DeleteMapping("/{userId}/cart/remove")
+    @GetMapping("/{userId}/cart/remove")//delete
     public ResponseEntity<Map<String, Object>> removeGameFromCart(
             @PathVariable(value = "userId") Long userId,
             @RequestParam Long gameId) {
@@ -151,8 +151,8 @@ public class UserController {
         }
     }
 
-    // Checkout (gọi đúng logic mới, không trả về tổng tiền mà thực hiện thanh toán)
-    @PostMapping("/{userId}/cart/checkout")
+    // Checkout cart
+    @GetMapping("/{userId}/cart/checkout")//post
     public ResponseEntity<Map<String, Object>> checkoutCart(@PathVariable(value = "userId") Long userId) {
         Map<String, Object> response = new HashMap<>();
         try {
@@ -163,8 +163,12 @@ public class UserController {
             }
             cartService.checkout(userId);
             response.put("success", true);
-            response.put("message", "Checkout successfully. All games removed from cart and transactions created.");
+            response.put("message", "Checkout successfully.");
             return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            response.put("success", false);
+            response.put("message", "Checkout failed: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
         } catch (Exception e) {
             response.put("success", false);
             response.put("message", "Checkout failed: " + e.getMessage());
