@@ -20,6 +20,8 @@ import com.se1933g01.steam_clone_backend.entity.request.Request;
 import com.se1933g01.steam_clone_backend.service.CloudinaryService;
 import com.se1933g01.steam_clone_backend.service.GoogleDriveService;
 import com.se1933g01.steam_clone_backend.service.RequestService;
+
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -70,9 +72,9 @@ public class PublisherController {
 
     @PostMapping("/upload")
     public ResponseEntity<Map<String, String>> uploadFile(@RequestParam("file") MultipartFile file) throws IOException {
-        String fileId = googleDriveService.uploadFile(file);
-        googleDriveService.makeFilePublic(fileId);
-        return ResponseEntity.ok(Map.of("message", "Upload Successful!", "fileId", fileId));
+        List<String> fileId = googleDriveService.uploadFile(file);
+        googleDriveService.makeFilePublic(fileId.get(0));
+        return ResponseEntity.ok(Map.of("message", "Upload Successful!", "fileId", fileId.get(0),"fileName",fileId.get(1)));
     }
 
     @GetMapping("/download/{fileId}")
@@ -82,5 +84,11 @@ public class PublisherController {
         return ResponseEntity.ok(downloadUrl);
     }
     
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<Map<String,String>> deleteGame(@PathVariable("id") String fileId) throws IOException {
+        googleDriveService.deleteFile(fileId);
+        Map<String,String> map = Map.of("message","File deleted successfully");
+        return ResponseEntity.ok(map);
+    }
     
 }

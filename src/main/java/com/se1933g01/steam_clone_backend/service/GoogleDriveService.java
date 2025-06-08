@@ -13,6 +13,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.swing.JFileChooser;
 
@@ -26,7 +30,8 @@ public class GoogleDriveService {
         this.driveService = driveService;
     }
 
-    public String uploadFile(MultipartFile file) throws IOException {
+    public List<String> uploadFile(MultipartFile file) throws IOException {
+        List<String> returnData = new ArrayList<>();
         File fileMetadata = new File();
         fileMetadata.setName(file.getOriginalFilename());
 
@@ -36,8 +41,9 @@ public class GoogleDriveService {
         File uploadedFile = driveService.files().create(fileMetadata, mediaContent)
                 .setFields("id")
                 .execute();
-
-        return uploadedFile.getId(); // ✅ Returns File ID
+        returnData.add(uploadedFile.getId());
+        returnData.add(file.getOriginalFilename());
+        return returnData; // ✅ Returns File ID
     }
     
     public String generateDownloadUrl(String fileId) throws IOException {
@@ -46,11 +52,9 @@ public class GoogleDriveService {
         
         return fileMetadata.getWebContentLink(); // Return the file's public download URL
     }
-
-
-
-
-    
+    public void deleteFile(String fileId) throws IOException {
+        driveService.files().delete(fileId).execute();
+    }
     public void makeFilePublic(String fileId) throws IOException {
         Permission permission = new Permission()
                 .setType("anyone")  // ✅ Allows anyone to view

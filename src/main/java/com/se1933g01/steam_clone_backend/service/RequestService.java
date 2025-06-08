@@ -14,6 +14,8 @@ import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.support.MultipartFilter;
@@ -68,7 +70,7 @@ public class RequestService {
         addingGameRequestRepo.save(addingGameRequest);
     }
 
-    public void approveGame(Long requestID, Long userID) {
+    public void approveGame(Long requestID) {
         Request request = requestRepo.findById(requestID).orElseThrow(()-> new RuntimeException("Request not found"));
         AddingGameRequest addingGameRequest = addingGameRequestRepo.findById(requestID).orElseThrow(()-> new RuntimeException("AddingGameRequest not found"));
         Publisher publisher = publisherRepo.findById(request.getUser().getUserID()).orElseThrow(()-> new RuntimeException("Publisher not found"));
@@ -93,5 +95,31 @@ public class RequestService {
         List<Media> mediaList = mediaUrls.stream().map(url -> Media.builder().game(game).url(url).type("Image").build()).collect(Collectors.toList());
         mediaRepo.saveAll(mediaList);
 
+        request.setRequestState(1);
+        requestRepo.save(request);
+    }
+    public void rejectGame(Long requestID) {
+        Request request = requestRepo.findById(requestID).orElseThrow(()-> new RuntimeException("Request not found"));
+        request.setRequestState(2);
+        requestRepo.save(request);
+    }
+    // public List<AddingGameRequestDTO> getAllAddingGameRequest(){
+    //     List<AddingGameRequest> addingGameRequestList = addingGameRequestRepo.findAll();
+    //     List<AddingGameRequestDTO> addingGameRequestDTOList = new ArrayList<>();
+    //     for(AddingGameRequest addingGameRequest : addingGameRequestList){
+    //         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+    //         AddingGameRequestDTO addingGameRequestDTO = modelMapper.map(addingGameRequest, AddingGameRequestDTO.class);
+    //         addingGameRequestDTOList.add(addingGameRequestDTO);
+    //     }
+    //     return addingGameRequestDTOList;
+    // }
+
+    public Page<AddingGameRequestDTO> getAllAddingGameRequest(Pageable pageable) {
+        Page<AddingGameRequest> addingGameRequestPage = addingGameRequestRepo.findAllByRequestStateZero(pageable);
+        
+        return addingGameRequestPage.map(addingGameRequest -> {
+            modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+            return modelMapper.map(addingGameRequest, AddingGameRequestDTO.class);
+        });
     }
 }
