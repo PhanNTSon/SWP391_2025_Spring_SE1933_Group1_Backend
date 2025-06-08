@@ -78,4 +78,12 @@ public class Transaction {
         this.transactionId = transactionId;
     }
 
+    public List<TransactionDetail> getTransactionDetail() {
+        return transactionDetail;
+    }
+
+    public void setTransactionDetail(List<TransactionDetail> transactionDetail) {
+        this.transactionDetail = transactionDetail;
+    }
+
 }

@@ -2,13 +2,16 @@ package com.se1933g01.steam_clone_backend.service;
 
 import com.se1933g01.steam_clone_backend.dto.CartDTO;
 import com.se1933g01.steam_clone_backend.entity.game.Game;
+import com.se1933g01.steam_clone_backend.entity.transaction.Transaction;
 import com.se1933g01.steam_clone_backend.entity.user.User;
 import com.se1933g01.steam_clone_backend.repository.GameRepo;
+import com.se1933g01.steam_clone_backend.repository.TransactionRepo;
 import com.se1933g01.steam_clone_backend.repository.UserRepo;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.HashSet;
 
 @Service
@@ -17,10 +20,13 @@ public class CartService {
     private UserRepo userRepo;
     @Autowired
     private GameRepo gameRepo;
+    @Autowired
+    private TransactionRepo transactionRepo;
 
-    public CartService(UserRepo userRepo, GameRepo gameRepo) {
+    public CartService(UserRepo userRepo, GameRepo gameRepo, TransactionRepo transactionRepo) {
         this.userRepo = userRepo;
         this.gameRepo = gameRepo;
+        this.transactionRepo = transactionRepo;
     }
 
      //show cart- author: Ba Thanh
@@ -86,8 +92,19 @@ public class CartService {
         if (user.getWalletBalance() < total) {
             throw new RuntimeException("Insufficient balance");
         }
-        //tru account balance
-        // user.setWalletBalance(user.getWalletBalance() - total);
+        // Lưu lại balance trước khi trừ
+        double oldBalance = user.getWalletBalance();
+        // Trừ tiền
+        user.setWalletBalance(oldBalance - total);
+        // Tạo transaction cho từng game
+        for (Game game : user.getCartGames()) {
+            Transaction transaction = new Transaction();
+            transaction.setUser(user);
+            transaction.setGame(game);
+            transaction.setTotalAmount(game.getPrice());
+            transaction.setCreatedAt(LocalDate.now());
+            transactionRepo.save(transaction);
+        }
         user.getCartGames().clear();
         userRepo.save(user);
         return getCart(userId);
