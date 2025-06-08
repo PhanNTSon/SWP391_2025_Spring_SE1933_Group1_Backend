@@ -7,7 +7,6 @@ import lombok.AllArgsConstructor;
 
 import java.math.BigDecimal;
 
-import org.checkerframework.checker.units.qual.s;
 
 @Getter
 @Setter

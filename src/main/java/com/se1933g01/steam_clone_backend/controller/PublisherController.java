@@ -1,4 +1,4 @@
-// package com.se1933g01.steam_clone_backend.controller;
+package com.se1933g01.steam_clone_backend.controller;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,11 +29,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 
-// @RestController
-// @RequestMapping("/publisher")
-// public class PublisherController {
-//     @Autowired
-//     private RequestService publisherService;
+@RestController
+@RequestMapping("/publisher")
+public class PublisherController {
+    @Autowired
+    private RequestService publisherService;
 
     @Autowired
     private CloudinaryService cloudinaryService;
@@ -91,4 +91,4 @@ import org.springframework.web.bind.annotation.RequestParam;
         return ResponseEntity.ok(map);
     }
     
-// }
+}

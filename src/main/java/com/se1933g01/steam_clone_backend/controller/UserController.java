@@ -222,13 +222,6 @@ public class UserController {
         }
     }
 
-    
-    // @Autowired
-    @GetMapping("/users")
-    public User getAllUsers() {
-        Long userId = 1L;
-        return userService.getUser(userId);
-    }
 
     @GetMapping("/download/{fileId}")
     public ResponseEntity<String> downloadFile(@PathVariable("fileId") String fileId) throws IOException {

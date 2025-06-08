@@ -1,4 +1,4 @@
-// package com.se1933g01.steam_clone_backend.controller;
+package com.se1933g01.steam_clone_backend.controller;
 
 import java.util.HashMap;
 import java.util.List;
@@ -59,12 +59,6 @@ public class AdminController {
             return ResponseEntity.badRequest().body(response);
         }
     }
-
-    // @GetMapping("/gameRequest/{page}")
-    // public ResponseEntity<List<AddingGameRequestDTO>> getGameRequest(){
-    //     List<AddingGameRequestDTO> gameRequestList = requestService.getAllAddingGameRequest();
-    //     return ResponseEntity.ok(gameRequestList);
-    // }
     
     @GetMapping("/gameRequest/{page}")
     public ResponseEntity<Page<AddingGameRequestDTO>> getGameRequest(@PathVariable int page) {
@@ -74,4 +68,4 @@ public class AdminController {
     return ResponseEntity.ok(gameRequestPage);
 }
     
-// }
+}

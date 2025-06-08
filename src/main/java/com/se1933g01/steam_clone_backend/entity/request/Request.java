@@ -40,7 +40,7 @@ public class Request {
     @Column(name = "UpdatedTime")
     private LocalDate updatedTime;
 
-    @Column(name = "Status")
+    @Column(name = "RequestState")
     private int requestState;
     
     // ================ Relationships =============
