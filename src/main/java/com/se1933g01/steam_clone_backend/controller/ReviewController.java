@@ -4,17 +4,14 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.se1933g01.steam_clone_backend.dto.Review.CreateReviewDTO;
-import com.se1933g01.steam_clone_backend.dto.Review.PatchReviewDTO;
 import com.se1933g01.steam_clone_backend.dto.Review.ReviewDTO;
-import com.se1933g01.steam_clone_backend.repository.ReviewRepo;
+import com.se1933g01.steam_clone_backend.dto.Review.UpdateReviewDTO;
 import com.se1933g01.steam_clone_backend.service.ReviewService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -61,17 +58,16 @@ public class ReviewController {
     }
 
     /**
-     * Update Review's helpful/ not helpful count.
      * 
      * @param dto
      * @param gameId
      * @return
      */
-    @PutMapping("/{gameId}/put-review")
-    public ResponseEntity<PatchReviewDTO> putReview(@RequestBody PatchReviewDTO dto,
+    @PutMapping("/{gameId}/update-review")
+    public ResponseEntity<UpdateReviewDTO> updateReview(@RequestBody UpdateReviewDTO dto,
             @PathVariable("gameId") Long gameId) {
-        PatchReviewDTO result = reviewService.putReview(gameId, dto.getUserId(), dto.getHelpful(),
-                dto.getNotHelpful());
+                System.out.println("Here: " + dto.isRecommended());
+        UpdateReviewDTO result = reviewService.updateReview(gameId, dto);
         return ResponseEntity.ok(result);
     }
 

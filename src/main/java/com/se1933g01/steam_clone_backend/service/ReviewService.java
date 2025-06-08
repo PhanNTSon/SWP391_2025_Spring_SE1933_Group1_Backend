@@ -9,8 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.se1933g01.steam_clone_backend.dto.Review.CreateReviewDTO;
-import com.se1933g01.steam_clone_backend.dto.Review.PatchReviewDTO;
 import com.se1933g01.steam_clone_backend.dto.Review.ReviewDTO;
+import com.se1933g01.steam_clone_backend.dto.Review.UpdateReviewDTO;
 import com.se1933g01.steam_clone_backend.entity.game.Game;
 import com.se1933g01.steam_clone_backend.entity.game.Review;
 import com.se1933g01.steam_clone_backend.entity.game.ReviewKey;
@@ -100,20 +100,20 @@ public class ReviewService {
     }
 
     @Transactional
-    public PatchReviewDTO putReview(long gameId, long userId, long helpful, long notHelpful) {
-        ReviewKey key = new ReviewKey(gameId, userId);
+    public UpdateReviewDTO updateReview(long gameId, UpdateReviewDTO dto) {
+        ReviewKey key = new ReviewKey(gameId, dto.getUserId());
         Review target = reviewRepo.findById(key).orElse(null);
         if (target != null) {
-            target.setHelpful(helpful);
-            target.setNotHelpful(notHelpful);
-
+            target.setHelpful(dto.getHelpful());
+            target.setNotHelpful(dto.getNotHelpful());
+            target.setReviewContent(dto.getReviewContent());
+            target.setRecommended(dto.isRecommended());
             reviewRepo.save(target);
 
-            return new PatchReviewDTO(userId, helpful, notHelpful);
+            return dto;
         } else {
             return null;
         }
     }
 
-    
 }

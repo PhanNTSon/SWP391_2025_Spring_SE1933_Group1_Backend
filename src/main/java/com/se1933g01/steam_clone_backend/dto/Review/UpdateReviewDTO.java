@@ -7,9 +7,10 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PatchReviewDTO {
+public class UpdateReviewDTO {
     private long userId;
-    // private String reviewContent;
+    private String reviewContent;
+    private boolean recommended;
     private long helpful;
     private long notHelpful;
 }
