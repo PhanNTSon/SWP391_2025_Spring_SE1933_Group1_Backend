@@ -2,72 +2,113 @@ package com.se1933g01.steam_clone_backend.service;
 
 import com.se1933g01.steam_clone_backend.dto.CartDTO;
 import com.se1933g01.steam_clone_backend.entity.game.Game;
+import com.se1933g01.steam_clone_backend.entity.transaction.Transaction;
 import com.se1933g01.steam_clone_backend.entity.user.User;
-import com.se1933g01.steam_clone_backend.repository.CartRepo;
 import com.se1933g01.steam_clone_backend.repository.GameRepo;
+import com.se1933g01.steam_clone_backend.repository.TransactionRepo;
+import com.se1933g01.steam_clone_backend.repository.UserRepo;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.HashSet;
-import java.util.Set;
 
 @Service
 public class CartService {
-
     @Autowired
-    private CartRepo cartRepo;
-
+    private UserRepo userRepo;
     @Autowired
     private GameRepo gameRepo;
-
     @Autowired
-    public CartService(CartRepo cartRepo, GameRepo gameRepo) {
-        this.cartRepo = cartRepo;
+    private TransactionRepo transactionRepo;
+
+    public CartService(UserRepo userRepo, GameRepo gameRepo, TransactionRepo transactionRepo) {
+        this.userRepo = userRepo;
         this.gameRepo = gameRepo;
+        this.transactionRepo = transactionRepo;
     }
 
-    //add games to cart
-    public void addGameToCart(Long userId, Long gameId) {
-        //Long userId = 1L; 
-        User user = cartRepo.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        Game game = gameRepo.findById(gameId)
-                .orElseThrow(() -> new RuntimeException("Game not found"));
-        if (!user.getCartGames().contains(game)) {
-            user.getCartGames().add(game);
-            cartRepo.save(user);
-        }
-    }
-
-    //remove games from cart
-    public void removeGameFromCart(Long userId, Long gameId) {
-        //Long userId = 1L;
-        User user = cartRepo.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        Game game = gameRepo.findById(gameId)
-                .orElseThrow(() -> new RuntimeException("Game not found"));
-        if (user.getCartGames().contains(game)) {
-            user.getCartGames().remove(game);
-            cartRepo.save(user);
-        }
-    }
-
-    //show games in cart
-    public CartDTO showCart(Long userId) {
-        //Long userId = 1L;
-        User user = cartRepo.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        Set<Game> cartGames = user.getCartGames();
+     //show cart- author: Ba Thanh
+    public CartDTO getCart(Long userId) {
+        User user = userRepo.findByIdWithCartGames(userId);
+        if (user == null) throw new RuntimeException("User not found");
         CartDTO cartDTO = new CartDTO();
         cartDTO.setUserId(userId);
-        cartDTO.setGames(cartGames != null? cartGames : new HashSet<>());
+        double total = 0.0;
+        for (Game game : user.getCartGames()) {
+            CartDTO.CartItemDTO item = new CartDTO.CartItemDTO();
+            item.setGameId(game.getGameId());
+            item.setGameName(game.getName());
+            item.setPrice(game.getPrice());
+            cartDTO.getCartItems().add(item);
+            total += game.getPrice();
+        }
+        cartDTO.setTotal(total);
         return cartDTO;
     }
 
-    public double calculateCartPrice(Long userId) {
-        //Long userId = 1L; 
-        User user = cartRepo.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    //add games to cart- author: Ba Thanh
+    public CartDTO addGameToCart(Long userId, Long gameId) {
+        User user = userRepo.findByIdWithCartGames(userId);
+        if (user == null) throw new RuntimeException("User not found");
+        if (user.getCartGames() == null) {
+            user.setCartGames(new HashSet<>());
+        }
+        if (user.getCartGames().stream().anyMatch(g -> g.getGameId().equals(gameId))) {
+            throw new RuntimeException("Game already in cart");
+        }
+        Game game = gameRepo.findById(gameId)
+                .orElseThrow(() -> new RuntimeException("Game not found"));
+        user.getCartGames().add(game);
+        userRepo.save(user);
+        return getCart(userId);
+    }
+
+    //remove games from cart- author: Ba Thanh
+    public CartDTO removeGameFromCart(Long userId, Long gameId) {
+        User user = userRepo.findByIdWithCartGames(userId);
+        if (user == null) throw new RuntimeException("User not found");
+        if (user.getCartGames() == null) {
+            user.setCartGames(new HashSet<>());
+        }
+        user.getCartGames().removeIf(game -> gameId.equals(game.getGameId()));
+        userRepo.save(user);
+        return getCart(userId);
+    }
+
+    //calculate total price of cart- author: Ba Thanh
+    public double calculateCartTotal(Long userId) {
+        User user = userRepo.findByIdWithCartGames(userId);
+        if (user == null) throw new RuntimeException("User not found");
         return user.getCartGames().stream().mapToDouble(Game::getPrice).sum();
     }
+
+    //checkout- author: Ba Thanh
+    public CartDTO checkout(Long userId) {
+        User user = userRepo.findByIdWithCartGames(userId);
+        if (user == null) throw new RuntimeException("User not found");
+        double total = calculateCartTotal(userId);
+        if (user.getWalletBalance() < total) {
+            throw new RuntimeException("Insufficient balance");
+        }
+        // Lưu lại balance trước khi trừ
+        double oldBalance = user.getWalletBalance();
+        // Trừ tiền
+        user.setWalletBalance(oldBalance - total);
+        // Tạo transaction cho từng game
+        for (Game game : user.getCartGames()) {
+            Transaction transaction = new Transaction();
+            transaction.setUser(user);
+            transaction.setGame(game);
+            transaction.setTotalAmount(game.getPrice());
+            transaction.setCreatedAt(LocalDate.now());
+            transactionRepo.save(transaction);
+        }
+        user.getCartGames().clear();
+        userRepo.save(user);
+        return getCart(userId);
+    }
+
+   
 }

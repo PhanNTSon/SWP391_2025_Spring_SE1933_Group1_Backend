@@ -1,6 +1,7 @@
 package com.se1933g01.steam_clone_backend.entity.user;
 
 import java.sql.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -82,7 +83,7 @@ public class User {
 
     @ManyToMany
     @JoinTable(name = "Cart", joinColumns = @JoinColumn(name = "UserID"), inverseJoinColumns = @JoinColumn(name = "GameID"))
-    private Set<Game> cartGames;
+    private Set<Game> cartGames = new HashSet<>();
 
     @ManyToMany
     @JoinTable(name = "Library", joinColumns = @JoinColumn(name = "UserID"), inverseJoinColumns = @JoinColumn(name = "GameID"))

@@ -22,9 +22,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/users")
 public class UserController {
-    @Autowired
     private final UserService userService;
-    @Autowired
     private final CartService cartService;
 
     public UserController(UserService userService, CartService cartService) {
@@ -32,20 +30,35 @@ public class UserController {
         this.cartService = cartService;
     }
 
-    // @Autowired
-    @GetMapping("/users")
-    public User getAllUsers() {
-        Long userId = 1L;
-        return userService.getUser(userId);
+    // Get all users (only userId and userName)
+    @GetMapping("")
+    public ResponseEntity<Map<String, Object>> getAllUsers() {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            List<User> users = userService.getAllUsers();
+            List<Map<String, Object>> userList = users.stream().map(user -> {
+                Map<String, Object> map = new HashMap<>();
+                map.put("userId", user.getUserID());
+                map.put("userName", user.getUsername());
+                return map;
+            }).toList();
+            response.put("success", true);
+            response.put("data", userList);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Failed to get users: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
     }
 
-    @GetMapping
-    public ResponseEntity<Map<String, Object>> getUser(@RequestHeader(value = "userId", required = false) Long userId) {
+    @GetMapping("/{userId}")
+    public ResponseEntity<Map<String, Object>> getUser(@PathVariable(value = "userId") Long userId) {
         Map<String, Object> response = new HashMap<>();
         try {
             if (userId == null) {
                 response.put("success", false);
-                response.put("message", "User ID is required in header");
+                response.put("message", "User ID is required in URL");
                 return ResponseEntity.badRequest().body(response);
             }
             User user = userService.getUser(userId);
@@ -60,18 +73,17 @@ public class UserController {
         }
     }
 
-    // Show games in cart
-    @GetMapping("/cart")
-    public ResponseEntity<Map<String, Object>> showCart(@RequestHeader(value = "userId", required = false) Long userId) {
+    // Show cart (chuẩn REST, trả về CartDTO)
+    @GetMapping("/{userId}/cart")
+    public ResponseEntity<Map<String, Object>> showCart(@PathVariable(value = "userId") Long userId) {
         Map<String, Object> response = new HashMap<>();
         try {
             if (userId == null) {
                 response.put("success", false);
-                response.put("message", "User ID is required in header");
+                response.put("message", "User ID is required in URL");
                 return ResponseEntity.badRequest().body(response);
             }
-            CartDTO cartDTO = cartService.showCart(userId);
-
+            CartDTO cartDTO = cartService.getCart(userId);
             response.put("success", true);
             response.put("data", cartDTO);
             return ResponseEntity.ok(response);
@@ -82,16 +94,17 @@ public class UserController {
         }
     }
 
+
     // Add games to cart
-    @PostMapping("/cart/add")
+    @PostMapping("/{userId}/cart/add")
     public ResponseEntity<Map<String, Object>> addGameToCart(
-            @RequestHeader(value = "userId", required = false) Long userId,
+            @PathVariable(value = "userId") Long userId,
             @RequestParam Long gameId) {
         Map<String, Object> response = new HashMap<>();
         try {
             if (userId == null) {
                 response.put("success", false);
-                response.put("message", "User ID is required in header");
+                response.put("message", "User ID is required in URL");
                 return ResponseEntity.badRequest().body(response);
             }
             if (gameId == null) {
@@ -111,15 +124,15 @@ public class UserController {
     }
 
     // Remove games from cart
-    @DeleteMapping("/cart/remove")
+    @DeleteMapping("/{userId}/cart/remove")
     public ResponseEntity<Map<String, Object>> removeGameFromCart(
-            @RequestHeader(value = "userId", required = false) Long userId,
+            @PathVariable(value = "userId") Long userId,
             @RequestParam Long gameId) {
         Map<String, Object> response = new HashMap<>();
         try {
             if (userId == null) {
                 response.put("success", false);
-                response.put("message", "User ID is required in header");
+                response.put("message", "User ID is required in URL");
                 return ResponseEntity.badRequest().body(response);
             }
             if (gameId == null) {
@@ -138,44 +151,57 @@ public class UserController {
         }
     }
 
-    // Simulate checkout
-    @GetMapping("/cart/checkout")
-    public ResponseEntity<Map<String, Object>> calculateCartPrice(
-            @RequestHeader(value = "userId", required = false) Long userId) {
+    // Checkout (gọi đúng logic mới, không trả về tổng tiền mà thực hiện thanh toán)
+    @PostMapping("/{userId}/cart/checkout")
+    public ResponseEntity<Map<String, Object>> checkoutCart(@PathVariable(value = "userId") Long userId) {
         Map<String, Object> response = new HashMap<>();
         try {
             if (userId == null) {
                 response.put("success", false);
-                response.put("message", "User ID is required in header");
+                response.put("message", "User ID is required in URL");
                 return ResponseEntity.badRequest().body(response);
             }
-            double totalPrice = cartService.calculateCartPrice(userId);
-
+            cartService.checkout(userId);
             response.put("success", true);
-            response.put("data", totalPrice);
+            response.put("message", "Checkout successfully. All games removed from cart and transactions created.");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             response.put("success", false);
-            response.put("message", "Failed to calculate cart price: " + e.getMessage());
+            response.put("message", "Checkout failed: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
-    // Show transaction history
-    @GetMapping("/transactions")
-    public ResponseEntity<Map<String, Object>> showTransactions(
-            @RequestHeader(value = "userId", required = false) Long userId) {
+    // Show transaction history (chỉ trả về các trường cần thiết)
+    @GetMapping("/{userId}/transactions")
+    public ResponseEntity<Map<String, Object>> showTransactions(@PathVariable(value = "userId") Long userId) {
         Map<String, Object> response = new HashMap<>();
         try {
             if (userId == null) {
                 response.put("success", false);
-                response.put("message", "User ID is required in header");
+                response.put("message", "User ID is required in URL");
                 return ResponseEntity.badRequest().body(response);
             }
             List<Transaction> transactions = userService.showTransactions(userId);
-
+            List<Map<String, Object>> result = transactions.stream().map(tran -> {
+                Map<String, Object> map = new HashMap<>();
+                map.put("transactionId", tran.getTransactionId());
+                map.put("dateCreated", tran.getCreatedAt());
+                // Get game info from the first TransactionDetail (each transaction has one game)
+                if (tran.getTransactionDetail() != null && !tran.getTransactionDetail().isEmpty()) {
+                    var detail = tran.getTransactionDetail().get(0);
+                    map.put("gameId", detail.getGame() != null ? detail.getGame().getGameId() : null);
+                    map.put("gameName", detail.getGame() != null ? detail.getGame().getName() : null);
+                    map.put("price", detail.getPrice());
+                } else {
+                    map.put("gameId", null);
+                    map.put("gameName", null);
+                    map.put("price", null);
+                }
+                return map;
+            }).toList();
             response.put("success", true);
-            response.put("data", transactions);
+            response.put("data", result);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             response.put("success", false);
@@ -183,4 +209,6 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+
+    
 }
