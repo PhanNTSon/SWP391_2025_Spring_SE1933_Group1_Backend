@@ -1,26 +1,19 @@
 package com.se1933g01.steam_clone_backend.dto;
 
+import lombok.Data;
 import java.util.Set;
+import java.util.HashSet;
 
-import com.se1933g01.steam_clone_backend.entity.game.Game;
-
+@Data
 public class CartDTO {
     private Long userId;
-    private Set<Game> games;
-    
-    public Long getUserId() {
-        return userId;
-    }
+    private Set<CartItemDTO> cartItems = new HashSet<>();
+    private Double total;
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-
-    public Set<Game> getGames() {
-        return games;
-    }
-
-    public void setGames(Set<Game> games) {
-        this.games = games;
+    @lombok.Data
+    public static class CartItemDTO {
+        private Long gameId;
+        private String gameName;
+        private Double price;
     }
 }
