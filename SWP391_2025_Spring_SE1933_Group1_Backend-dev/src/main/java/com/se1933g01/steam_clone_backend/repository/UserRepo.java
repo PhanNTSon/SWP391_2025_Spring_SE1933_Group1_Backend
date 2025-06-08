@@ -11,4 +11,5 @@ import com.se1933g01.steam_clone_backend.entity.user.User;
 public interface UserRepo extends JpaRepository<User,Long>{
     boolean existsByEmail(String email);
     Optional<User> findByEmail(String email);
+    Optional<User> findByUsername(String username);
 }
