@@ -32,7 +32,7 @@ public class Request {
     @Column(name = "UpdatedTime")
     private LocalDate updatedTime;
 
-    @Column(name = "RequestState")
+    @Column(name = "Status")
     private int requestState;
     
     // ================ Relationships =============

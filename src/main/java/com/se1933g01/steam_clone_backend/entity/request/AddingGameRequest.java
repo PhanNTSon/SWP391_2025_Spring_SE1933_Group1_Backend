@@ -46,15 +46,15 @@ public class AddingGameRequest {
     private String additionalNotes;
     @Column(name = "Graphics")
     private String graphics;
-    @Column(name = "GameUrl")
-    private String gameUrl;
-    @Column(name = "IconUrl")
-    private String iconUrl;
+    // @Column(name = "GameUrl")
+    // private String gameUrl;
+    // @Column(name = "IconUrl")
+    // private String iconUrl;
     
-    @Column(name = "MediaUrls")
+    // @Column(name = "MediaUrls")
     @ElementCollection
     @CollectionTable(name = "AddingGameRequest_mediaUrls", joinColumns = @JoinColumn(name = "AddingGameRequest_RequestID"))
-    private List<String> mediaUrls;
+    //private List<String> mediaUrls;
 
     // ================ Relationships =============
 

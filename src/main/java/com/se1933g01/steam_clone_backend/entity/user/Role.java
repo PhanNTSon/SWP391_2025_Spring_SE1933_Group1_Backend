@@ -15,7 +15,7 @@ public class Role {
     @Column(name = "RoleID")
     private Integer roleId;
 
-    @Column(name = "Role", nullable = false, length = 50)
+    @Column(name = "RoleName", nullable = false, length = 50)
     private String roleName; // Đổi tên thuộc tính cho phù hợp Java convention
 
     // Constructors, Getters, Setters (Lombok sẽ tự tạo nếu bạn dùng @Getter

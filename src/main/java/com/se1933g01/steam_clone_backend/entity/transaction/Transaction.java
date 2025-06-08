@@ -3,6 +3,7 @@ package com.se1933g01.steam_clone_backend.entity.transaction;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.se1933g01.steam_clone_backend.entity.game.Game;
 import com.se1933g01.steam_clone_backend.entity.user.User;
 
 import jakarta.persistence.Column;
@@ -29,6 +30,10 @@ public class Transaction {
     @JoinColumn(name = "UserID")
     private User user;
 
+    @ManyToOne
+    @JoinColumn(name = "GameID")
+    private Game game;
+
     @OneToMany(mappedBy = "transaction")
     private List<TransactionDetail> transactionDetail;
 
@@ -39,6 +44,14 @@ public class Transaction {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public Game getGame() {
+        return game;
+    }
+
+    public void setGame(Game game) {
+        this.game = game;
     }
 
     public Double getTotalAmount() {
@@ -55,6 +68,14 @@ public class Transaction {
 
     public void setCreatedAt(LocalDate createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Long getTransactionId() {
+        return transactionId;
+    }
+
+    public void setTransactionId(Long transactionId) {
+        this.transactionId = transactionId;
     }
 
 }
