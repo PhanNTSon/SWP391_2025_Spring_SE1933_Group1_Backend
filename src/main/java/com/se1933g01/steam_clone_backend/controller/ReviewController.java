@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -66,20 +67,22 @@ public class ReviewController {
     @PutMapping("/{gameId}/update-review")
     public ResponseEntity<UpdateReviewDTO> updateReview(@RequestBody UpdateReviewDTO dto,
             @PathVariable("gameId") Long gameId) {
-                System.out.println("Here: " + dto.isRecommended());
+        System.out.println("Here: " + dto.isRecommended());
         UpdateReviewDTO result = reviewService.updateReview(gameId, dto);
         return ResponseEntity.ok(result);
     }
 
-    // @PutMapping("/{gameId}/update-review")
-    // public ResponseEntity<PatchReviewDTO> updateReview(@RequestBody
-    // PatchReviewDTO dto,
-    // @PathVariable("gameId") Long gameId) {
-    // PatchReviewDTO result = reviewService.putReview(gameId, dto.getUserId(),
-    // dto.getHelpful(),
-    // dto.getNotHelpful());
-    // return ResponseEntity.ok(result);
-    // }
+    /**
+     * 
+     * @param userId
+     * @param gameId
+     * @return
+     */
+    @DeleteMapping("/{gameId}/delete-review/{userId}")
+    public ResponseEntity<Void> deleteReview(@PathVariable("userId") Long userId,
+            @PathVariable("gameId") Long gameId) {
+        reviewService.deleteReview(gameId, userId);
+        return ResponseEntity.noContent().build();
+    }
 
-    
 }

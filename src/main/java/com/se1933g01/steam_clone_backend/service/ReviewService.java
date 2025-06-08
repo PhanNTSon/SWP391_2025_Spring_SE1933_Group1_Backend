@@ -19,6 +19,7 @@ import com.se1933g01.steam_clone_backend.repository.GameRepo;
 import com.se1933g01.steam_clone_backend.repository.ReviewRepo;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceContext;
 
 /**
@@ -114,6 +115,14 @@ public class ReviewService {
         } else {
             return null;
         }
+    }
+
+    @Transactional
+    public void deleteReview(Long userId, Long gameId) {
+        ReviewKey key = new ReviewKey(gameId, userId);
+        Review review = reviewRepo.findById(key)
+                .orElseThrow(() -> new EntityNotFoundException("Review not found"));
+        reviewRepo.delete(review);
     }
 
 }
