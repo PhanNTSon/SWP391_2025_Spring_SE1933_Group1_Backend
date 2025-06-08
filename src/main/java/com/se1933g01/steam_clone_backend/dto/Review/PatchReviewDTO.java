@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PatchReviewDTO {
     private long userId;
+    // private String reviewContent;
     private long helpful;
     private long notHelpful;
 }

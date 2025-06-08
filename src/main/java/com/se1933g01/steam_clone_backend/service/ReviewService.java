@@ -68,7 +68,7 @@ public class ReviewService {
 
         reviewRepo.save(review);
 
-        return new CreateReviewDTO(gameId, userId, user.getUsername(), reviewContent, isRecommended);
+        return new CreateReviewDTO(isRecommended, userId, reviewContent);
     }
 
     /**
@@ -115,4 +115,5 @@ public class ReviewService {
         }
     }
 
+    
 }

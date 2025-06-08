@@ -36,6 +36,7 @@ public class ReviewController {
 
     /**
      * Create new Review
+     * 
      * @param dto
      * @param gameId
      * @return
@@ -50,6 +51,7 @@ public class ReviewController {
 
     /**
      * Get Review list of a Game.
+     * 
      * @param gameId
      * @return
      */
@@ -60,6 +62,7 @@ public class ReviewController {
 
     /**
      * Update Review's helpful/ not helpful count.
+     * 
      * @param dto
      * @param gameId
      * @return
@@ -71,6 +74,16 @@ public class ReviewController {
                 dto.getNotHelpful());
         return ResponseEntity.ok(result);
     }
+
+    // @PutMapping("/{gameId}/update-review")
+    // public ResponseEntity<PatchReviewDTO> updateReview(@RequestBody
+    // PatchReviewDTO dto,
+    // @PathVariable("gameId") Long gameId) {
+    // PatchReviewDTO result = reviewService.putReview(gameId, dto.getUserId(),
+    // dto.getHelpful(),
+    // dto.getNotHelpful());
+    // return ResponseEntity.ok(result);
+    // }
 
     
 }
