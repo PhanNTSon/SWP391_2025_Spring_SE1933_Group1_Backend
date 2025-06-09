@@ -3,11 +3,15 @@ package com.se1933g01.steam_clone_backend.entity.transaction;
 import java.time.LocalDate;
 import java.util.List;
 
+import jakarta.persistence.CascadeType;
+
 import com.se1933g01.steam_clone_backend.entity.game.Game;
 import com.se1933g01.steam_clone_backend.entity.user.User;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -27,6 +31,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "Transaction")
 public class Transaction {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "TransactionID")
     private Long transactionId;
 
@@ -41,11 +46,8 @@ public class Transaction {
     @JoinColumn(name = "UserID")
     private User user;
 
-    @ManyToOne
-    @JoinColumn(name = "GameID")
-    private Game game;
 
-    @OneToMany(mappedBy = "transaction")
+    @OneToMany(mappedBy = "transaction", cascade = CascadeType.ALL)
     private List<TransactionDetail> transactionDetail;
 
     //================ Getter & Setter =============
