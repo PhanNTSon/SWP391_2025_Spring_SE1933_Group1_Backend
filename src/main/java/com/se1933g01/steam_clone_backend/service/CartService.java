@@ -1,6 +1,7 @@
 package com.se1933g01.steam_clone_backend.service;
 
 import com.se1933g01.steam_clone_backend.dto.CartDTO;
+import com.se1933g01.steam_clone_backend.dto.GameBasicDTO;
 import com.se1933g01.steam_clone_backend.entity.CompositedKey;
 import com.se1933g01.steam_clone_backend.entity.game.Game;
 import com.se1933g01.steam_clone_backend.entity.transaction.Transaction;
@@ -13,7 +14,10 @@ import com.se1933g01.steam_clone_backend.repository.UserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import static org.mockito.ArgumentMatchers.floatThat;
+
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
@@ -33,26 +37,24 @@ public class CartService {
     }
 
      //show cart- author: Ba Thanh
-    public CartDTO getCart(Long userId) {
+    public List<GameBasicDTO> getCart(Long userId) {
         User user = userRepo.findByIdWithCartGames(userId);
         if (user == null) throw new RuntimeException("User not found");
-        CartDTO cartDTO = new CartDTO();
-        cartDTO.setUserId(userId);
-        double total = 0.0;
+        List<GameBasicDTO> listCart = new ArrayList<GameBasicDTO>();
         for (Game game : user.getCartGames()) {
-            CartDTO.CartItemDTO item = new CartDTO.CartItemDTO();
-            item.setGameId(game.getGameId());
-            item.setGameName(game.getName());
-            item.setPrice(game.getPrice());
-            cartDTO.getCartItems().add(item);
-            total += game.getPrice();
+            GameBasicDTO gameInCart = new GameBasicDTO();
+            gameInCart.setId(game.getGameId());
+            gameInCart.setTitle(game.getName());
+            gameInCart.setPrice(game.getPrice());
+            gameInCart.setDiscountPrice(0);
+            gameInCart.setOriginalPrice(gameInCart.getPrice()+gameInCart.getDiscountPrice());
+            listCart.add(gameInCart);
         }
-        cartDTO.setTotal(total);
-        return cartDTO;
+        return listCart;
     }
 
     //add games to cart- author: Ba Thanh
-    public CartDTO addGameToCart(Long userId, Long gameId) {
+    public List<GameBasicDTO> addGameToCart(Long userId, Long gameId) {
         User user = userRepo.findByIdWithCartGames(userId);
         if (user == null) throw new RuntimeException("User not found");
         if (user.getCartGames() == null) {
@@ -73,7 +75,7 @@ public class CartService {
     }
 
     //remove games from cart- author: Ba Thanh
-    public CartDTO removeGameFromCart(Long userId, Long gameId) {
+    public List<GameBasicDTO> removeGameFromCart(Long userId, Long gameId) {
         User user = userRepo.findByIdWithCartGames(userId);
         if (user == null) throw new RuntimeException("User not found");
         if (user.getCartGames() == null) {
@@ -92,7 +94,7 @@ public class CartService {
     }
 
     //checkout- author: Ba Thanh
-    public CartDTO checkout(Long userId) {
+    public List<GameBasicDTO> checkout(Long userId) {
         User user = userRepo.findByIdWithCartGames(userId);
         if (user == null) throw new RuntimeException("User not found");
         if (user.getCartGames().isEmpty())
