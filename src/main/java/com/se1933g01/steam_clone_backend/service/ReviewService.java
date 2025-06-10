@@ -2,6 +2,7 @@ package com.se1933g01.steam_clone_backend.service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ import com.se1933g01.steam_clone_backend.entity.game.ReviewKey;
 import com.se1933g01.steam_clone_backend.entity.user.User;
 import com.se1933g01.steam_clone_backend.repository.GameRepo;
 import com.se1933g01.steam_clone_backend.repository.ReviewRepo;
+import com.se1933g01.steam_clone_backend.repository.UserRepo;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
@@ -34,10 +36,14 @@ public class ReviewService {
     private final GameRepo gameRepo;
 
     @Autowired
+    private final UserRepo userRepo;
+
+    @Autowired
     private final ReviewRepo reviewRepo;
 
-    public ReviewService(GameRepo gameRepo, ReviewRepo reviewRepo) {
+    public ReviewService(GameRepo gameRepo, UserRepo userRepo, ReviewRepo reviewRepo) {
         this.gameRepo = gameRepo;
+        this.userRepo = userRepo;
         this.reviewRepo = reviewRepo;
     }
 
@@ -62,10 +68,10 @@ public class ReviewService {
                 reviewContent,
                 LocalDate.now(),
                 isRecommended,
-                0,
-                0,
                 user,
-                game);
+                game,
+                new HashSet<>(),
+                new HashSet<>());
 
         reviewRepo.save(review);
 
@@ -83,14 +89,16 @@ public class ReviewService {
         if (targetGame != null) {
             List<ReviewDTO> reviews = new ArrayList<>();
             reviewRepo.findByGame_GameId(gameId).forEach(review -> {
-                ReviewDTO reviewDTO = new ReviewDTO(
-                        review.getUser().getUsername(),
-                        review.getUser().getUserID(),
-                        review.getReviewContent(),
-                        review.isRecommended(),
-                        review.getHelpful(),
-                        review.getNotHelpful(),
-                        review.getTimeCreated());
+                ReviewDTO reviewDTO = new ReviewDTO();
+
+                reviewDTO.setUserId(review.getUser().getUserID());
+                reviewDTO.setUserName(review.getUser().getUsername());
+                reviewDTO.setRecommended(review.isRecommended());
+                reviewDTO.setReviewContent(review.getReviewContent());
+                reviewDTO.setHelpful(reviewRepo.countLikedByUsers(gameId, review.getUser().getUserID()));
+                reviewDTO.setNotHelpful(reviewRepo.countUnLikedByUsers(gameId, review.getUser().getUserID()));
+                reviewDTO.setTimeCreated(review.getTimeCreated());
+
                 reviews.add(reviewDTO);
             });
             return reviews;
@@ -100,21 +108,77 @@ public class ReviewService {
 
     }
 
+    public int checkUserReaction(long userId, long reviewGameId, long reviewAuthorId) {
+        User user = userRepo.findById(userId).orElseThrow();
+        ReviewKey key = new ReviewKey(reviewGameId, reviewAuthorId);
+        Review review = reviewRepo.findById(key).orElseThrow();
+
+        int result;
+
+        if (user.getLikedReviews().contains(review)) {
+            result = 1;
+        } else if (user.getUnlikedReviews().contains(review)) {
+            result = -1;
+        } else {
+            result = 0;
+        }
+        return result;
+    }
+
     @Transactional
     public UpdateReviewDTO updateReview(long gameId, UpdateReviewDTO dto) {
         ReviewKey key = new ReviewKey(gameId, dto.getUserId());
         Review target = reviewRepo.findById(key).orElse(null);
         if (target != null) {
-            target.setHelpful(dto.getHelpful());
-            target.setNotHelpful(dto.getNotHelpful());
+
             target.setReviewContent(dto.getReviewContent());
             target.setRecommended(dto.isRecommended());
+
             reviewRepo.save(target);
 
             return dto;
         } else {
             return null;
         }
+    }
+
+    @Transactional
+    public void patchLikeReview(long userId, long reviewGameId, long reviewAuthorId) {
+        User user = userRepo.findById(userId).orElseThrow();
+        ReviewKey key = new ReviewKey(reviewGameId, reviewAuthorId);
+        Review review = reviewRepo.findById(key).orElseThrow();
+
+        review.getLikedByUsers().add(user);
+        user.getLikedReviews().add(review);
+
+        userRepo.save(user);
+    }
+
+    @Transactional
+    public void patchUnLikeReview(long userId, long reviewGameId, long reviewAuthorId) {
+        User user = userRepo.findById(userId).orElseThrow();
+        ReviewKey key = new ReviewKey(reviewGameId, reviewAuthorId);
+        Review review = reviewRepo.findById(key).orElseThrow();
+
+        review.getUnlikedByUsers().add(user);
+        user.getUnlikedReviews().add(review);
+
+        userRepo.save(user);
+    }
+
+    @Transactional
+    public void deleteReactionReview(long userId, long reviewGameId, long reviewAuthorId) {
+        User user = userRepo.findById(userId).orElseThrow();
+        ReviewKey key = new ReviewKey(reviewGameId, reviewAuthorId);
+        Review review = reviewRepo.findById(key).orElseThrow();
+
+        review.getLikedByUsers().remove(user);
+        user.getLikedReviews().remove(review);
+
+        review.getUnlikedByUsers().remove(user);
+        user.getUnlikedReviews().remove(review);
+
+        userRepo.save(user);
     }
 
     @Transactional

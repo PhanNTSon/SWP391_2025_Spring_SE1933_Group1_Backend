@@ -5,7 +5,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.se1933g01.steam_clone_backend.entity.game.Game;
+import com.se1933g01.steam_clone_backend.entity.game.Notifications;
+import com.se1933g01.steam_clone_backend.entity.game.Review;
 import com.se1933g01.steam_clone_backend.entity.request.Request;
 
 import jakarta.persistence.CascadeType;
@@ -74,6 +77,9 @@ public class User {
     @OneToMany(mappedBy = "user")
     private List<Request> requests;
 
+    @OneToMany(mappedBy = "user")
+    private List<Notifications> notifications;
+
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private Publisher publisher;
 
@@ -88,5 +94,29 @@ public class User {
     @ManyToMany
     @JoinTable(name = "Library", joinColumns = @JoinColumn(name = "UserID"), inverseJoinColumns = @JoinColumn(name = "GameID"))
     private Set<Game> games;
+
+    @ManyToMany
+    @JoinTable(
+        name = "ReviewHelpful",
+        joinColumns = @JoinColumn(name = "HelpfulUserID"),
+        inverseJoinColumns = {
+            @JoinColumn(name = "ReviewGameID", referencedColumnName = "GameID"),
+            @JoinColumn(name = "ReviewUserID", referencedColumnName = "UserID")
+        }
+    )
+    @JsonIgnore
+    private Set<Review> likedReviews;
+
+    @ManyToMany
+    @JoinTable(
+        name = "ReviewNotHelpful",
+        joinColumns = @JoinColumn(name = "NotHelpfulUserID"),
+        inverseJoinColumns = {
+            @JoinColumn(name = "ReviewGameID", referencedColumnName = "GameID"),
+            @JoinColumn(name = "ReviewUserID", referencedColumnName = "UserID")
+        }
+    )
+    @JsonIgnore
+    private Set<Review> unlikedReviews;
 
 }

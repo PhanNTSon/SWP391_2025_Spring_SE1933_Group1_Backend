@@ -1,13 +1,16 @@
 package com.se1933g01.steam_clone_backend.entity.game;
 
 import java.time.LocalDate;
+import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.se1933g01.steam_clone_backend.entity.user.User;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
@@ -38,12 +41,6 @@ public class Review {
     @Column(name = "IsRecommended")
     private boolean isRecommended;
 
-    @Column(name = "Helpful")
-    private long helpful;
-
-    @Column(name = "NotHelpful")
-    private long notHelpful;
-
     // ================ Relationships =============
     @ManyToOne
     @MapsId("userId")
@@ -54,4 +51,15 @@ public class Review {
     @MapsId("gameId")
     @JoinColumn(name = "GameID")
     private Game game;
+
+    @ManyToMany(mappedBy = "likedReviews")
+    @JsonIgnore
+    private Set<User> likedByUsers;
+
+    @ManyToMany(mappedBy = "unlikedReviews")
+    @JsonIgnore
+    private Set<User> unlikedByUsers;
+
+    
 }
+
