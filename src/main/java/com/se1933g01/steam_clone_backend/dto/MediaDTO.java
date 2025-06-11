@@ -10,10 +10,7 @@ import lombok.AllArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MediaDTO {
-    public MediaDTO(long mediaId2, String url2, String type2) {
-        //TODO Auto-generated constructor stub
-    }
-    private Integer mediaId;
+    private long mediaId;
     private String url;
     private String type;
 }

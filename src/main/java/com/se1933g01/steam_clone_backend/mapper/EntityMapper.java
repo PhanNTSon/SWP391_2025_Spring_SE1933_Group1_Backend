@@ -18,8 +18,9 @@ public class EntityMapper {
 
     // --- Tag Mapper ---
     public static TagDTO toTagDTO(Tag tag) {
-        if (tag == null)
+        if (tag == null) {
             return null;
+        }
         return new TagDTO(tag.getTagId(), tag.getTagName());
     }
 
@@ -27,7 +28,6 @@ public class EntityMapper {
     public static PublisherBasicDTO toPublisherBasicDTO(Publisher publisher) {
         if (publisher == null)
             return null;
-        // Giả sử Publisher entity có getPublisherId() và getPublisherName()
         return new PublisherBasicDTO(publisher.getPublisherId(), publisher.getPublisherName());
     }
 
@@ -89,16 +89,19 @@ public class EntityMapper {
         double discountPrice = originalPrice; // Mặc định không giảm
         double currentPrice = originalPrice; // Giá bán hiện tại
 
-        // if (originalPrice != null && originalPrice.compareTo(double.valueOf(20)) > 0) { // Ví dụ: giảm 10% nếu giá >
-        //                                                                                     // 20
-        //     double discountAmount = originalPrice.multiply(double.valueOf(0.10)) // Giảm 10%
-        //             .setScale(2, RoundingMode.HALF_UP);
-        //     discountPrice = originalPrice.subtract(discountAmount);
-        //     currentPrice = discountPrice;
-        // } else if (originalPrice != null && originalPrice.compareTo(double.ZERO) == 0) {
-        //     // Nếu game miễn phí
-        //     discountPrice = double.ZERO;
-        //     currentPrice = double.ZERO;
+        // if (originalPrice != null && originalPrice.compareTo(double.valueOf(20)) > 0)
+        // { // Ví dụ: giảm 10% nếu giá >
+        // // 20
+        // double discountAmount = originalPrice.multiply(double.valueOf(0.10)) // Giảm
+        // 10%
+        // .setScale(2, RoundingMode.HALF_UP);
+        // discountPrice = originalPrice.subtract(discountAmount);
+        // currentPrice = discountPrice;
+        // } else if (originalPrice != null && originalPrice.compareTo(double.ZERO) ==
+        // 0) {
+        // // Nếu game miễn phí
+        // discountPrice = double.ZERO;
+        // currentPrice = double.ZERO;
         // }
 
         dto.setDiscountPrice(discountPrice);

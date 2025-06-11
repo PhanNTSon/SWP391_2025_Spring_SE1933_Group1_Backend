@@ -37,6 +37,7 @@ public class UserController {
     private final CartService cartService;
     @Autowired
     private GoogleDriveService googleDriveService;
+
     public UserController(UserService userService, CartService cartService) {
         this.userService = userService;
         this.cartService = cartService;
@@ -106,9 +107,8 @@ public class UserController {
         }
     }
 
-
     // Add games to cart
-    @GetMapping("/{userId}/cart/add")//post
+    @GetMapping("/{userId}/cart/add") // post
     public ResponseEntity<Map<String, Object>> addGameToCart(
             @PathVariable(value = "userId") Long userId,
             @RequestParam Long gameId) {
@@ -136,7 +136,7 @@ public class UserController {
     }
 
     // Remove games from cart
-    @GetMapping("/{userId}/cart/remove")//delete
+    @GetMapping("/{userId}/cart/remove") // delete
     public ResponseEntity<Map<String, Object>> removeGameFromCart(
             @PathVariable(value = "userId") Long userId,
             @RequestParam Long gameId) {
@@ -164,7 +164,7 @@ public class UserController {
     }
 
     // Checkout cart
-    @GetMapping("/{userId}/cart/checkout")//post
+    @GetMapping("/{userId}/cart/checkout") // post
     public ResponseEntity<Map<String, Object>> checkoutCart(@PathVariable(value = "userId") Long userId) {
         Map<String, Object> response = new HashMap<>();
         try {
@@ -203,7 +203,8 @@ public class UserController {
                 Map<String, Object> map = new HashMap<>();
                 map.put("transactionId", tran.getTransactionId());
                 map.put("dateCreated", tran.getCreatedAt());
-                // Get game info from the first TransactionDetail (each transaction has one game)
+                // Get game info from the first TransactionDetail (each transaction has one
+                // game)
                 if (tran.getTransactionDetail() != null && !tran.getTransactionDetail().isEmpty()) {
                     var detail = tran.getTransactionDetail().get(0);
                     map.put("gameId", detail.getGame() != null ? detail.getGame().getGameId() : null);
@@ -225,7 +226,6 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
-
 
     @GetMapping("/download/{fileId}")
     public ResponseEntity<String> downloadFile(@PathVariable("fileId") String fileId) throws IOException {
