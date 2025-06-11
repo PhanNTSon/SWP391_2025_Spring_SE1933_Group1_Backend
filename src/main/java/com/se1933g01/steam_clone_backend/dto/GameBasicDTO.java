@@ -20,8 +20,9 @@ public class GameBasicDTO {
     private double discountPrice; // Giá sau khi giảm giá (nếu không có giảm giá, có thể bằng originalPrice)
     private double originalPrice; // Giá gốc của sản phẩm (từ game.price)
 
-    public GameBasicDTO(long gameId, String gameName){
+    public GameBasicDTO(long gameId, String gameName, double price){
         this.id = gameId;
         this.title = gameName;
+        this.price = price;
     }
 }

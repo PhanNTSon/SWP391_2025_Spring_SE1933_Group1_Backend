@@ -21,7 +21,9 @@ public class UserService {
         return userRepo.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
-
+    /**
+    * Author: Ba Thanh
+    */
     public List<Transaction> showTransactions(Long userId) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));

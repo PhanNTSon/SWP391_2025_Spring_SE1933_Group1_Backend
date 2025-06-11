@@ -1,6 +1,7 @@
 package com.se1933g01.steam_clone_backend.controller;
 
 import com.se1933g01.steam_clone_backend.dto.CartDTO;
+import com.se1933g01.steam_clone_backend.dto.GameBasicDTO;
 import com.se1933g01.steam_clone_backend.entity.transaction.Transaction;
 import com.se1933g01.steam_clone_backend.entity.user.User;
 import com.se1933g01.steam_clone_backend.service.CartService;
@@ -8,8 +9,10 @@ import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -23,9 +26,6 @@ import java.util.Map;
 import java.util.List;
 import org.springframework.web.bind.annotation.RequestParam;
 
-/**
- * @Author: Phan Son
- */
 
 @RestController
 @RequestMapping("/users")
@@ -39,7 +39,9 @@ public class UserController {
         this.userService = userService;
         this.cartService = cartService;
     }
-
+    /**
+    * Author: Ba Thanh
+    */
     // Get all users (only userId and userName)
     @GetMapping("")
     public ResponseEntity<Map<String, Object>> getAllUsers() {
@@ -48,8 +50,9 @@ public class UserController {
             List<User> users = userService.getAllUsers();
             List<Map<String, Object>> userList = users.stream().map(user -> {
                 Map<String, Object> map = new HashMap<>();
-                map.put("userId", user.getUserID());
+                map.put("walletBalance", user.getWalletBalance());
                 map.put("userName", user.getUsername());
+                map.put("userId", user.getUserID());
                 return map;
             }).toList();
             response.put("success", true);
@@ -61,29 +64,10 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
-
-    @GetMapping("/{userId}")
-    public ResponseEntity<Map<String, Object>> getUser(@PathVariable(value = "userId") Long userId) {
-        Map<String, Object> response = new HashMap<>();
-        try {
-            if (userId == null) {
-                response.put("success", false);
-                response.put("message", "User ID is required in URL");
-                return ResponseEntity.badRequest().body(response);
-            }
-            User user = userService.getUser(userId);
-
-            response.put("success", true);
-            response.put("data", user);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("message", "Failed to get user: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
-    }
-
-    // Show cart (chuẩn REST, trả về CartDTO)
+    /**
+    * Author: Ba Thanh
+    */
+    // Show cart 
     @GetMapping("/{userId}/cart")
     public ResponseEntity<Map<String, Object>> showCart(@PathVariable(value = "userId") Long userId) {
         Map<String, Object> response = new HashMap<>();
@@ -93,9 +77,9 @@ public class UserController {
                 response.put("message", "User ID is required in URL");
                 return ResponseEntity.badRequest().body(response);
             }
-            CartDTO cartDTO = cartService.getCart(userId);
+            List<GameBasicDTO> listCart = cartService.getCart(userId).getListCart();
             response.put("success", true);
-            response.put("data", cartDTO);
+            response.put("data", listCart);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             response.put("success", false);
@@ -104,8 +88,11 @@ public class UserController {
         }
     }
 
+    /**
+    * Author: Ba Thanh
+    */
     // Add games to cart
-    @GetMapping("/{userId}/cart/add") // post
+    @PostMapping("/{userId}/cart/add")
     public ResponseEntity<Map<String, Object>> addGameToCart(
             @PathVariable(value = "userId") Long userId,
             @RequestParam Long gameId) {
@@ -131,9 +118,11 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
-
+    /**
+    * Author: Ba Thanh
+    */
     // Remove games from cart
-    @GetMapping("/{userId}/cart/remove") // delete
+    @DeleteMapping("/{userId}/cart/remove")
     public ResponseEntity<Map<String, Object>> removeGameFromCart(
             @PathVariable(value = "userId") Long userId,
             @RequestParam Long gameId) {
@@ -159,9 +148,11 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
-
+    /**
+    * Author: Ba Thanh
+    */
     // Checkout cart
-    @GetMapping("/{userId}/cart/checkout") // post
+    @PostMapping("/{userId}/cart/checkout")
     public ResponseEntity<Map<String, Object>> checkoutCart(@PathVariable(value = "userId") Long userId) {
         Map<String, Object> response = new HashMap<>();
         try {
@@ -184,7 +175,9 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
-
+    /**
+    * Author: Ba Thanh
+    */
     // Show transaction history (chỉ trả về các trường cần thiết)
     @GetMapping("/{userId}/transactions")
     public ResponseEntity<Map<String, Object>> showTransactions(@PathVariable(value = "userId") Long userId) {
