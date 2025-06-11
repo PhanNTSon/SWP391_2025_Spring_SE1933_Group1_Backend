@@ -31,4 +31,17 @@ public class UserService {
     public List<User> getAllUsers() {
         return userRepo.findAll();
     }
+
+    /**
+     * Get an User by username.
+     * 
+     * @author Phan NT Son
+     * @param username
+     * @return an User
+     * @since 11-06-2025
+     */
+    public User getUser(String username){
+        return userRepo.findByUsername(username)
+        .orElseThrow(() -> new RuntimeException("User not found"));
+    }
 }
