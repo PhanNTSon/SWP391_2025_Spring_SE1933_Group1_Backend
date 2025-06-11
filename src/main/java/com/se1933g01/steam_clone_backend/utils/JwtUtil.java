@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.security.Key;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import io.jsonwebtoken.Claims;
@@ -17,8 +18,10 @@ import io.jsonwebtoken.security.Keys;
  */
 @Component
 public class JwtUtil {
-    private final String secretKey = "";
+    @Value("${jwt.secret}")
+    private String secretKey;
 
+    @Value("${jwt.expirationMs}")
     private long expirationMs;
 
     /**
@@ -40,7 +43,7 @@ public class JwtUtil {
      * @param role
      * @return compact JWT string
      */
-    public String generateToken(String username, Long userId, int role) {
+    public String generateToken(String username, Long userId, Long role) {
         return Jwts.builder()
                 .setSubject(username)
                 .claim("userId", userId)
