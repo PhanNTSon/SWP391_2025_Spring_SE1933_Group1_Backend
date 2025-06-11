@@ -46,7 +46,6 @@ public class GameController {
     public ResponseEntity<GameDetailDTO> getGameById(@PathVariable Long id) {
         try {
             GameDetailDTO gameDetail = gameService.getGameDetailsById(id);
-            System.out.println("Game detail: " + gameDetail.getMedia().get(0).getUrl());
             return new ResponseEntity<>(gameDetail, HttpStatus.OK);
         } catch (EntityNotFoundException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
