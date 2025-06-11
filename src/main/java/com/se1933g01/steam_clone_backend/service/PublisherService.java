@@ -1,0 +1,35 @@
+package com.se1933g01.steam_clone_backend.service;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import com.se1933g01.steam_clone_backend.repository.PublisherRepo;
+
+import jakarta.persistence.EntityNotFoundException; // Hoặc exception tùy chỉnh
+import org.hibernate.Hibernate; // Để khởi tạo các collection lazy
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.se1933g01.steam_clone_backend.dto.PublisherBasicDTO;
+import com.se1933g01.steam_clone_backend.entity.user.Publisher;
+import com.se1933g01.steam_clone_backend.mapper.EntityMapper;
+@Service
+public class PublisherService {
+
+    private final PublisherRepo PublisherRepo;
+
+    @Autowired
+    public PublisherService(PublisherRepo PublisherRepo) {
+        this.PublisherRepo = PublisherRepo;
+    }
+
+    @Transactional(readOnly = true)
+    public List<PublisherBasicDTO> getAllPublishersBasicDTO() {
+        return PublisherRepo.findAll().stream()
+                .map(EntityMapper::toPublisherBasicDTO)
+                .collect(Collectors.toList());
+    }
+}

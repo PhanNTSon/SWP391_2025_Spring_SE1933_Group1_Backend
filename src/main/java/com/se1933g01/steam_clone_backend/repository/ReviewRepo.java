@@ -15,4 +15,10 @@ import com.se1933g01.steam_clone_backend.entity.game.ReviewKey;
 public interface ReviewRepo extends JpaRepository<Review, ReviewKey>{
     @Query("SELECT r FROM Review r JOIN FETCH r.user WHERE r.game.gameId = :gameId")
     List<Review> findByGame_GameId(@Param("gameId") Long gameId);
+
+    @Query(value = "SELECT COUNT(*) FROM ReviewHelpful WHERE ReviewGameID = :gameId AND ReviewUserID = :userId", nativeQuery = true)
+    long countLikedByUsers(@Param("gameId") Long gameId, @Param("userId") Long userId);
+
+    @Query(value = "SELECT COUNT(*) FROM ReviewNotHelpful WHERE ReviewGameID = :gameId AND ReviewUserID = :userId", nativeQuery = true)
+    long countUnLikedByUsers(@Param("gameId") Long gameId, @Param("userId") Long userId);
 }

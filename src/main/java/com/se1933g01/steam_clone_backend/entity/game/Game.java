@@ -2,9 +2,11 @@ package com.se1933g01.steam_clone_backend.entity.game;
 
 import java.sql.Date;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 // import com.se1933g01.steam_clone_backend.entity.transaction.TransactionDetail;
 import com.se1933g01.steam_clone_backend.entity.user.Publisher;
 import com.se1933g01.steam_clone_backend.entity.user.User;
@@ -19,6 +21,7 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -30,6 +33,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@Table(name = "Game")
 public class Game {
     @Id
     @Column(name = "GameID")
@@ -82,7 +86,8 @@ public class Game {
     // private List<TransactionDetail> transactionDetails;
 
     @ManyToMany(mappedBy = "cartGames")
-    private Set<User> cartUsers;
+    @JsonIgnore
+    private Set<User> usersInCart = new HashSet<>();
 
     @ManyToMany(mappedBy = "games")
     private Set<User> users;
@@ -94,5 +99,16 @@ public class Game {
     private List<Media> media;
 
     // ================ Getter & Setter =============
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Game game = (Game) o;
+        return gameId != null && gameId.equals(game.gameId);
+    }
 
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(gameId);
+    }
 }

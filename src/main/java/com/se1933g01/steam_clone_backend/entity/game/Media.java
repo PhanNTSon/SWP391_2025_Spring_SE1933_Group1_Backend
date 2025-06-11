@@ -34,5 +34,4 @@ public class Media {
     @JoinColumn(name = "GameID")
     private Game game;
 
-
 }

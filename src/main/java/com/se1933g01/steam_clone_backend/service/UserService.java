@@ -7,7 +7,6 @@ import com.se1933g01.steam_clone_backend.repository.TransactionRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
 import java.util.List;
 
 @Service
@@ -22,11 +21,29 @@ public class UserService {
         return userRepo.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
-
+    /**
+    * Author: Ba Thanh
+    */
     public List<Transaction> showTransactions(Long userId) {
-        //Long userId = 1L;
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return transactionRepo.findByUser(user);
+    }
+
+    public List<User> getAllUsers() {
+        return userRepo.findAll();
+    }
+
+    /**
+     * Get an User by username.
+     * 
+     * @author Phan NT Son
+     * @param username
+     * @return an User
+     * @since 11-06-2025
+     */
+    public User getUser(String username){
+        return userRepo.findByUsername(username)
+        .orElseThrow(() -> new RuntimeException("User not found"));
     }
 }

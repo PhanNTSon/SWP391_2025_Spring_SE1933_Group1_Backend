@@ -17,8 +17,9 @@ import java.util.stream.Collectors;
 public class EntityMapper {
 
     public static TagDTO toTagDTO(Tag tag) {
-        if (tag == null)
+        if (tag == null) {
             return null;
+        }
         return new TagDTO(tag.getTagId(), tag.getTagName());
     }
 
@@ -26,7 +27,6 @@ public class EntityMapper {
     public static PublisherBasicDTO toPublisherBasicDTO(Publisher publisher) {
         if (publisher == null)
             return null;
-        // Giả sử Publisher entity có getPublisherId() và getPublisherName()
         return new PublisherBasicDTO(publisher.getPublisherId(), publisher.getPublisherName());
     }
 

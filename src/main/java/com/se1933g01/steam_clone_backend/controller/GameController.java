@@ -10,10 +10,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping("/game") 
+@RequestMapping("/game")
 public class GameController {
 
     private final GameService gameService;
@@ -23,15 +24,23 @@ public class GameController {
         this.gameService = gameService;
     }
 
+    // @GetMapping
+    // public ResponseEntity<List<GameBasicDTO>> getAllGames() {
+    // List<GameBasicDTO> games = gameService.getAllGamesBasic();
+    // if (games.isEmpty()) {
+    // return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    // }
+    // return new ResponseEntity<>(games, HttpStatus.OK);
+    // }
+
     @GetMapping
-    public ResponseEntity<List<GameBasicDTO>> getAllGames() {
-        List<GameBasicDTO> games = gameService.getAllGamesBasic();
-        if (games.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }
+    public ResponseEntity<List<GameBasicDTO>> getFilteredGames(
+            @RequestParam(required = false) Double maxPrice,
+            @RequestParam(required = false) List<Integer> tags,
+            @RequestParam(required = false) List<Long> publishers) {
+        List<GameBasicDTO> games = gameService.findGamesByCriteria(maxPrice, tags, publishers);
         return new ResponseEntity<>(games, HttpStatus.OK);
     }
-
 
     @GetMapping("/{id}")
     public ResponseEntity<GameDetailDTO> getGameById(@PathVariable Long id) {

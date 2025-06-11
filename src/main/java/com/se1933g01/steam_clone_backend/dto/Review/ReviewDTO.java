@@ -13,7 +13,7 @@ public class ReviewDTO {
     private String userName;
     private long userId;
     private String reviewContent;
-    private boolean isRecommended;
+    private boolean recommended;
     private long helpful;
     private long notHelpful;
     private LocalDate timeCreated;
