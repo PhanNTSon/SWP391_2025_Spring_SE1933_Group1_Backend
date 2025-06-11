@@ -122,4 +122,12 @@ public class RequestService {
             return modelMapper.map(addingGameRequest, AddingGameRequestDTO.class);
         });
     }
+
+    public AddingGameRequestDTO getGameDetails(Long requestId){
+        AddingGameRequest addingGameRequest = addingGameRequestRepo.findById(requestId).orElseThrow(()-> new RuntimeException("AddingGameRequest not found"));
+        modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+        AddingGameRequestDTO addingGameRequestDTO = modelMapper.map(addingGameRequest, AddingGameRequestDTO.class);
+        addingGameRequestDTO.setPublisherName(addingGameRequestRepo.findPublisherNameByRequestId(requestId));
+        return addingGameRequestDTO;
+    }
 }

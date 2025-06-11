@@ -38,9 +38,9 @@ public class AddingGameRequest {
     private LocalDate releaseDate;
     @Column(name = "Price")
     private double price;
-    @Column(name = "ShortDescription")
+    @Column(name = "ShortDescription", columnDefinition = "NVARCHAR(MAX)")
     private String shortDescription;
-    @Column(name = "FullDescription")
+    @Column(name = "FullDescription", columnDefinition = "NVARCHAR(MAX)")
     private String fullDescription;
     @Column(name = "Os")
     private String os;
