@@ -1,6 +1,4 @@
-package com.se1933g01.steam_clone_backend.entity.game;
-
-import com.se1933g01.steam_clone_backend.entity.user.User;
+package com.se1933g01.steam_clone_backend.entity.user;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -23,7 +21,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Entity
 @Table(name = "Notifications")
-public class Notifications {
+public class Notification {
     @Id
     @Column(name = "NotificationID")
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -7,7 +7,6 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.se1933g01.steam_clone_backend.entity.game.Game;
-import com.se1933g01.steam_clone_backend.entity.game.Notifications;
 import com.se1933g01.steam_clone_backend.entity.game.Review;
 import com.se1933g01.steam_clone_backend.entity.request.Request;
 
@@ -29,7 +28,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Author: Phan Son
+ * @Author: Phan Son
  */
 @Data
 @AllArgsConstructor
@@ -77,8 +76,9 @@ public class User {
     @OneToMany(mappedBy = "user")
     private List<Request> requests;
 
+   
     @OneToMany(mappedBy = "user")
-    private List<Notifications> notifications;
+    private List<Notification> notifications;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private Publisher publisher;

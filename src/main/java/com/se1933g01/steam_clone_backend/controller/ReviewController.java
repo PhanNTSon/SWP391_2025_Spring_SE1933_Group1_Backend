@@ -2,7 +2,6 @@ package com.se1933g01.steam_clone_backend.controller;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,7 +28,6 @@ public class ReviewController {
 
     private final ReviewService reviewService;
 
-    @Autowired
     ReviewController(ReviewService reviewService) {
         this.reviewService = reviewService;
     }
