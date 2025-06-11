@@ -37,9 +37,10 @@ public class CartService {
     }
 
      //show cart- author: Ba Thanh
-    public List<GameBasicDTO> getCart(Long userId) {
+    public CartDTO getCart(Long userId) {
         User user = userRepo.findByIdWithCartGames(userId);
         if (user == null) throw new RuntimeException("User not found");
+        CartDTO cartDTO = new CartDTO();
         List<GameBasicDTO> listCart = new ArrayList<GameBasicDTO>();
         for (Game game : user.getCartGames()) {
             GameBasicDTO gameInCart = new GameBasicDTO();
@@ -50,11 +51,13 @@ public class CartService {
             gameInCart.setOriginalPrice(gameInCart.getPrice()+gameInCart.getDiscountPrice());
             listCart.add(gameInCart);
         }
-        return listCart;
+        cartDTO.setUserId(userId);
+        cartDTO.setListCart(listCart);
+        return cartDTO;
     }
 
     //add games to cart- author: Ba Thanh
-    public List<GameBasicDTO> addGameToCart(Long userId, Long gameId) {
+    public CartDTO addGameToCart(Long userId, Long gameId) {
         User user = userRepo.findByIdWithCartGames(userId);
         if (user == null) throw new RuntimeException("User not found");
         if (user.getCartGames() == null) {
@@ -75,7 +78,7 @@ public class CartService {
     }
 
     //remove games from cart- author: Ba Thanh
-    public List<GameBasicDTO> removeGameFromCart(Long userId, Long gameId) {
+    public CartDTO removeGameFromCart(Long userId, Long gameId) {
         User user = userRepo.findByIdWithCartGames(userId);
         if (user == null) throw new RuntimeException("User not found");
         if (user.getCartGames() == null) {
@@ -94,7 +97,7 @@ public class CartService {
     }
 
     //checkout- author: Ba Thanh
-    public List<GameBasicDTO> checkout(Long userId) {
+    public CartDTO checkout(Long userId) {
         User user = userRepo.findByIdWithCartGames(userId);
         if (user == null) throw new RuntimeException("User not found");
         if (user.getCartGames().isEmpty())

@@ -66,7 +66,7 @@ public class UserController {
                 response.put("message", "User ID is required in URL");
                 return ResponseEntity.badRequest().body(response);
             }
-            List<GameBasicDTO> listCart = cartService.getCart(userId);
+            List<GameBasicDTO> listCart = cartService.getCart(userId).getListCart();
             response.put("success", true);
             response.put("data", listCart);
             return ResponseEntity.ok(response);
