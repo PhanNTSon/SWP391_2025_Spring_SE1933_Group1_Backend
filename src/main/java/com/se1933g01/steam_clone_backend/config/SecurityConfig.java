@@ -15,6 +15,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.se1933g01.steam_clone_backend.security.JwtAuthenticationFilter;
+import com.se1933g01.steam_clone_backend.service.AuthService;
 import com.se1933g01.steam_clone_backend.service.UserDetailsServiceImpl;
 
 /**
@@ -25,7 +26,7 @@ import com.se1933g01.steam_clone_backend.service.UserDetailsServiceImpl;
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtFilter;
     private final UserDetailsServiceImpl userDetailsServiceImpl;
-
+    
     public SecurityConfig(JwtAuthenticationFilter jwtFilter, UserDetailsServiceImpl userDetailsServiceImpl) {
         this.jwtFilter = jwtFilter;
         this.userDetailsServiceImpl = userDetailsServiceImpl;
@@ -38,13 +39,19 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll())
+                .authorizeHttpRequests(auth -> {
+                    auth.requestMatchers("/").permitAll();
+                    auth.anyRequest().authenticated();
+                })
                 .authenticationProvider(daoAuthenticationProvider())
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .oauth2Login(oauth -> oauth
+                        .defaultSuccessUrl("/api/public/oauth2/success", true) // by Loc Phan: redirect Google logins to
+                                                                               // controller
+                );
         return http.build();
     }
+
 
     @Bean
     public DaoAuthenticationProvider daoAuthenticationProvider() {

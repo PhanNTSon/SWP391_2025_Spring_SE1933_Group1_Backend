@@ -120,6 +120,34 @@ public class AuthService {
         }
     }
 
+    /**
+     * @author Loc Phan
+     * @param email
+     * @param name
+     * @return JWT token
+     */
+    public String processOAuthPostLogin(String email, String name) {
+        User user = userRepo.findByEmail(email).orElse(null);
+    
+        if (user == null) {
+            user = new User();
+            user.setEmail(email);
+            user.setUsername(email); // tạo username bằng email
+            user.setPassword(""); // rỗng vì OAuth2 không sử dụng mật khẩu
+            user.setWalletBalance(0.0);
+            user.setBanStatus(false);
+    
+            Role userRole = new Role();
+            userRole.setRoleId(1L); // Default user role
+            user.setRole(userRole);
+    
+            userRepo.save(user);
+        }
+    
+        // Generate JWT
+        return jwtUtil.generateToken(user.getUsername(), user.getUserID(), user.getRole().getRoleId());
+    }
+
     public boolean emailExists(String email) {
         return userRepo.existsByEmail(email);
     }
