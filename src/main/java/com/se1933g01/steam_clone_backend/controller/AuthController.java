@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "*") // allow frontend access
+// @CrossOrigin(origins = "*") // allow frontend access
 public class AuthController {
 
     @Autowired
