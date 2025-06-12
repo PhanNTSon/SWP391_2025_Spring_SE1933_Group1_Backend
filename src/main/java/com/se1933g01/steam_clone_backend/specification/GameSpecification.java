@@ -6,6 +6,8 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Join;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.CollectionUtils; // Import tiện ích của Spring
+import org.springframework.util.StringUtils;
+
 import java.util.List;
 
 public class GameSpecification {
@@ -61,6 +63,21 @@ public class GameSpecification {
             // .get("publisherId") -> trỏ đến thuộc tính 'publisherId' trong Publisher
             // entity
             return root.get("publisher").get("publisherId").in(publisherIds);
+        };
+    }
+
+    public static Specification<Game> hasSearchTerm(String searchTerm) {
+        return (root, query, criteriaBuilder) -> {
+            // StringUtils.hasText kiểm tra xem chuỗi có null, rỗng, hoặc chỉ chứa khoảng
+            // trắng không.
+            if (!StringUtils.hasText(searchTerm)) {
+                return null; // Không áp dụng điều kiện lọc nếu không có từ khóa
+            }
+            // Tạo điều kiện WHERE LOWER(game.name) LIKE '%searchTerm%'
+            return criteriaBuilder.like(
+                    criteriaBuilder.lower(root.get("name")), // Chuyển tên game về chữ thường
+                    "%" + searchTerm.toLowerCase() + "%" // Chuyển từ khóa về chữ thường và thêm ký tự đại diện %
+            );
         };
     }
 

@@ -7,6 +7,9 @@ import com.se1933g01.steam_clone_backend.mapper.EntityMapper; // Import mapper
 import com.se1933g01.steam_clone_backend.repository.GameRepository;
 import com.se1933g01.steam_clone_backend.specification.GameSpecification;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import jakarta.persistence.EntityNotFoundException; // Hoặc exception tùy chỉnh
 import org.hibernate.Hibernate; // Để khởi tạo các collection lazy
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,9 +17,13 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional; // QUAN TRỌNG cho lazy loading
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * @author kerri
+ */
 @Service
 public class GameService {
 
@@ -25,6 +32,47 @@ public class GameService {
     @Autowired
     public GameService(GameRepository gameRepository) {
         this.gameRepository = gameRepository;
+    }
+
+    /**
+     * @author kerri
+     * @param term
+     * @return
+     */
+    @Transactional(readOnly = true)
+    public List<GameBasicDTO> searchGamesByName(String term) {
+        if (term == null || term.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+        // Giới hạn chỉ lấy 5 kết quả để làm gợi ý
+        Pageable pageable = PageRequest.of(0, 5);
+
+        Page<Game> gamePage = gameRepository.findByNameContainingIgnoreCase(term, pageable);
+
+        return gamePage.getContent().stream()
+                .map(game -> {
+                    Hibernate.initialize(game.getMedia()); // Để lấy ảnh thumbnail
+                    return EntityMapper.toGameBasicDTO(game);
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public Page<GameBasicDTO> findGamesByCriteria(String searchTerm, Double maxPrice, List<Integer> tagIds,
+            List<Long> publisherIds, Pageable pageable) {
+        // Xây dựng Specification, thêm vào điều kiện hasSearchTerm
+        Specification<Game> spec = Specification
+                .where(GameSpecification.hasSearchTerm(searchTerm)) // <-- THÊM ĐIỀU KIỆN MỚI
+                .and(GameSpecification.hasMaxPrice(maxPrice))
+                .and(GameSpecification.hasTags(tagIds))
+                .and(GameSpecification.hasPublishers(publisherIds));
+
+        Page<Game> gamePage = gameRepository.findAll(spec, pageable);
+
+        return gamePage.map(game -> {
+            Hibernate.initialize(game.getMedia());
+            return EntityMapper.toGameBasicDTO(game);
+        });
     }
 
     @Transactional(readOnly = true) // Quan trọng để xử lý lazy loading khi mapping sang DTO
