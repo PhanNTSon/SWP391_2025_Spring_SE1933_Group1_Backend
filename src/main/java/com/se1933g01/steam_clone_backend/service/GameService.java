@@ -39,28 +39,11 @@ public class GameService {
      * @param term
      * @return
      */
-    @Transactional(readOnly = true)
-    public List<GameBasicDTO> searchGamesByName(String term) {
-        if (term == null || term.trim().isEmpty()) {
-            return Collections.emptyList();
-        }
-        // Giới hạn chỉ lấy 5 kết quả để làm gợi ý
-        Pageable pageable = PageRequest.of(0, 5);
 
-        Page<Game> gamePage = gameRepository.findByNameContainingIgnoreCase(term, pageable);
-
-        return gamePage.getContent().stream()
-                .map(game -> {
-                    Hibernate.initialize(game.getMedia()); // Để lấy ảnh thumbnail
-                    return EntityMapper.toGameBasicDTO(game);
-                })
-                .collect(Collectors.toList());
-    }
 
     @Transactional(readOnly = true)
     public Page<GameBasicDTO> findGamesByCriteria(String searchTerm, Double maxPrice, List<Integer> tagIds,
             List<Long> publisherIds, Pageable pageable) {
-        // Xây dựng Specification, thêm vào điều kiện hasSearchTerm
         Specification<Game> spec = Specification
                 .where(GameSpecification.hasSearchTerm(searchTerm)) // <-- THÊM ĐIỀU KIỆN MỚI
                 .and(GameSpecification.hasMaxPrice(maxPrice))
@@ -75,24 +58,15 @@ public class GameService {
         });
     }
 
-    @Transactional(readOnly = true) // Quan trọng để xử lý lazy loading khi mapping sang DTO
-    public List<GameBasicDTO> findGamesByCriteria(Double maxPrice, List<Integer> tagIds, List<Long> publisherIds) {
-        Specification<Game> spec = Specification
-                .where(GameSpecification.hasMaxPrice(maxPrice))
-                .and(GameSpecification.hasTags(tagIds))
-                .and(GameSpecification.hasPublishers(publisherIds));
-
-        // Framework sẽ tự động bỏ qua các điều kiện null.
-
-        // 2. Gọi repository với Specification đã tạo
-        List<Game> games = gameRepository.findAll(spec);
-
-        // 3. Chuyển đổi sang DTO (và xử lý lazy loading nếu cần)
-        return games.stream()
-                .map(game -> {
-                    Hibernate.initialize(game.getMedia());
-                    return EntityMapper.toGameBasicDTO(game);
-                })
+    @Transactional(readOnly = true)
+    public List<GameBasicDTO> searchGamesByName(String term) {
+        if (term == null || term.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+        Pageable pageable = PageRequest.of(0, 5); // Luôn chỉ lấy 5 gợi ý
+        Page<Game> gamePage = gameRepository.findByNameContainingIgnoreCase(term, pageable);
+        return gamePage.getContent().stream()
+                .map(EntityMapper::toGameBasicDTO)
                 .collect(Collectors.toList());
     }
 
@@ -115,7 +89,4 @@ public class GameService {
 
         return EntityMapper.toGameDetailDTO(game);
     }
-
-    // ... các service method khác (search, create, update game cũng nên dùng DTO)
-    // Ví dụ: khi tạo game, bạn có thể nhận GameInputDTO và chuyển thành Entity Game
 }
