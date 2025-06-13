@@ -2,6 +2,7 @@ package com.se1933g01.steam_clone_backend.controller;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,6 +16,9 @@ import com.se1933g01.steam_clone_backend.dto.Review.CreateReviewDTO;
 import com.se1933g01.steam_clone_backend.dto.Review.ReviewDTO;
 import com.se1933g01.steam_clone_backend.dto.Review.UpdateReviewDTO;
 import com.se1933g01.steam_clone_backend.service.ReviewService;
+
+import jakarta.persistence.EntityNotFoundException;
+
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -59,12 +63,16 @@ public class ReviewController {
     }
 
     @GetMapping("/{gameId}/{authorId}/check")
-    public ResponseEntity<Integer> getUserReaction(@RequestParam Long userId,
+    public ResponseEntity<?> getUserReaction(@RequestParam Long userId,
             @PathVariable("gameId") long reviewGameId,
             @PathVariable("authorId") long reviewAuthorId) {
+        try {
+            int result = reviewService.checkUserReaction(userId, reviewGameId, reviewAuthorId);
+            return ResponseEntity.ok(result);
 
-        int result = reviewService.checkUserReaction(userId, reviewGameId, reviewAuthorId);
-        return ResponseEntity.ok(result);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
     }
 
     /**
@@ -94,10 +102,9 @@ public class ReviewController {
             @PathVariable("authorId") long reviewAuthorId) {
         try {
             reviewService.patchLikeReview(dto.getUserId(), reviewGameId, reviewAuthorId);
-            return ResponseEntity.ok("Done helpful");
+            return ResponseEntity.status(HttpStatus.OK).body("Success");
         } catch (Exception e) {
-            return ResponseEntity.ok("Not done helpful");
-
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Server Error");
         }
     }
 
@@ -115,10 +122,9 @@ public class ReviewController {
             @PathVariable("authorId") long reviewAuthorId) {
         try {
             reviewService.patchUnLikeReview(dto.getUserId(), reviewGameId, reviewAuthorId);
-            return ResponseEntity.ok("Done not helpful");
+            return ResponseEntity.status(HttpStatus.OK).body("Success");
         } catch (Exception e) {
-            return ResponseEntity.ok("Not Done not helpful");
-
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Server Error");
         }
     }
 
@@ -128,9 +134,9 @@ public class ReviewController {
             @PathVariable("authorId") long reviewAuthorId) {
         try {
             reviewService.deleteReactionReview(dto.getUserId(), reviewGameId, reviewAuthorId);
-            return ResponseEntity.ok("Done clean");
+            return ResponseEntity.ok("Success");
         } catch (Exception e) {
-            return ResponseEntity.ok("Not Done clean");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Server Error");
 
         }
     }
@@ -145,7 +151,7 @@ public class ReviewController {
     @DeleteMapping("/{gameId}/delete-review/{userId}")
     public ResponseEntity<Void> deleteReview(@PathVariable("userId") Long userId,
             @PathVariable("gameId") Long gameId) {
-        reviewService.deleteReview(gameId, userId);
+        reviewService.deleteReview(userId, gameId);
         return ResponseEntity.noContent().build();
     }
 

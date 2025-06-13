@@ -62,7 +62,7 @@ public class AuthService {
 
         user.setCountry(request.getCountry());
         user.setWalletBalance(0.0); // default balance
-        user.setBanStatus(false); // default status
+        user.setBanStatus(true); // default status
 
         Role userRole = new Role();
         userRole.setRoleId(1L);

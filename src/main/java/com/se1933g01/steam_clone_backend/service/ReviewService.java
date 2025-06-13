@@ -109,9 +109,11 @@ public class ReviewService {
     }
 
     public int checkUserReaction(long userId, long reviewGameId, long reviewAuthorId) {
-        User user = userRepo.findById(userId).orElseThrow();
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
         ReviewKey key = new ReviewKey(reviewGameId, reviewAuthorId);
-        Review review = reviewRepo.findById(key).orElseThrow();
+        Review review = reviewRepo.findById(key)
+                .orElseThrow(() -> new EntityNotFoundException("Review not found"));
 
         int result;
 
@@ -186,6 +188,8 @@ public class ReviewService {
         ReviewKey key = new ReviewKey(gameId, userId);
         Review review = reviewRepo.findById(key)
                 .orElseThrow(() -> new EntityNotFoundException("Review not found"));
+        reviewRepo.deleteAllLiked(gameId, userId);
+        reviewRepo.deleteAllUnLiked(gameId, userId);
         reviewRepo.delete(review);
     }
 

@@ -10,19 +10,20 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.se1933g01.steam_clone_backend.dto.AddingGameRequestDTO;
+import com.se1933g01.steam_clone_backend.dto.BannedUserDTO;
 import com.se1933g01.steam_clone_backend.service.GoogleDriveService;
 import com.se1933g01.steam_clone_backend.service.RequestService;
+import com.se1933g01.steam_clone_backend.service.UserService;
 
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
-
-
 
 @RestController
 @RequestMapping("/admin")
@@ -31,40 +32,47 @@ public class AdminController {
     RequestService requestService;
     @Autowired
     GoogleDriveService googleDriveService;
+
+    // Added by Phan NT Son
+    @Autowired
+    UserService userService;
+    // --!!
+
     @PatchMapping("/approve/{requestID}")
-    public ResponseEntity<Map<String,String>> approveGame(@PathVariable String requestID){
+    public ResponseEntity<Map<String, String>> approveGame(@PathVariable String requestID) {
         try {
             requestService.approveGame(Long.parseLong(requestID));
-            Map<String,String> response = new HashMap<>();
+            Map<String, String> response = new HashMap<>();
             response.put("message", "Game Approved");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            Map<String,String> response = new HashMap<>();
+            Map<String, String> response = new HashMap<>();
             response.put("message", "Game Approve Failed");
             response.put("e", e.getMessage());
             return ResponseEntity.badRequest().body(response);
         }
     }
+
     @PatchMapping("/reject/{requestID}")
-    public ResponseEntity<Map<String,String>> rejectGame(@PathVariable String requestID){
+    public ResponseEntity<Map<String, String>> rejectGame(@PathVariable String requestID) {
         try {
             requestService.rejectGame(Long.parseLong(requestID));
-            Map<String,String> response = new HashMap<>();
+            Map<String, String> response = new HashMap<>();
             response.put("message", "Game Rejected");
             return ResponseEntity.ok(response);
-        }catch (Exception e) {
-            Map<String,String> response = new HashMap<>();
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
             response.put("message", "Game Reject Failed");
             response.put("e", e.getMessage());
             return ResponseEntity.badRequest().body(response);
         }
     }
-    
+
     @GetMapping("/gameRequest/{page}")
     public ResponseEntity<Page<AddingGameRequestDTO>> getGameRequest(@PathVariable int page) {
-    Pageable pageable = PageRequest.of(page, 10, Sort.by("requestId").descending());// Hard-coded size to 10
-    Page<AddingGameRequestDTO> gameRequestPage = requestService.getAllAddingGameRequest(pageable);
-    return ResponseEntity.ok(gameRequestPage);
+        Pageable pageable = PageRequest.of(page, 10, Sort.by("requestId").descending());// Hard-coded size to 10
+        Page<AddingGameRequestDTO> gameRequestPage = requestService.getAllAddingGameRequest(pageable);
+        return ResponseEntity.ok(gameRequestPage);
     }
 
     @GetMapping("/gameRequest/details/{id}")
@@ -72,11 +80,21 @@ public class AdminController {
         AddingGameRequestDTO gameDetails = requestService.getGameDetails(id);
         return ResponseEntity.ok(gameDetails);
     }
+
     @GetMapping("/download/{fileId}")
     public ResponseEntity<String> downloadFile(@PathVariable("fileId") String fileId) throws IOException {
         String downloadUrl = googleDriveService.generateDownloadUrl(fileId);
         System.out.println(downloadUrl);
         return ResponseEntity.ok(downloadUrl);
     }
-    
+
+    /**
+     * @apiNote Author Phan NT Son
+     * @return
+     */
+    @GetMapping("/banned-users/{page}")
+    public ResponseEntity<Page<BannedUserDTO>> getAllBannedUser(@PathVariable(name = "page") int pageNum) {
+        Page<BannedUserDTO> result = userService.getAllBannedUser(pageNum);
+        return ResponseEntity.ok(result);
+    }
 }
