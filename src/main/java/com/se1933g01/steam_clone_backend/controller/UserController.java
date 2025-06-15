@@ -2,6 +2,7 @@ package com.se1933g01.steam_clone_backend.controller;
 
 import com.se1933g01.steam_clone_backend.dto.CartDTO;
 import com.se1933g01.steam_clone_backend.dto.GameBasicDTO;
+import com.se1933g01.steam_clone_backend.dto.LibraryDTO;
 import com.se1933g01.steam_clone_backend.entity.transaction.Transaction;
 import com.se1933g01.steam_clone_backend.entity.user.User;
 import com.se1933g01.steam_clone_backend.service.CartService;
@@ -217,10 +218,21 @@ public class UserController {
         }
     }
 
+    @GetMapping("/{userId}/library")
+    public ResponseEntity<LibraryDTO> showLibrary(@PathVariable Long userId) {
+        LibraryDTO dto = userService.showLibrary(userId);
+        return ResponseEntity.ok(dto);
+    }
+
+    
+
     @GetMapping("/download/{fileId}")
     public ResponseEntity<String> downloadFile(@PathVariable("fileId") String fileId) throws IOException {
         String downloadUrl = googleDriveService.generateDownloadUrl(fileId);
         System.out.println(downloadUrl);
         return ResponseEntity.ok(downloadUrl);
     }
+   
+
+
 }
