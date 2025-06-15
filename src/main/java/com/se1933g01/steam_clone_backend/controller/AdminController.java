@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.se1933g01.steam_clone_backend.dto.AddingGameRequestDTO;
+import com.se1933g01.steam_clone_backend.dto.PublisherApplyRequestDTO;
 import com.se1933g01.steam_clone_backend.service.GoogleDriveService;
 import com.se1933g01.steam_clone_backend.service.RequestService;
 
@@ -21,6 +22,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 
 
@@ -59,6 +62,35 @@ public class AdminController {
             return ResponseEntity.badRequest().body(response);
         }
     }
+
+    @PatchMapping("/approvepublisher/{requestID}")
+    public ResponseEntity<Map<String,String>> approvePublisher(@PathVariable String requestID){
+        try {
+            requestService.approvePublisher(Long.parseLong(requestID));
+            Map<String,String> response = new HashMap<>();
+            response.put("message", "This user are now publisher");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String,String> response = new HashMap<>();
+            response.put("message", "Failed to approve");
+            response.put("e", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+    @PatchMapping("/rejectpublisher/{requestID}")
+    public ResponseEntity<Map<String,String>> rejectPublisher(@PathVariable String requestID){
+        try {
+            requestService.rejectPublisher(Long.parseLong(requestID));
+            Map<String,String> response = new HashMap<>();
+            response.put("message", "User Rejected");
+            return ResponseEntity.ok(response);
+        }catch (Exception e) {
+            Map<String,String> response = new HashMap<>();
+            response.put("message", "Game Reject Failed");
+            response.put("e", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }    
     
     @GetMapping("/gameRequest/{page}")
     public ResponseEntity<Page<AddingGameRequestDTO>> getGameRequest(@PathVariable int page) {
@@ -66,11 +98,21 @@ public class AdminController {
     Page<AddingGameRequestDTO> gameRequestPage = requestService.getAllAddingGameRequest(pageable);
     return ResponseEntity.ok(gameRequestPage);
     }
-
+    @GetMapping("/publisherApplyRequest/{page}")
+    public ResponseEntity<Page<PublisherApplyRequestDTO>> getPublisherApplyRequest(@PathVariable int page) {
+        Pageable pageable = PageRequest.of(page, 10, Sort.by("requestId").descending());// Hard-coded size to 10
+        Page<PublisherApplyRequestDTO> publisherApplyRequestPage = requestService.getAllPublisherApplyRequest(pageable);
+        return ResponseEntity.ok(publisherApplyRequestPage);
+    }
     @GetMapping("/gameRequest/details/{id}")
     public ResponseEntity<AddingGameRequestDTO> getGameRequest(@PathVariable Long id) {
         AddingGameRequestDTO gameDetails = requestService.getGameDetails(id);
         return ResponseEntity.ok(gameDetails);
+    }
+    @GetMapping("/publisherApplyRequest/details/{id}")
+    public ResponseEntity<PublisherApplyRequestDTO> getPublisherApplyRequest(@PathVariable Long id) {
+        PublisherApplyRequestDTO publisherApplyRequestDetails = requestService.getPublisherDetails(id);
+        return ResponseEntity.ok(publisherApplyRequestDetails);
     }
     @GetMapping("/download/{fileId}")
     public ResponseEntity<String> downloadFile(@PathVariable("fileId") String fileId) throws IOException {

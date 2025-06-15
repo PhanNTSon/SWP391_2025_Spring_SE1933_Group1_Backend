@@ -21,25 +21,33 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.support.MultipartFilter;
 
 import com.se1933g01.steam_clone_backend.dto.AddingGameRequestDTO;
+import com.se1933g01.steam_clone_backend.dto.PublisherApplyRequestDTO;
 import com.se1933g01.steam_clone_backend.entity.game.Game;
 import com.se1933g01.steam_clone_backend.entity.game.Media;
 import com.se1933g01.steam_clone_backend.entity.request.AddingGameRequest;
+import com.se1933g01.steam_clone_backend.entity.request.PublisherApplyRequest;
 import com.se1933g01.steam_clone_backend.entity.request.Request;
 import com.se1933g01.steam_clone_backend.entity.user.User;
 import com.se1933g01.steam_clone_backend.entity.user.Publisher;
 import com.se1933g01.steam_clone_backend.repository.AddingGameRequestRepo;
 import com.se1933g01.steam_clone_backend.repository.GameRepo;
 import com.se1933g01.steam_clone_backend.repository.MediaRepo;
+import com.se1933g01.steam_clone_backend.repository.PublisherApplyRequestRepo;
 import com.se1933g01.steam_clone_backend.repository.PublisherRepo;
 import com.se1933g01.steam_clone_backend.repository.RequestRepo;
 import com.se1933g01.steam_clone_backend.repository.UserRepo;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 
 @Service
 public class RequestService {
     @Autowired
     private AddingGameRequestRepo addingGameRequestRepo;
+    @Autowired
+    private PublisherApplyRequestRepo publisherApplyRequestRepo;
     @Autowired
     private RequestRepo requestRepo;
     @Autowired
@@ -52,9 +60,10 @@ public class RequestService {
     private MediaRepo mediaRepo;
     @Autowired 
     private PublisherRepo publisherRepo;
+    @PersistenceContext
+    private EntityManager entityManager;
     @Transactional
     public void addGame(AddingGameRequestDTO addingGameRequestDTO, Long UserID) {
-        System.out.println(addingGameRequestDTO);
         User user = userRepo.findById(UserID).orElseThrow(()-> new RuntimeException("User not found"));
         Request request = new Request();
         request.setUser(user);
@@ -64,7 +73,6 @@ public class RequestService {
         Request savedRequest = requestRepo.save(request); 
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
         AddingGameRequest addingGameRequest = modelMapper.map(addingGameRequestDTO, AddingGameRequest.class);
-        System.out.println(addingGameRequest.getMediaUrls());
         addingGameRequest.setReleaseDate(LocalDate.now());
         addingGameRequest.setRequest(savedRequest);
         addingGameRequestRepo.save(addingGameRequest);
@@ -98,6 +106,28 @@ public class RequestService {
         request.setRequestState(1);
         requestRepo.save(request);
     }
+    @Transactional
+    public void approvePublisher(Long requestID) {
+        Request request = requestRepo.findById(requestID).orElseThrow(()-> new RuntimeException("Request not found"));
+        PublisherApplyRequest publisherApplyRequest = publisherApplyRequestRepo.findById(requestID).orElseThrow(()-> new RuntimeException("PublisherApplyRequest not found"));
+        User user = userRepo.findById(request.getUser().getUserID()).orElseThrow(()-> new RuntimeException("User not found"));
+        Publisher publisher = new Publisher();
+        publisher.setPublisherId(user.getUserID());
+        publisher.setUser(user);
+        publisher.setLegalName(publisherApplyRequest.getLegalName());
+        publisher.setAddress(publisherApplyRequest.getAddress());
+        publisher.setSocialNumber(publisherApplyRequest.getSocialNumber());
+        publisher.setCountry(publisherApplyRequest.getCountry());
+        publisher.setCardNumber(publisherApplyRequest.getCardNumber());
+        publisher.setPublisherName(publisherApplyRequest.getPublisherName());
+        publisher.setImageUrl(publisherApplyRequest.getImageUrl());
+        entityManager.persist(publisher);
+        requestRepo.delete(request);
+    }
+    public void rejectPublisher(Long requestID) {
+        Request request = requestRepo.findById(requestID).orElseThrow(()-> new RuntimeException("Request not found"));
+        requestRepo.delete(request);
+    }
     public void rejectGame(Long requestID) {
         Request request = requestRepo.findById(requestID).orElseThrow(()-> new RuntimeException("Request not found"));
         request.setRequestState(2);
@@ -122,12 +152,38 @@ public class RequestService {
             return modelMapper.map(addingGameRequest, AddingGameRequestDTO.class);
         });
     }
-
+    public Page<PublisherApplyRequestDTO> getAllPublisherApplyRequest(Pageable pageable) {
+        Page<PublisherApplyRequest> publisherApplyRequestPage = publisherApplyRequestRepo.findAll(pageable);
+        return publisherApplyRequestPage.map(publisherApplyRequest -> {
+            modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+            return modelMapper.map(publisherApplyRequest, PublisherApplyRequestDTO.class);
+        });
+    }
     public AddingGameRequestDTO getGameDetails(Long requestId){
         AddingGameRequest addingGameRequest = addingGameRequestRepo.findById(requestId).orElseThrow(()-> new RuntimeException("AddingGameRequest not found"));
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
         AddingGameRequestDTO addingGameRequestDTO = modelMapper.map(addingGameRequest, AddingGameRequestDTO.class);
         addingGameRequestDTO.setPublisherName(addingGameRequestRepo.findPublisherNameByRequestId(requestId));
         return addingGameRequestDTO;
+    }
+    public PublisherApplyRequestDTO getPublisherDetails(Long requestId){
+        PublisherApplyRequest publisherApplyRequest = publisherApplyRequestRepo.findById(requestId).orElseThrow(()-> new RuntimeException("PublisherApplyRequest not found"));
+        modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+        PublisherApplyRequestDTO publisherApplyRequestDTO = modelMapper.map(publisherApplyRequest, PublisherApplyRequestDTO.class);
+        return publisherApplyRequestDTO;
+    }
+
+    public void addPublisher(PublisherApplyRequestDTO publisherApplyRequestDTO, Long UserID){
+        User user = userRepo.findById(UserID).orElseThrow(()-> new RuntimeException("User not found"));
+        Request request = new Request();
+        request.setUser(user);
+        request.setRequestType("Publisher Submission");
+        request.setTimeCreated(LocalDate.now());
+        request.setRequestState(0);
+        Request savedRequest = requestRepo.save(request); 
+        modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+        PublisherApplyRequest publisherApplyRequest = modelMapper.map(publisherApplyRequestDTO, PublisherApplyRequest.class);
+        publisherApplyRequest.setRequest(savedRequest);
+        publisherApplyRequestRepo.save(publisherApplyRequest);
     }
 }
