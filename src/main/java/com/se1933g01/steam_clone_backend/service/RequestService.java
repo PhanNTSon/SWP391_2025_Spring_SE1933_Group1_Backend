@@ -122,7 +122,9 @@ public class RequestService {
         publisher.setPublisherName(publisherApplyRequest.getPublisherName());
         publisher.setImageUrl(publisherApplyRequest.getImageUrl());
         entityManager.persist(publisher);
-        requestRepo.delete(request);
+        entityManager.flush();
+        requestRepo.deleteById(requestID);
+
     }
     public void rejectPublisher(Long requestID) {
         Request request = requestRepo.findById(requestID).orElseThrow(()-> new RuntimeException("Request not found"));

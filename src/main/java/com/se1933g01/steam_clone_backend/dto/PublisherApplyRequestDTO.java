@@ -4,6 +4,7 @@ import lombok.Data;
 
 @Data
 public class PublisherApplyRequestDTO {
+    private Long requestId;
     String legalName;
     String publisherName;
     String address;
