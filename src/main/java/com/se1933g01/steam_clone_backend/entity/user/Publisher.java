@@ -8,7 +8,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-
+import lombok.Data;
+@Data
 @Entity
 @Table(name = "Publisher")
 public class Publisher {
@@ -21,6 +22,21 @@ public class Publisher {
 
     @Column(name = "CardNumber")
     private String cardNumber;
+
+    @Column(name = "LegalName")
+    private String legalName;
+
+    @Column(name = "Address")
+    private String address;
+
+    @Column(name = "SocialNumber")
+    private String socialNumber;
+
+    @Column(name = "Country")
+    private String country;
+
+    @Column(name = "ImageUrl")
+    private String imageUrl;
     // ================ Relationships =============
     @OneToOne
     @MapsId
@@ -28,39 +44,5 @@ public class Publisher {
     private User user;
 
     // ================ Getter & Setter =============
-    public Publisher() {
-    }
-
-    public Long getPublisherId() {
-        return publisherId;
-    }
-
-    public void setPublisherId(Long publisherId) {
-        this.publisherId = publisherId;
-    }
-
-    public String getPublisherName() {
-        return publisherName;
-    }
-
-    public void setPublisherName(String publisherName) {
-        this.publisherName = publisherName;
-    }
-
-    public String getCardNumber() {
-        return cardNumber;
-    }
-
-    public void setCardNumber(String cardNumber) {
-        this.cardNumber = cardNumber;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
 
 }

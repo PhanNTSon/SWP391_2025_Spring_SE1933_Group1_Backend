@@ -3,6 +3,7 @@ package com.se1933g01.steam_clone_backend.controller;
 import com.se1933g01.steam_clone_backend.dto.CartDTO;
 import com.se1933g01.steam_clone_backend.dto.GameBasicDTO;
 import com.se1933g01.steam_clone_backend.dto.LibraryDTO;
+import com.se1933g01.steam_clone_backend.dto.PublisherApplyRequestDTO;
 import com.se1933g01.steam_clone_backend.entity.transaction.Transaction;
 import com.se1933g01.steam_clone_backend.entity.user.User;
 import com.se1933g01.steam_clone_backend.service.CartService;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.se1933g01.steam_clone_backend.service.GoogleDriveService;
+import com.se1933g01.steam_clone_backend.service.RequestService;
 import com.se1933g01.steam_clone_backend.service.UserService;
 
 import org.springframework.http.HttpStatus;
@@ -26,6 +28,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestBody;
+
 
 
 @RestController
@@ -35,7 +39,8 @@ public class UserController {
     private final CartService cartService;
     @Autowired
     private GoogleDriveService googleDriveService;
-
+    @Autowired
+    private RequestService requestService;
     public UserController(UserService userService, CartService cartService) {
         this.userService = userService;
         this.cartService = cartService;
@@ -232,7 +237,17 @@ public class UserController {
         System.out.println(downloadUrl);
         return ResponseEntity.ok(downloadUrl);
     }
-   
 
-
+    @PostMapping("/sendpublisher")
+    public ResponseEntity<Map<String, Object>> sendPublisherApplyRequest(@RequestBody PublisherApplyRequestDTO publisherApplyRequestDTO) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            requestService.addPublisher(publisherApplyRequestDTO, 2L);
+            response.put("message", "Sending publisher apply request successfully");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+    
 }
