@@ -121,14 +121,16 @@ public class RequestService {
         publisher.setCardNumber(publisherApplyRequest.getCardNumber());
         publisher.setPublisherName(publisherApplyRequest.getPublisherName());
         publisher.setImageUrl(publisherApplyRequest.getImageUrl());
+        request.setRequestState(1);
         entityManager.persist(publisher);
         entityManager.flush();
-        requestRepo.deleteById(requestID);
+        requestRepo.save(request);
 
     }
     public void rejectPublisher(Long requestID) {
         Request request = requestRepo.findById(requestID).orElseThrow(()-> new RuntimeException("Request not found"));
-        requestRepo.delete(request);
+        request.setRequestState(2);
+        requestRepo.save(request);
     }
     public void rejectGame(Long requestID) {
         Request request = requestRepo.findById(requestID).orElseThrow(()-> new RuntimeException("Request not found"));
@@ -163,6 +165,10 @@ public class RequestService {
     }
     public AddingGameRequestDTO getGameDetails(Long requestId){
         AddingGameRequest addingGameRequest = addingGameRequestRepo.findById(requestId).orElseThrow(()-> new RuntimeException("AddingGameRequest not found"));
+        int status = addingGameRequest.getRequest().getRequestState();
+        if (status == 1 || status == 2) {
+            return null; 
+        }
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
         AddingGameRequestDTO addingGameRequestDTO = modelMapper.map(addingGameRequest, AddingGameRequestDTO.class);
         addingGameRequestDTO.setPublisherName(addingGameRequestRepo.findPublisherNameByRequestId(requestId));
@@ -170,6 +176,10 @@ public class RequestService {
     }
     public PublisherApplyRequestDTO getPublisherDetails(Long requestId){
         PublisherApplyRequest publisherApplyRequest = publisherApplyRequestRepo.findById(requestId).orElseThrow(()-> new RuntimeException("PublisherApplyRequest not found"));
+        int status = publisherApplyRequest.getRequest().getRequestState();
+        if (status == 1 || status == 2) {
+            return null; 
+        }
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
         PublisherApplyRequestDTO publisherApplyRequestDTO = modelMapper.map(publisherApplyRequest, PublisherApplyRequestDTO.class);
         return publisherApplyRequestDTO;
