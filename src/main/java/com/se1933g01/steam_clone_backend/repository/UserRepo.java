@@ -17,7 +17,8 @@ public interface UserRepo extends JpaRepository<User,Long>{
 
     @Query("SELECT u FROM User u LEFT JOIN FETCH u.games WHERE u.userID = :userId")
     User findByIdWithLibraryGames(@Param("userId") Long userId);
-
+    
+    
 
     boolean existsByEmail(String email);
     Optional<User> findByEmail(String email);

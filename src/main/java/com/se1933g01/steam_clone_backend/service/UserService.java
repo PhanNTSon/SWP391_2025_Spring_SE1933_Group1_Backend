@@ -94,6 +94,25 @@ public class UserService {
         return libraryDTO;
     }
 
+    /*author: bathanh 
+     * check if game is in cart
+     * return true if game is in cart, false otherwise.
+    */
+    public boolean isGameInCart(Long userId, Long gameId) {
+        User user = userRepo.findByIdWithCartGames(userId);
+        if (user == null) return false;
+        return user.getCartGames().stream().anyMatch(game -> game.getGameId().equals(gameId));
+    }
+    /*author: bathanh 
+     * check if game is in library
+     * return true if game is in library, false otherwise.
+    */
+    public boolean isGameOwned(Long userId, Long gameId) {
+        User user = userRepo.findByIdWithLibraryGames(userId);
+        if (user == null) return false;
+        return user.getGames().stream().anyMatch(game -> game.getGameId().equals(gameId));
+    }
+
     /**
      * Get an User by username.
      * 

@@ -65,6 +65,8 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+
+   
     /**
     * Author: Ba Thanh
     */
@@ -218,13 +220,28 @@ public class UserController {
         }
     }
 
+    /*author: bathanh */
+    //show library
     @GetMapping("/{userId}/library")
     public ResponseEntity<LibraryDTO> showLibrary(@PathVariable Long userId) {
         LibraryDTO dto = userService.showLibrary(userId);
         return ResponseEntity.ok(dto);
     }
+     /*author: bathanh */
+     //api check if game is in cart or not
+    @GetMapping("/{userId}/cart/contains/{gameId}")
+    public ResponseEntity<Boolean> isGameInCart(@PathVariable Long userId, @PathVariable Long gameId) {
+        return ResponseEntity.ok(userService.isGameInCart(userId, gameId));
+    }
+    /*author: bathanh */
+    //api check if game is in library or not
+    @GetMapping("/{userId}/library/contains/{gameId}")
+    public ResponseEntity<Boolean> isGameOwned(@PathVariable Long userId, @PathVariable Long gameId) {
+        return ResponseEntity.ok(userService.isGameOwned(userId, gameId));
+    }
 
-    
+
+
 
     @GetMapping("/download/{fileId}")
     public ResponseEntity<String> downloadFile(@PathVariable("fileId") String fileId) throws IOException {
