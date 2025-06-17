@@ -1,6 +1,5 @@
 package com.se1933g01.steam_clone_backend.controller;
 
-import com.se1933g01.steam_clone_backend.dto.CartDTO;
 import com.se1933g01.steam_clone_backend.dto.GameBasicDTO;
 import com.se1933g01.steam_clone_backend.dto.LibraryDTO;
 import com.se1933g01.steam_clone_backend.dto.PublisherApplyRequestDTO;
@@ -245,8 +244,42 @@ public class UserController {
         return ResponseEntity.ok(userService.isGameOwned(userId, gameId));
     }
 
+    /*author: bathanh */
+    //api get user account balance
+    @GetMapping("/{userId}/balance")
+    public ResponseEntity<Double> getUserBalance(@PathVariable Long userId) {
+        Double balance = userService.getUserBalance(userId);
+        return ResponseEntity.ok(balance);
+    }
 
+    /*author: bathanh */
+    //api add user account balance
+    @PostMapping("/{userId}/balance/add")
+    public ResponseEntity<Double> addBalance(
+            @PathVariable Long userId,
+            @RequestParam Double amount) {
+        Double newBalance = userService.addUserBalance(userId, amount);
+        return ResponseEntity.ok(newBalance);
+    }
 
+    /*author: bathanh */
+    //api add user account balance
+    @PostMapping("/{userId}/balance/subtract")
+    public ResponseEntity<?> subtractBalance(
+            @PathVariable Long userId,
+            @RequestParam Double amount) {
+        try {
+            Double newBalance = userService.subtractUserBalance(userId, amount);
+            return ResponseEntity.ok(newBalance);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(400).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Internal server error");
+        }
+    }
+    
 
     @GetMapping("/download/{fileId}")
     public ResponseEntity<String> downloadFile(@PathVariable("fileId") String fileId) throws IOException {

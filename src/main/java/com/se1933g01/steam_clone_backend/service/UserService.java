@@ -1,6 +1,5 @@
 package com.se1933g01.steam_clone_backend.service;
 
-import com.se1933g01.steam_clone_backend.dto.GameBasicDTO;
 import com.se1933g01.steam_clone_backend.dto.GameDetailDTO;
 import com.se1933g01.steam_clone_backend.dto.LibraryDTO;
 import com.se1933g01.steam_clone_backend.dto.MediaDTO;
@@ -11,9 +10,12 @@ import com.se1933g01.steam_clone_backend.dto.BannedUserDTO;
 import com.se1933g01.steam_clone_backend.entity.transaction.Transaction;
 import com.se1933g01.steam_clone_backend.entity.user.User;
 import com.se1933g01.steam_clone_backend.repository.UserRepo;
+
+import jakarta.transaction.Transactional;
+
 import com.se1933g01.steam_clone_backend.repository.TransactionRepo;
 
-import org.hibernate.mapping.Set;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -111,6 +113,39 @@ public class UserService {
         User user = userRepo.findByIdWithLibraryGames(userId);
         if (user == null) return false;
         return user.getGames().stream().anyMatch(game -> game.getGameId().equals(gameId));
+    }
+
+    /*author: bathanh */
+    //get user's balance
+    public double getUserBalance(Long userId) {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return user.getWalletBalance();
+    }
+
+    /*author: bathanh */
+    //add money to user's wallet
+    @Transactional
+    public Double addUserBalance(Long userId, Double amount) {
+        if (amount == null || amount <= 0) throw new IllegalArgumentException("Amount must be positive");
+        User user = userRepo.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        user.setWalletBalance(user.getWalletBalance() + amount);
+        userRepo.save(user);
+        return user.getWalletBalance();
+    }
+
+    /*author: bathanh */
+    //deduct user's wallet
+    @Transactional
+    public Double subtractUserBalance(Long userId, Double amount) {
+        if (amount == null || amount <= 0) throw new IllegalArgumentException("Amount must be positive");
+        User user = userRepo.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        if (user.getWalletBalance() < amount) {
+            throw new RuntimeException("Insufficient balance");
+        }
+        user.setWalletBalance(user.getWalletBalance() - amount);
+        userRepo.save(user);
+        return user.getWalletBalance();
     }
 
     /**
