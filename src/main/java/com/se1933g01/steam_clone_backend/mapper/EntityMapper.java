@@ -107,6 +107,9 @@ public class EntityMapper {
         dto.setDiscountPrice(discountPrice);
         dto.setPrice(currentPrice); // price trong DTO là giá bán hiệu lực
 
+        // Added by Phan NT Son 17-06-2025
+        dto.setReleaseDate(game.getReleaseDate());
+
         return dto;
     }
 
