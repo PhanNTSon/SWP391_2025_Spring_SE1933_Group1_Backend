@@ -29,8 +29,6 @@ import java.util.List;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
 
-
-
 @RestController
 @RequestMapping("/users")
 public class UserController {
@@ -40,13 +38,15 @@ public class UserController {
     private GoogleDriveService googleDriveService;
     @Autowired
     private RequestService requestService;
+
     public UserController(UserService userService, CartService cartService) {
         this.userService = userService;
         this.cartService = cartService;
     }
+
     /**
-    * Author: Ba Thanh
-    */
+     * Author: Ba Thanh
+     */
     // Get all users (only userId and userName)
     @GetMapping("")
     public ResponseEntity<Map<String, Object>> getAllUsers() {
@@ -70,11 +70,10 @@ public class UserController {
         }
     }
 
-   
     /**
-    * Author: Ba Thanh
-    */
-    // Show cart 
+     * Author: Ba Thanh
+     */
+    // Show cart
     @GetMapping("/{userId}/cart")
     public ResponseEntity<Map<String, Object>> showCart(@PathVariable(value = "userId") Long userId) {
         Map<String, Object> response = new HashMap<>();
@@ -96,8 +95,8 @@ public class UserController {
     }
 
     /**
-    * Author: Ba Thanh
-    */
+     * Author: Ba Thanh
+     */
     // Add games to cart
     @PostMapping("/{userId}/cart/add")
     public ResponseEntity<Map<String, Object>> addGameToCart(
@@ -125,9 +124,10 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+
     /**
-    * Author: Ba Thanh
-    */
+     * Author: Ba Thanh
+     */
     // Remove games from cart
     @DeleteMapping("/{userId}/cart/remove")
     public ResponseEntity<Map<String, Object>> removeGameFromCart(
@@ -155,9 +155,10 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+
     /**
-    * Author: Ba Thanh
-    */
+     * Author: Ba Thanh
+     */
     // Checkout cart
     @PostMapping("/{userId}/cart/checkout")
     public ResponseEntity<Map<String, Object>> checkoutCart(@PathVariable(value = "userId") Long userId) {
@@ -182,9 +183,10 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+
     /**
-    * Author: Ba Thanh
-    */
+     * Author: Ba Thanh
+     */
     // Show transaction history (chỉ trả về các trường cần thiết)
     @GetMapping("/{userId}/transactions")
     public ResponseEntity<Map<String, Object>> showTransactions(@PathVariable(value = "userId") Long userId) {
@@ -224,36 +226,38 @@ public class UserController {
         }
     }
 
-    /*author: bathanh */
-    //show library
+    /* author: bathanh */
+    // show library
     @GetMapping("/{userId}/library")
     public ResponseEntity<LibraryDTO> showLibrary(@PathVariable Long userId) {
         LibraryDTO dto = userService.showLibrary(userId);
         return ResponseEntity.ok(dto);
     }
-     /*author: bathanh */
-     //api check if game is in cart or not
+
+    /* author: bathanh */
+    // api check if game is in cart or not
     @GetMapping("/{userId}/cart/contains/{gameId}")
     public ResponseEntity<Boolean> isGameInCart(@PathVariable Long userId, @PathVariable Long gameId) {
         return ResponseEntity.ok(userService.isGameInCart(userId, gameId));
     }
-    /*author: bathanh */
-    //api check if game is in library or not
+
+    /* author: bathanh */
+    // api check if game is in library or not
     @GetMapping("/{userId}/library/contains/{gameId}")
     public ResponseEntity<Boolean> isGameOwned(@PathVariable Long userId, @PathVariable Long gameId) {
         return ResponseEntity.ok(userService.isGameOwned(userId, gameId));
     }
 
-    /*author: bathanh */
-    //api get user account balance
+    /* author: bathanh */
+    // api get user account balance
     @GetMapping("/{userId}/balance")
     public ResponseEntity<Double> getUserBalance(@PathVariable Long userId) {
         Double balance = userService.getUserBalance(userId);
         return ResponseEntity.ok(balance);
     }
 
-    /*author: bathanh */
-    //api add user account balance
+    /* author: bathanh */
+    // api add user account balance
     @PostMapping("/{userId}/balance/add")
     public ResponseEntity<Double> addBalance(
             @PathVariable Long userId,
@@ -262,8 +266,8 @@ public class UserController {
         return ResponseEntity.ok(newBalance);
     }
 
-    /*author: bathanh */
-    //api add user account balance
+    /* author: bathanh */
+    // api add user account balance
     @PostMapping("/{userId}/balance/subtract")
     public ResponseEntity<?> subtractBalance(
             @PathVariable Long userId,
@@ -279,7 +283,6 @@ public class UserController {
             return ResponseEntity.status(500).body("Internal server error");
         }
     }
-    
 
     @GetMapping("/download/{fileId}")
     public ResponseEntity<String> downloadFile(@PathVariable("fileId") String fileId) throws IOException {
@@ -289,7 +292,8 @@ public class UserController {
     }
 
     @PostMapping("/sendpublisher")
-    public ResponseEntity<Map<String, Object>> sendPublisherApplyRequest(@RequestBody PublisherApplyRequestDTO publisherApplyRequestDTO) {
+    public ResponseEntity<Map<String, Object>> sendPublisherApplyRequest(
+            @RequestBody PublisherApplyRequestDTO publisherApplyRequestDTO) {
         Map<String, Object> response = new HashMap<>();
         try {
             requestService.addPublisher(publisherApplyRequestDTO, 2L);
@@ -299,5 +303,5 @@ public class UserController {
             return ResponseEntity.badRequest().body(response);
         }
     }
-    
+
 }

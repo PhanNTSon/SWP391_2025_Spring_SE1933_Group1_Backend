@@ -106,7 +106,7 @@ public class AuthService {
 
             // Tạo JWT token
             String token = jwtUtil.generateToken(userDetails.getUsername(), userDetails.getUser().getUserID(),
-                    userDetails.getUser().getRole().getRoleId());
+                    userDetails.getUser().getRole().getRoleName());
 
             // Trả về cho client
             Map<String, Object> response = new HashMap<>();
@@ -145,7 +145,7 @@ public class AuthService {
         }
     
         // Generate JWT
-        return jwtUtil.generateToken(user.getUsername(), user.getUserID(), user.getRole().getRoleId());
+        return jwtUtil.generateToken(user.getUsername(), user.getUserID(), user.getRole().getRoleName()); // Adjust by Phan NT SOn 18-06-2025
     }
 
     public boolean emailExists(String email) {
