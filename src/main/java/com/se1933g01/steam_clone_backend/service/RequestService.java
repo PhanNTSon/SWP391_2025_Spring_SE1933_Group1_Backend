@@ -21,15 +21,18 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.support.MultipartFilter;
 
 import com.se1933g01.steam_clone_backend.dto.AddingGameRequestDTO;
+import com.se1933g01.steam_clone_backend.dto.FeedbackDTO;
 import com.se1933g01.steam_clone_backend.dto.PublisherApplyRequestDTO;
 import com.se1933g01.steam_clone_backend.entity.game.Game;
 import com.se1933g01.steam_clone_backend.entity.game.Media;
 import com.se1933g01.steam_clone_backend.entity.request.AddingGameRequest;
+import com.se1933g01.steam_clone_backend.entity.request.Feedback;
 import com.se1933g01.steam_clone_backend.entity.request.PublisherApplyRequest;
 import com.se1933g01.steam_clone_backend.entity.request.Request;
 import com.se1933g01.steam_clone_backend.entity.user.User;
 import com.se1933g01.steam_clone_backend.entity.user.Publisher;
 import com.se1933g01.steam_clone_backend.repository.AddingGameRequestRepo;
+import com.se1933g01.steam_clone_backend.repository.FeedbackRepo;
 import com.se1933g01.steam_clone_backend.repository.GameRepo;
 import com.se1933g01.steam_clone_backend.repository.MediaRepo;
 import com.se1933g01.steam_clone_backend.repository.PublisherApplyRequestRepo;
@@ -60,6 +63,8 @@ public class RequestService {
     private MediaRepo mediaRepo;
     @Autowired 
     private PublisherRepo publisherRepo;
+    @Autowired
+    private FeedbackRepo feedbackRepo;
     @PersistenceContext
     private EntityManager entityManager;
     @Transactional
@@ -197,5 +202,18 @@ public class RequestService {
         PublisherApplyRequest publisherApplyRequest = modelMapper.map(publisherApplyRequestDTO, PublisherApplyRequest.class);
         publisherApplyRequest.setRequest(savedRequest);
         publisherApplyRequestRepo.save(publisherApplyRequest);
+    }
+    public void addFeedback(FeedbackDTO feedbackDTO, Long UserID){
+        User user = userRepo.findById(UserID).orElseThrow(()-> new RuntimeException("User not found"));
+        Request request = new Request();
+        request.setUser(user);
+        request.setRequestType("Feedback");
+        request.setTimeCreated(LocalDate.now());
+        request.setRequestState(0);
+        Request savedRequest = requestRepo.save(request); 
+        modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+        Feedback feedback = modelMapper.map(feedbackDTO, Feedback.class);
+        feedback.setRequest(savedRequest);
+        feedbackRepo.save(feedback);
     }
 }
