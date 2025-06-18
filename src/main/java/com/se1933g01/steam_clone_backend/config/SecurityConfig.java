@@ -40,7 +40,8 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/review/**").hasRole("STANDARD")
+                        .requestMatchers("/review/**").hasAnyRole("PUBLISHER", "STANDARD")
+                        .requestMatchers("/publisher/**").hasRole("PUBLISHER")
                         .anyRequest().permitAll())
                 .authenticationProvider(daoAuthenticationProvider())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)

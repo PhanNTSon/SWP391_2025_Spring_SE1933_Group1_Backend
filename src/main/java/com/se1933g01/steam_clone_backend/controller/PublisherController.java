@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,6 +20,7 @@ import com.se1933g01.steam_clone_backend.dto.AddingGameRequestDTO;
 import com.se1933g01.steam_clone_backend.dto.PublisherBasicDTO;
 import com.se1933g01.steam_clone_backend.entity.request.AddingGameRequest;
 import com.se1933g01.steam_clone_backend.entity.request.Request;
+import com.se1933g01.steam_clone_backend.entity.user.CustomUserDetail;
 import com.se1933g01.steam_clone_backend.service.CloudinaryService;
 import com.se1933g01.steam_clone_backend.service.GoogleDriveService;
 import com.se1933g01.steam_clone_backend.service.RequestService;
@@ -55,9 +58,10 @@ public class PublisherController {
     }
 
     @PostMapping("/addGame")
-    public ResponseEntity<Map<String, String>> addGame(@RequestBody AddingGameRequestDTO addingGameRequestDTO) {
+    public ResponseEntity<Map<String, String>> addGame(
+            @RequestBody AddingGameRequestDTO addingGameRequestDTO, @AuthenticationPrincipal CustomUserDetail me) {
         try {
-            publisherService.addGame(addingGameRequestDTO, 2L);
+            publisherService.addGame(addingGameRequestDTO, me.getUser().getUserID());
             Map<String, String> map = Map.of("message", "Game added successfully");
             return ResponseEntity.ok(map);
         } catch (Exception e) {
