@@ -29,9 +29,6 @@ import com.se1933g01.steam_clone_backend.service.UserDetailsServiceImpl;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
-@Autowired
-private OAuth2LoginSuccessHandler oauth2LoginSuccessHandler;
-    private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
 
     private final JwtAuthenticationFilter jwtFilter;
     private final UserDetailsServiceImpl userDetailsServiceImpl;
@@ -42,7 +39,7 @@ private OAuth2LoginSuccessHandler oauth2LoginSuccessHandler;
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, OAuth2LoginSuccessHandler oauth2LoginSuccessHandler) throws Exception {
 
         http
                 .csrf(csrf -> csrf.disable())
@@ -52,9 +49,9 @@ private OAuth2LoginSuccessHandler oauth2LoginSuccessHandler;
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .oauth2Login(oauth -> oauth
                         .successHandler(oauth2LoginSuccessHandler)
-                        .failureHandler((request, response, exception) -> {
-                            response.sendRedirect("http://localhost:5173/oauth2/error");
-                        }));
+                        .failureHandler((request, response, exception) ->
+                            response.sendRedirect("http://localhost:5173/oauth2/error")
+                        ));
         return http.build(); // by Loc Phan
     }
 

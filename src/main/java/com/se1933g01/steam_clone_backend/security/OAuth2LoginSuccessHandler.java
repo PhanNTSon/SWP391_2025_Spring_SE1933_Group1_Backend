@@ -38,7 +38,6 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         var attributes = oauthToken.getPrincipal().getAttributes();
 
         String email = (String) attributes.get("email");
-        String name = (String) attributes.get("name");
 
         // Check if user exists
         User user = userRepo.findByEmail(email).orElse(null);
@@ -58,7 +57,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         String jwt = jwtUtil.generateToken(user.getUsername(), user.getUserId(), user.getRole().getRoleName());
 
         // Redirect to frontend
-        String redirectUrl = "http://localhost:5173/home?token=" + jwt;
+        String redirectUrl = "http://localhost:5173/?token=" + jwt;
         response.sendRedirect(redirectUrl);
     }
 }

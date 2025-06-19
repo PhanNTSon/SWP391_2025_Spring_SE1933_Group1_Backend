@@ -15,14 +15,14 @@ public class ErrorController {
     private static final Logger logger = LoggerFactory.getLogger(ErrorController.class);
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<?> handleException(Exception ex) {
+    public ResponseEntity<String> handleException(Exception ex) {
         logger.error("Unexpected error: {}", ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
             .body("Error: " + ex.getMessage());
     }
 
     @ExceptionHandler(NullPointerException.class)
-    public ResponseEntity<?> handleNullPointerException(NullPointerException ex) {
+    public ResponseEntity<String> handleNullPointerException(NullPointerException ex) {
         logger.error("NullPointerException: {}", ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
             .body("Invalid data: " + ex.getMessage());

@@ -41,21 +41,19 @@ public class AuthService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    AuthService(UserRepo userRepo) {
+        this.userRepo = userRepo;
+    }
+
     @Autowired
     public void setAuthenticationManager(AuthenticationManager authenticationManager) {
         this.authenticationManager = authenticationManager;
     }
 
-    @Autowired
-    private UserRepo userRepo;
-    // @Autowired
-    // private RoleRepo roleRepo;
-
-    // @Autowired
-    // private PasswordEncoder passwordEncoder;
+    private final UserRepo userRepo;
 
     @Transactional // Added by Phan NT Son
-    public ResponseEntity<?> register(RegisterRequestDTO request) {
+    public ResponseEntity<String> register(RegisterRequestDTO request) {
 
         User user = new User();
         user.setEmail(request.getEmail());
