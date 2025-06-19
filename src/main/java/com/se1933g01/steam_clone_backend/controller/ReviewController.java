@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.se1933g01.steam_clone_backend.dto.Review.CreateReviewDTO;
 import com.se1933g01.steam_clone_backend.dto.Review.ReviewDTO;
 import com.se1933g01.steam_clone_backend.dto.Review.UpdateReviewDTO;
+import com.se1933g01.steam_clone_backend.entity.user.CustomUserDetail;
 import com.se1933g01.steam_clone_backend.service.ReviewService;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -27,7 +29,6 @@ import org.springframework.web.bind.annotation.RequestBody;
  * Author: Phan Son
  */
 @RestController
-@RequestMapping("/review")
 public class ReviewController {
 
     private final ReviewService reviewService;
@@ -43,10 +44,11 @@ public class ReviewController {
      * @param gameId
      * @return
      */
-    @PostMapping("/{gameId}/post-review")
+    @PostMapping("/user/review/post")
     public ResponseEntity<CreateReviewDTO> createReview(@RequestBody CreateReviewDTO dto,
-            @PathVariable("gameId") Long gameId) {
-        CreateReviewDTO result = reviewService.createReview(dto.getUserId(), gameId, dto.getReviewContent(),
+            @AuthenticationPrincipal CustomUserDetail me) {
+        CreateReviewDTO result = reviewService.createReview(me.getUser().getUserID(), dto.getGameId(),
+                dto.getReviewContent(),
                 dto.isRecommended());
         return ResponseEntity.ok(result);
     }
@@ -57,8 +59,9 @@ public class ReviewController {
      * @param gameId
      * @return
      */
-    @GetMapping("/{gameId}/review-list")
-    public ResponseEntity<List<ReviewDTO>> getReviewList(@PathVariable("gameId") Long gameId) {
+    @GetMapping("/game/{gameId}/reviews/{page}")
+    public ResponseEntity<List<ReviewDTO>> getReviewList(@PathVariable("gameId") Long gameId,
+            @PathVariable(name = "page") int pageNum) {
         return ResponseEntity.ok(reviewService.getGameReviewList(gameId));
     }
 

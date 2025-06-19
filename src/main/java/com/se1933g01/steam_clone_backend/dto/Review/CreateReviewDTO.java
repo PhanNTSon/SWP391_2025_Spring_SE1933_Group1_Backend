@@ -8,8 +8,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateReviewDTO {
+    private long gameId;
     private boolean recommended;
-    private Long userId;
     private String reviewContent;
     
 }
