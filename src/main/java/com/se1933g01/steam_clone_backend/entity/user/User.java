@@ -55,6 +55,9 @@ public class User {
     @Column(name = "WalletBalance")
     private Double walletBalance;
 
+    @Column(name = "AvatarUrl")
+    private String avatarUrl;
+
     @Column(name = "Country")
     private String country;
 
@@ -77,7 +80,6 @@ public class User {
     @OneToMany(mappedBy = "user")
     private List<Request> requests;
 
-   
     @OneToMany(mappedBy = "user")
     private List<Notification> notifications;
 
@@ -97,26 +99,18 @@ public class User {
     private Set<Game> games;
 
     @ManyToMany
-    @JoinTable(
-        name = "ReviewHelpful",
-        joinColumns = @JoinColumn(name = "HelpfulUserID"),
-        inverseJoinColumns = {
+    @JoinTable(name = "ReviewHelpful", joinColumns = @JoinColumn(name = "HelpfulUserID"), inverseJoinColumns = {
             @JoinColumn(name = "ReviewGameID", referencedColumnName = "GameID"),
             @JoinColumn(name = "ReviewUserID", referencedColumnName = "UserID")
-        }
-    )
+    })
     @JsonIgnore
     private Set<Review> likedReviews;
 
     @ManyToMany
-    @JoinTable(
-        name = "ReviewNotHelpful",
-        joinColumns = @JoinColumn(name = "NotHelpfulUserID"),
-        inverseJoinColumns = {
+    @JoinTable(name = "ReviewNotHelpful", joinColumns = @JoinColumn(name = "NotHelpfulUserID"), inverseJoinColumns = {
             @JoinColumn(name = "ReviewGameID", referencedColumnName = "GameID"),
             @JoinColumn(name = "ReviewUserID", referencedColumnName = "UserID")
-        }
-    )
+    })
     @JsonIgnore
     private Set<Review> unlikedReviews;
 

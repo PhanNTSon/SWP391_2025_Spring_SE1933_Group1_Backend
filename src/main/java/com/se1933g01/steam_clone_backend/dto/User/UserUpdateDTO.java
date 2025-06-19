@@ -15,6 +15,7 @@ public class UserUpdateDTO {
     // annotation validation
     private String profileName;
     private String email;
+    private String avatarUrl;
     private String country;
     private Date dob;
     private Character gender;
