@@ -20,13 +20,17 @@ import org.springframework.web.bind.annotation.GetMapping;
 @RequestMapping("/publisher")
 public class PublisherController {
 
+    private PublisherService publisherService;
+
     @Autowired
-    private PublisherService publisherService1;
+    public PublisherController(PublisherService publisherService1) {
+        publisherService = publisherService1;
+    }
 
     @GetMapping("/list")
     @PreAuthorize("permitAll()")
     public ResponseEntity<List<PublisherBasicDTO>> getAllPublishers() {
-        List<PublisherBasicDTO> publishers = publisherService1.getAllPublishersBasicDTO();
+        List<PublisherBasicDTO> publishers = publisherService.getAllPublishersBasicDTO();
         if (publishers.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
