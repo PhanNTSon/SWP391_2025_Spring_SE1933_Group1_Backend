@@ -50,7 +50,7 @@ public class ReviewController {
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
     public ResponseEntity<CreateReviewDTO> createReview(@RequestBody CreateReviewDTO dto,
             @AuthenticationPrincipal CustomUserDetail me) {
-        CreateReviewDTO result = reviewService.createReview(me.getUser().getUserID(), dto.getGameId(),
+        CreateReviewDTO result = reviewService.createReview(me.getUser().getUserId(), dto.getGameId(),
                 dto.getReviewContent(),
                 dto.isRecommended());
         return ResponseEntity.ok(result);
@@ -109,7 +109,7 @@ public class ReviewController {
     public ResponseEntity<String> likeReview(@RequestBody UpdateReviewDTO dto,
             @AuthenticationPrincipal CustomUserDetail me) {
         try {
-            reviewService.patchLikeReview(me.getUser().getUserID(), dto.getGameId(), dto.getAuthorId());
+            reviewService.patchLikeReview(me.getUser().getUserId(), dto.getGameId(), dto.getAuthorId());
             return ResponseEntity.ok().body(RESPONSE_STRING_OK);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(RESPONSE_STRING_ERROR);
@@ -127,7 +127,7 @@ public class ReviewController {
     public ResponseEntity<String> dislikeReview(@RequestBody UpdateReviewDTO dto,
             @AuthenticationPrincipal CustomUserDetail me) {
         try {
-            reviewService.patchUnLikeReview(me.getUser().getUserID(), dto.getGameId(), dto.getAuthorId());
+            reviewService.patchUnLikeReview(me.getUser().getUserId(), dto.getGameId(), dto.getAuthorId());
             return ResponseEntity.ok().body(RESPONSE_STRING_OK);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(RESPONSE_STRING_ERROR);
@@ -144,7 +144,7 @@ public class ReviewController {
     public ResponseEntity<String> reactionReview(@RequestBody UpdateReviewDTO dto,
             @AuthenticationPrincipal CustomUserDetail me) {
         try {
-            reviewService.deleteReactionReview(me.getUser().getUserID(), dto.getGameId(), dto.getAuthorId());
+            reviewService.deleteReactionReview(me.getUser().getUserId(), dto.getGameId(), dto.getAuthorId());
             return ResponseEntity.ok().body(RESPONSE_STRING_OK);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(RESPONSE_STRING_ERROR);
@@ -161,7 +161,7 @@ public class ReviewController {
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
     public ResponseEntity<Void> deleteReview(@AuthenticationPrincipal CustomUserDetail me,
             @RequestBody Long gameId) {
-        reviewService.deleteReview(me.getUser().getUserID(), gameId);
+        reviewService.deleteReview(me.getUser().getUserId(), gameId);
         return ResponseEntity.noContent().build();
     }
 
