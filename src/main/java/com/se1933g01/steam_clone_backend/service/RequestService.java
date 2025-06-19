@@ -21,15 +21,18 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.support.MultipartFilter;
 
 import com.se1933g01.steam_clone_backend.dto.AddingGameRequestDTO;
+import com.se1933g01.steam_clone_backend.dto.FeedbackDTO;
 import com.se1933g01.steam_clone_backend.dto.PublisherApplyRequestDTO;
 import com.se1933g01.steam_clone_backend.entity.game.Game;
 import com.se1933g01.steam_clone_backend.entity.game.Media;
 import com.se1933g01.steam_clone_backend.entity.request.AddingGameRequest;
+import com.se1933g01.steam_clone_backend.entity.request.Feedback;
 import com.se1933g01.steam_clone_backend.entity.request.PublisherApplyRequest;
 import com.se1933g01.steam_clone_backend.entity.request.Request;
 import com.se1933g01.steam_clone_backend.entity.user.User;
 import com.se1933g01.steam_clone_backend.entity.user.Publisher;
 import com.se1933g01.steam_clone_backend.repository.AddingGameRequestRepo;
+import com.se1933g01.steam_clone_backend.repository.FeedbackRepo;
 import com.se1933g01.steam_clone_backend.repository.GameRepo;
 import com.se1933g01.steam_clone_backend.repository.MediaRepo;
 import com.se1933g01.steam_clone_backend.repository.PublisherApplyRequestRepo;
@@ -60,6 +63,8 @@ public class RequestService {
     private MediaRepo mediaRepo;
     @Autowired 
     private PublisherRepo publisherRepo;
+    @Autowired
+    private FeedbackRepo feedbackRepo;
     @PersistenceContext
     private EntityManager entityManager;
     @Transactional
@@ -121,14 +126,16 @@ public class RequestService {
         publisher.setCardNumber(publisherApplyRequest.getCardNumber());
         publisher.setPublisherName(publisherApplyRequest.getPublisherName());
         publisher.setImageUrl(publisherApplyRequest.getImageUrl());
+        request.setRequestState(1);
         entityManager.persist(publisher);
         entityManager.flush();
-        requestRepo.deleteById(requestID);
+        requestRepo.save(request);
 
     }
     public void rejectPublisher(Long requestID) {
         Request request = requestRepo.findById(requestID).orElseThrow(()-> new RuntimeException("Request not found"));
-        requestRepo.delete(request);
+        request.setRequestState(2);
+        requestRepo.save(request);
     }
     public void rejectGame(Long requestID) {
         Request request = requestRepo.findById(requestID).orElseThrow(()-> new RuntimeException("Request not found"));
@@ -163,6 +170,10 @@ public class RequestService {
     }
     public AddingGameRequestDTO getGameDetails(Long requestId){
         AddingGameRequest addingGameRequest = addingGameRequestRepo.findById(requestId).orElseThrow(()-> new RuntimeException("AddingGameRequest not found"));
+        int status = addingGameRequest.getRequest().getRequestState();
+        if (status == 1 || status == 2) {
+            return null; 
+        }
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
         AddingGameRequestDTO addingGameRequestDTO = modelMapper.map(addingGameRequest, AddingGameRequestDTO.class);
         addingGameRequestDTO.setPublisherName(addingGameRequestRepo.findPublisherNameByRequestId(requestId));
@@ -170,6 +181,10 @@ public class RequestService {
     }
     public PublisherApplyRequestDTO getPublisherDetails(Long requestId){
         PublisherApplyRequest publisherApplyRequest = publisherApplyRequestRepo.findById(requestId).orElseThrow(()-> new RuntimeException("PublisherApplyRequest not found"));
+        int status = publisherApplyRequest.getRequest().getRequestState();
+        if (status == 1 || status == 2) {
+            return null; 
+        }
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
         PublisherApplyRequestDTO publisherApplyRequestDTO = modelMapper.map(publisherApplyRequest, PublisherApplyRequestDTO.class);
         return publisherApplyRequestDTO;
@@ -187,5 +202,18 @@ public class RequestService {
         PublisherApplyRequest publisherApplyRequest = modelMapper.map(publisherApplyRequestDTO, PublisherApplyRequest.class);
         publisherApplyRequest.setRequest(savedRequest);
         publisherApplyRequestRepo.save(publisherApplyRequest);
+    }
+    public void addFeedback(FeedbackDTO feedbackDTO, Long UserID){
+        User user = userRepo.findById(UserID).orElseThrow(()-> new RuntimeException("User not found"));
+        Request request = new Request();
+        request.setUser(user);
+        request.setRequestType("Feedback");
+        request.setTimeCreated(LocalDate.now());
+        request.setRequestState(0);
+        Request savedRequest = requestRepo.save(request); 
+        modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+        Feedback feedback = modelMapper.map(feedbackDTO, Feedback.class);
+        feedback.setRequest(savedRequest);
+        feedbackRepo.save(feedback);
     }
 }

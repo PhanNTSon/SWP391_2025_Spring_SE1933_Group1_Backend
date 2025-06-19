@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -34,7 +35,8 @@ public class NotificationController {
      * @param userIdLong
      * @return
      */
-    @GetMapping("/notification-list")
+    @GetMapping("/list")
+    @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
     public ResponseEntity<List<NotificationDTO>> getNotificationList(@RequestParam Long userId) {
         List<NotificationDTO> result = notifService.getNotificationsList(userId);
         return ResponseEntity.ok(result);
@@ -46,7 +48,8 @@ public class NotificationController {
      * @param userId
      * @return
      */
-    @GetMapping("/unread/notification-list")
+    @GetMapping("/list/unread")
+    @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
     public ResponseEntity<List<NotificationDTO>> getUnreadNotificationList(@RequestParam Long userId) {
         List<NotificationDTO> result = notifService.getUnreadNotifList(userId);
         return ResponseEntity.ok(result);
@@ -59,6 +62,7 @@ public class NotificationController {
      * @return
      */
     @PostMapping("/create")
+    @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
     public ResponseEntity<CreateNotificationDTO> createNotificatioin(@RequestBody CreateNotificationDTO dto) {
         CreateNotificationDTO result = notifService.createNotif(dto.getUserId(), dto.getNotificationType(),
                 dto.getNotificationContent());
@@ -71,7 +75,8 @@ public class NotificationController {
      * @param notificationId
      * @return
      */
-    @PatchMapping("/mark-as-read/{notifId}")
+    @PatchMapping("/markread/{notifId}")
+    @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
     public ResponseEntity<Void> patchNotif(@PathVariable(name = "notifId") long notificationId) {
         notifService.patchNotif(notificationId);
         return ResponseEntity.noContent().build();
@@ -83,6 +88,7 @@ public class NotificationController {
      * @return
      */
     @DeleteMapping("/delete/{notifId}")
+    @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
     public ResponseEntity<Void> deleteNotif(@PathVariable(name = "notifId") long notificationId) {
         notifService.deleteNotif(notificationId);
         return ResponseEntity.noContent().build();
