@@ -10,6 +10,7 @@ import com.se1933g01.steam_clone_backend.dto.User.UserUpdateDTO;
 import com.se1933g01.steam_clone_backend.entity.game.Game;
 import com.se1933g01.steam_clone_backend.dto.BannedUserDTO;
 import com.se1933g01.steam_clone_backend.entity.transaction.Transaction;
+import com.se1933g01.steam_clone_backend.entity.user.CustomUserDetail;
 import com.se1933g01.steam_clone_backend.entity.user.User;
 import com.se1933g01.steam_clone_backend.repository.UserRepo;
 import com.se1933g01.steam_clone_backend.mapper.EntityMapper;
@@ -19,10 +20,10 @@ import jakarta.transaction.Transactional;
 
 import com.se1933g01.steam_clone_backend.repository.TransactionRepo;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -32,24 +33,33 @@ import java.util.stream.Collectors;
 @Service
 public class UserService {
 
-    @Autowired
+    
     private UserRepo userRepo;
-    @Autowired
     private TransactionRepo transactionRepo;
     private EntityMapper entityMapper;
 
     public User getUser(Long userId) {
         return userRepo.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+    }
+
+    //String constant for user not found message
+    private static final String msg = "User not found";
+    //author: Ba Thanh
+    //Get userId from SecurityContextHolder
+    private Long getCurrentUserId() {
+        CustomUserDetail userDetails = (CustomUserDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return userDetails.getUser().getUserID();
     }
 
     /**
      * Author: Ba Thanh
      * // Show all transactions of a user.
      */
-    public List<Transaction> showTransactions(Long userId) {
+    public List<Transaction> showTransactions() {
+        Long userId = getCurrentUserId();
         User user = userRepo.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException(msg));
         return transactionRepo.findByUser(user);
     }
 
@@ -64,10 +74,11 @@ public class UserService {
      * @param userId
      * @return LibraryDTO containing user's library
      */
-    public LibraryDTO showLibrary(Long userId) {
+    public LibraryDTO showLibrary() {
+        Long userId = getCurrentUserId();
         User user = userRepo.findByIdWithLibraryGames(userId);
         if (user == null)
-            throw new RuntimeException("User not found");
+            throw new EntityNotFoundException(msg);
         LibraryDTO libraryDTO = new LibraryDTO();
         List<GameDetailDTO> gameDetailList = new ArrayList<>();
         for (Game game : user.getGames()) {
@@ -84,11 +95,11 @@ public class UserService {
             gameInLibrary.setFullDescription(game.getFullDescription());
             gameInLibrary.setTotalPurchased(game.getTotalPurchased());
             gameInLibrary.setTags(game.getTags().stream()
-                    .map(tag -> new TagDTO(tag.getTagId(), tag.getTagName()))
-                    .collect(Collectors.toSet()));
+                .map(tag -> new TagDTO(tag.getTagId(), tag.getTagName()))
+                .collect(Collectors.toSet()));
             gameInLibrary.setMedia(game.getMedia().stream()
-                    .map(media -> new MediaDTO(media.getMediaId(), media.getUrl(), media.getType()))
-                    .collect(Collectors.toList()));
+                .map(media -> new MediaDTO(media.getMediaId(), media.getUrl(), media.getType()))
+                .toList());
             gameInLibrary.setOs(game.getOs());
             gameInLibrary.setStorage(game.getStorage());
             gameInLibrary.setProcessor(game.getProcessor());
@@ -108,7 +119,8 @@ public class UserService {
      * check if game is in cart
      * return true if game is in cart, false otherwise.
      */
-    public boolean isGameInCart(Long userId, Long gameId) {
+    public boolean isGameInCart(Long gameId) {
+        Long userId = getCurrentUserId();
         User user = userRepo.findByIdWithCartGames(userId);
         if (user == null)
             return false;
@@ -120,7 +132,8 @@ public class UserService {
      * check if game is in library
      * return true if game is in library, false otherwise.
      */
-    public boolean isGameOwned(Long userId, Long gameId) {
+    public boolean isGameOwned(Long gameId) {
+        Long userId = getCurrentUserId();
         User user = userRepo.findByIdWithLibraryGames(userId);
         if (user == null)
             return false;
@@ -129,19 +142,21 @@ public class UserService {
 
     /* author: bathanh */
     // get user's balance
-    public double getUserBalance(Long userId) {
+    public double getUserBalance() {
+        Long userId = getCurrentUserId();
         User user = userRepo.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException(msg));
         return user.getWalletBalance();
     }
 
     /* author: bathanh */
     // add money to user's wallet
     @Transactional
-    public Double addUserBalance(Long userId, Double amount) {
+    public Double addUserBalance(Double amount) {
         if (amount == null || amount <= 0)
             throw new IllegalArgumentException("Amount must be positive");
-        User user = userRepo.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        Long userId = getCurrentUserId();
+        User user = userRepo.findById(userId).orElseThrow(() -> new EntityNotFoundException(msg));
         user.setWalletBalance(user.getWalletBalance() + amount);
         userRepo.save(user);
         return user.getWalletBalance();
@@ -150,12 +165,13 @@ public class UserService {
     /* author: bathanh */
     // deduct user's wallet
     @Transactional
-    public Double subtractUserBalance(Long userId, Double amount) {
+    public Double subtractUserBalance(Double amount) {
         if (amount == null || amount <= 0)
             throw new IllegalArgumentException("Amount must be positive");
-        User user = userRepo.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        Long userId = getCurrentUserId();
+        User user = userRepo.findById(userId).orElseThrow(() -> new EntityNotFoundException(msg));
         if (user.getWalletBalance() < amount) {
-            throw new RuntimeException("Insufficient balance");
+            throw new IllegalArgumentException("Insufficient balance");
         }
         user.setWalletBalance(user.getWalletBalance() - amount);
         userRepo.save(user);

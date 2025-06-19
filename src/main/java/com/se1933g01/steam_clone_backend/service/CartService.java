@@ -6,12 +6,15 @@ import com.se1933g01.steam_clone_backend.entity.CompositedKey;
 import com.se1933g01.steam_clone_backend.entity.game.Game;
 import com.se1933g01.steam_clone_backend.entity.transaction.Transaction;
 import com.se1933g01.steam_clone_backend.entity.transaction.TransactionDetail;
+import com.se1933g01.steam_clone_backend.entity.user.CustomUserDetail;
 import com.se1933g01.steam_clone_backend.entity.user.User;
 import com.se1933g01.steam_clone_backend.repository.GameRepo;
 import com.se1933g01.steam_clone_backend.repository.TransactionRepo;
 import com.se1933g01.steam_clone_backend.repository.UserRepo;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.persistence.EntityNotFoundException;
+
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 
@@ -22,11 +25,8 @@ import java.util.List;
 
 @Service
 public class CartService {
-    @Autowired
     private UserRepo userRepo;
-    @Autowired
     private GameRepo gameRepo;
-    @Autowired
     private TransactionRepo transactionRepo;
 
     public CartService(UserRepo userRepo, GameRepo gameRepo, TransactionRepo transactionRepo) {
@@ -35,12 +35,19 @@ public class CartService {
         this.transactionRepo = transactionRepo;
     }
 
+    // Get current user ID from security context
+    private Long getCurrentUserId() {
+        CustomUserDetail userDetails = (CustomUserDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return userDetails.getUser().getUserID();
+    }
+
      //show cart- author: Ba Thanh
-    public CartDTO getCart(Long userId) {
+    public CartDTO getCart() {
+        Long userId = getCurrentUserId();
         User user = userRepo.findByIdWithCartGames(userId);
-        if (user == null) throw new RuntimeException("User not found");
+        if (user == null) throw new EntityNotFoundException("User not found");
         CartDTO cartDTO = new CartDTO();
-        List<GameBasicDTO> listCart = new ArrayList<GameBasicDTO>();
+        List<GameBasicDTO> listCart = new ArrayList<>();
         for (Game game : user.getCartGames()) {
             GameBasicDTO gameInCart = new GameBasicDTO();
             gameInCart.setId(game.getGameId());
@@ -56,62 +63,66 @@ public class CartService {
     }
 
     //add games to cart- author: Ba Thanh
-    public CartDTO addGameToCart(Long userId, Long gameId) {
+    public CartDTO addGameToCart(Long gameId) {
+        Long userId = getCurrentUserId();
         User user = userRepo.findByIdWithCartGames(userId);
-        if (user == null) throw new RuntimeException("User not found");
+        if (user == null) throw new EntityNotFoundException("User not found");
         if (user.getCartGames() == null) {
             user.setCartGames(new HashSet<>());
         }
         // Check if user already owns the game
         if (user.getGames() != null && user.getGames().stream().anyMatch(g -> g.getGameId().equals(gameId))) {
-            throw new RuntimeException("You already own this game");
+            throw new IllegalArgumentException("You already own this game");
         }
         if (user.getCartGames().stream().anyMatch(g -> g.getGameId().equals(gameId))) {
-            throw new RuntimeException("Game already in cart");
+            throw new IllegalArgumentException("Game already in cart");
         }
         Game game = gameRepo.findById(gameId)
-                .orElseThrow(() -> new RuntimeException("Game not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Game not found"));
         user.getCartGames().add(game);
         userRepo.save(user);
-        return getCart(userId);
+        return getCart();
     }
 
     //remove games from cart- author: Ba Thanh
-    public CartDTO removeGameFromCart(Long userId, Long gameId) {
+    public CartDTO removeGameFromCart(Long gameId) {
+        Long userId = getCurrentUserId();
         User user = userRepo.findByIdWithCartGames(userId);
-        if (user == null) throw new RuntimeException("User not found");
+        if (user == null) throw new EntityNotFoundException("User not found");
         if (user.getCartGames() == null) {
             user.setCartGames(new HashSet<>());
         }
         user.getCartGames().removeIf(game -> gameId.equals(game.getGameId()));
         userRepo.save(user);
-        return getCart(userId);
+        return getCart();
     }
 
     //calculate total price of cart- author: Ba Thanh
-    public double calculateCartTotal(Long userId) {
+    public double calculateCartTotal() {
+        Long userId = getCurrentUserId();
         User user = userRepo.findByIdWithCartGames(userId);
-        if (user == null) throw new RuntimeException("User not found");
+        if (user == null) throw new EntityNotFoundException("User not found");
         return user.getCartGames().stream().mapToDouble(Game::getPrice).sum();
     }
 
     //checkout- author: Ba Thanh
-    public CartDTO checkout(Long userId) {
+    public CartDTO checkout() {
+        Long userId = getCurrentUserId();
         User user = userRepo.findByIdWithCartGames(userId);
-        if (user == null) throw new RuntimeException("User not found");
+        if (user == null) throw new EntityNotFoundException("User not found");
         if (user.getCartGames().isEmpty())
-            throw new RuntimeException("Cart is empty");
+            throw new IllegalArgumentException("Cart is empty");
         // Only checkout games not already owned
         java.util.Set<Game> ownedGames = user.getGames() != null ? user.getGames() : new java.util.HashSet<>();
         List<Game> gamesToBuy = user.getCartGames().stream()
             .filter(game -> ownedGames.stream().noneMatch(owned -> owned.getGameId().equals(game.getGameId())))
             .toList();
         if (gamesToBuy.isEmpty()) {
-            throw new RuntimeException("All games in cart are already owned");
+            throw new IllegalArgumentException("All games in cart are already owned");
         }
         double total = gamesToBuy.stream().mapToDouble(Game::getPrice).sum();
         if (user.getWalletBalance() < total) {
-            throw new RuntimeException("Insufficient balance");
+            throw new IllegalArgumentException("Insufficient balance");
         }
         // Lưu lại balance trước khi trừ
         double oldBalance = user.getWalletBalance();
@@ -147,7 +158,7 @@ public class CartService {
         user.getCartGames().removeAll(gamesToBuy);
         user.setGames(ownedGames);
         userRepo.save(user);
-        return getCart(userId);
+        return getCart();
     }
 
    
