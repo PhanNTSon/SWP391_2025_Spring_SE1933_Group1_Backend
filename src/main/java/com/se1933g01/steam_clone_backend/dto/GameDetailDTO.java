@@ -5,12 +5,10 @@ import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Date; // Hoặc LocalDate
 import java.util.Set;
-import java.util.List; // Hoặc Set tùy ý
-
+import java.util.List;
+//delete unused import
 @Getter
 @Setter
 @NoArgsConstructor
