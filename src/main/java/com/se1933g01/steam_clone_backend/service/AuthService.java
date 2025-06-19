@@ -34,12 +34,17 @@ public class AuthService {
     /**
      * @author Phan NT Son
      */
-    @Autowired
+    
     private AuthenticationManager authenticationManager;
     @Autowired
     private JwtUtil jwtUtil;
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    public void setAuthenticationManager(AuthenticationManager authenticationManager) {
+        this.authenticationManager = authenticationManager;
+    }
 
     @Autowired
     private UserRepo userRepo;
@@ -106,7 +111,7 @@ public class AuthService {
 
             // Tạo JWT token
             String token = jwtUtil.generateToken(userDetails.getUsername(), userDetails.getUser().getUserID(),
-                    userDetails.getUser().getRole().getRoleId());
+                    userDetails.getUser().getRole().getRoleName());
 
             // Trả về cho client
             Map<String, Object> response = new HashMap<>();
@@ -128,7 +133,7 @@ public class AuthService {
      */
     public String processOAuthPostLogin(String email, String name) {
         User user = userRepo.findByEmail(email).orElse(null);
-    
+
         if (user == null) {
             user = new User();
             user.setEmail(email);
@@ -136,16 +141,18 @@ public class AuthService {
             user.setPassword(""); // rỗng vì OAuth2 không sử dụng mật khẩu
             user.setWalletBalance(0.0);
             user.setBanStatus(false); // default status
-    
+
             Role userRole = new Role();
             userRole.setRoleId(1L); // Default user role
             user.setRole(userRole);
-    
+
             userRepo.save(user);
         }
-    
+
         // Generate JWT
-        return jwtUtil.generateToken(user.getUsername(), user.getUserID(), user.getRole().getRoleId());
+        return jwtUtil.generateToken(user.getUsername(), user.getUserID(), user.getRole().getRoleName()); // Adjust by
+                                                                                                          // Phan NT SOn
+                                                                                                          // 18-06-2025
     }
 
     public boolean emailExists(String email) {

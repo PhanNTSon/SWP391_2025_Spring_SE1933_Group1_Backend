@@ -7,6 +7,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+/*
+ * @author Loc Phan
+ */
 @ControllerAdvice
 public class ErrorController {
     private static final Logger logger = LoggerFactory.getLogger(ErrorController.class);

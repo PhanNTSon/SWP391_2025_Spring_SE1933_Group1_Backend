@@ -138,6 +138,8 @@ public class CartService {
             transactionDetails.add(detail);
             transaction.setTransactionDetail(transactionDetails);
             transactionRepo.save(transaction);
+            // count total purchased for the game bought by user
+            game.setTotalPurchased(game.getTotalPurchased() + 1);
             // Add game to user's library
             ownedGames.add(game);
         }

@@ -7,7 +7,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-
+import lombok.Data;
+@Data
 @Entity
 @Table(name = "PublisherApplyRequest")
 public class PublisherApplyRequest {
@@ -20,6 +21,22 @@ public class PublisherApplyRequest {
 
     @Column(name = "CardNumber")
     private String cardNumber;
+
+    @Column(name = "LegalName")
+    private String legalName;
+
+    @Column(name = "Address")
+    private String address;
+
+    @Column(name = "SocialNumber")
+    private String socialNumber;
+
+    @Column(name = "Country")
+    private String country;
+
+    @Column(name = "ImageUrl")
+    private String imageUrl;
+    
 
     // ================ Relationships =============
     @OneToOne
