@@ -32,6 +32,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 public class ReviewController {
 
     private final ReviewService reviewService;
+    private final String RESPONSE_STRING_OK = "SUCCESS";
+    private final String RESPONSE_STRING_ERROR = "SERVER ERROR";
 
     ReviewController(ReviewService reviewService) {
         this.reviewService = reviewService;
@@ -68,12 +70,12 @@ public class ReviewController {
 
     @GetMapping("/{gameId}/{authorId}/check")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<?> getUserReaction(@RequestParam Long userId,
+    public ResponseEntity<String> getUserReaction(@RequestParam Long userId,
             @PathVariable("gameId") long reviewGameId,
             @PathVariable("authorId") long reviewAuthorId) {
         try {
             int result = reviewService.checkUserReaction(userId, reviewGameId, reviewAuthorId);
-            return ResponseEntity.ok(result);
+            return ResponseEntity.ok(String.valueOf(result));
 
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
@@ -105,13 +107,12 @@ public class ReviewController {
     @PatchMapping("/vote/helpful")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
     public ResponseEntity<String> likeReview(@RequestBody UpdateReviewDTO dto,
-            @PathVariable("gameId") long reviewGameId,
-            @PathVariable("authorId") long reviewAuthorId) {
+            @AuthenticationPrincipal CustomUserDetail me) {
         try {
-            reviewService.patchLikeReview(dto.getUserId(), reviewGameId, reviewAuthorId);
-            return ResponseEntity.status(HttpStatus.OK).body("Success");
+            reviewService.patchLikeReview(me.getUser().getUserID(), dto.getGameId(), dto.getAuthorId());
+            return ResponseEntity.ok().body(RESPONSE_STRING_OK);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Server Error");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(RESPONSE_STRING_ERROR);
         }
     }
 
@@ -124,13 +125,12 @@ public class ReviewController {
     @PatchMapping("/vote/unhelpful")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
     public ResponseEntity<String> dislikeReview(@RequestBody UpdateReviewDTO dto,
-            @PathVariable("gameId") long reviewGameId,
-            @PathVariable("authorId") long reviewAuthorId) {
+            @AuthenticationPrincipal CustomUserDetail me) {
         try {
-            reviewService.patchUnLikeReview(dto.getUserId(), reviewGameId, reviewAuthorId);
-            return ResponseEntity.status(HttpStatus.OK).body("Success");
+            reviewService.patchUnLikeReview(me.getUser().getUserID(), dto.getGameId(), dto.getAuthorId());
+            return ResponseEntity.ok().body(RESPONSE_STRING_OK);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Server Error");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(RESPONSE_STRING_ERROR);
         }
     }
 
@@ -142,14 +142,12 @@ public class ReviewController {
     @PatchMapping("/vote/clean")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
     public ResponseEntity<String> reactionReview(@RequestBody UpdateReviewDTO dto,
-            @PathVariable("gameId") long reviewGameId,
-            @PathVariable("authorId") long reviewAuthorId) {
+            @AuthenticationPrincipal CustomUserDetail me) {
         try {
-            reviewService.deleteReactionReview(dto.getUserId(), reviewGameId, reviewAuthorId);
-            return ResponseEntity.ok("Success");
+            reviewService.deleteReactionReview(me.getUser().getUserID(), dto.getGameId(), dto.getAuthorId());
+            return ResponseEntity.ok().body(RESPONSE_STRING_OK);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Server Error");
-
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(RESPONSE_STRING_ERROR);
         }
     }
 
@@ -161,9 +159,9 @@ public class ReviewController {
      */
     @DeleteMapping("/delete")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<Void> deleteReview(@PathVariable("userId") Long userId,
-            @PathVariable("gameId") Long gameId) {
-        reviewService.deleteReview(userId, gameId);
+    public ResponseEntity<Void> deleteReview(@AuthenticationPrincipal CustomUserDetail me,
+            @RequestBody Long gameId) {
+        reviewService.deleteReview(me.getUser().getUserID(), gameId);
         return ResponseEntity.noContent().build();
     }
 
