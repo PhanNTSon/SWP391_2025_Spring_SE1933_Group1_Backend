@@ -1,5 +1,6 @@
 package com.se1933g01.steam_clone_backend.service;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -15,14 +16,14 @@ import lombok.Data;
 @Data
 public class CloudinaryService {
     private final Cloudinary cloudinary;
-    public List<String> uploadFiles(MultipartFile[] files){
+    public List<String> uploadFiles(MultipartFile[] files) throws IOException{
         List<String> urls = new ArrayList<>();
         for(MultipartFile file: files){
             try {
                 Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
                 urls.add(uploadResult.get("url").toString());
             } catch (Exception e) {
-                throw new RuntimeException(e.getMessage());
+                throw new IOException("Failed to process file upload", e);
             }
         }
         return urls;

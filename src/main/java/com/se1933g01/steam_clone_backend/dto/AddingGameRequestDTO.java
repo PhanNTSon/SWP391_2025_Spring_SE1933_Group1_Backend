@@ -1,6 +1,5 @@
 package com.se1933g01.steam_clone_backend.dto;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import lombok.Data;

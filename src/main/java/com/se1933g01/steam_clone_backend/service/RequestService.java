@@ -41,35 +41,49 @@ import com.se1933g01.steam_clone_backend.repository.RequestRepo;
 import com.se1933g01.steam_clone_backend.repository.UserRepo;
 
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.LockModeType;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 
 @Service
 public class RequestService {
-    @Autowired
-    private AddingGameRequestRepo addingGameRequestRepo;
-    @Autowired
-    private PublisherApplyRequestRepo publisherApplyRequestRepo;
-    @Autowired
-    private RequestRepo requestRepo;
-    @Autowired
-    private ModelMapper modelMapper;
-    @Autowired
-    private UserRepo userRepo;
-    @Autowired
-    private GameRepo gameRepo;
-    @Autowired
-    private MediaRepo mediaRepo;
-    @Autowired 
-    private PublisherRepo publisherRepo;
-    @Autowired
-    private FeedbackRepo feedbackRepo;
+    private static final String USER_NOT_FOUND_MESSAGE = "User not found";
+    private static final String REQUEST_NOT_FOUND_MESSAGE = "Request not found";
+    private final AddingGameRequestRepo addingGameRequestRepo;
+    private final PublisherApplyRequestRepo publisherApplyRequestRepo;
+    private final RequestRepo requestRepo;
+    private final ModelMapper modelMapper;
+    private final UserRepo userRepo;
+    private final GameRepo gameRepo;
+    private final MediaRepo mediaRepo;
+    private final PublisherRepo publisherRepo;
+    private final FeedbackRepo feedbackRepo;
+
+    public RequestService(
+        AddingGameRequestRepo addingGameRequestRepo,
+        PublisherApplyRequestRepo publisherApplyRequestRepo,
+        RequestRepo requestRepo,
+        ModelMapper modelMapper,
+        UserRepo userRepo,
+        GameRepo gameRepo,
+        MediaRepo mediaRepo,
+        PublisherRepo publisherRepo,
+        FeedbackRepo feedbackRepo
+    ) {
+        this.addingGameRequestRepo = addingGameRequestRepo;
+        this.publisherApplyRequestRepo = publisherApplyRequestRepo;
+        this.requestRepo = requestRepo;
+        this.modelMapper = modelMapper;
+        this.userRepo = userRepo;
+        this.gameRepo = gameRepo;
+        this.mediaRepo = mediaRepo;
+        this.publisherRepo = publisherRepo;
+        this.feedbackRepo = feedbackRepo;
+    }
     @PersistenceContext
     private EntityManager entityManager;
     @Transactional
-    public void addGame(AddingGameRequestDTO addingGameRequestDTO, Long UserID) {
-        User user = userRepo.findById(UserID).orElseThrow(()-> new RuntimeException("User not found"));
+    public void addGame(AddingGameRequestDTO addingGameRequestDTO, Long userId) {
+        User user = userRepo.findById(userId).orElseThrow(()-> new RuntimeException(USER_NOT_FOUND_MESSAGE));
         Request request = new Request();
         request.setUser(user);
         request.setRequestType("Game Submission");
@@ -84,9 +98,9 @@ public class RequestService {
     }
 
     public void approveGame(Long requestID) {
-        Request request = requestRepo.findById(requestID).orElseThrow(()-> new RuntimeException("Request not found"));
+        Request request = requestRepo.findById(requestID).orElseThrow(()-> new RuntimeException(REQUEST_NOT_FOUND_MESSAGE));
         AddingGameRequest addingGameRequest = addingGameRequestRepo.findById(requestID).orElseThrow(()-> new RuntimeException("AddingGameRequest not found"));
-        Publisher publisher = publisherRepo.findById(request.getUser().getUserID()).orElseThrow(()-> new RuntimeException("Publisher not found"));
+        Publisher publisher = publisherRepo.findById(request.getUser().getUserId()).orElseThrow(()-> new RuntimeException("Publisher not found"));
         Game game = new Game();
         game.setPublisher(publisher);
         game.setName(addingGameRequest.getGameName());
@@ -113,11 +127,11 @@ public class RequestService {
     }
     @Transactional
     public void approvePublisher(Long requestID) {
-        Request request = requestRepo.findById(requestID).orElseThrow(()-> new RuntimeException("Request not found"));
+        Request request = requestRepo.findById(requestID).orElseThrow(()-> new RuntimeException(REQUEST_NOT_FOUND_MESSAGE));
         PublisherApplyRequest publisherApplyRequest = publisherApplyRequestRepo.findById(requestID).orElseThrow(()-> new RuntimeException("PublisherApplyRequest not found"));
-        User user = userRepo.findById(request.getUser().getUserID()).orElseThrow(()-> new RuntimeException("User not found"));
+        User user = userRepo.findById(request.getUser().getUserId()).orElseThrow(()-> new RuntimeException(USER_NOT_FOUND_MESSAGE));
         Publisher publisher = new Publisher();
-        publisher.setPublisherId(user.getUserID());
+        publisher.setPublisherId(user.getUserId());
         publisher.setUser(user);
         publisher.setLegalName(publisherApplyRequest.getLegalName());
         publisher.setAddress(publisherApplyRequest.getAddress());
@@ -133,25 +147,17 @@ public class RequestService {
 
     }
     public void rejectPublisher(Long requestID) {
-        Request request = requestRepo.findById(requestID).orElseThrow(()-> new RuntimeException("Request not found"));
-        request.setRequestState(2);
-        requestRepo.save(request);
+        rejectRequestById(requestID);
     }
     public void rejectGame(Long requestID) {
-        Request request = requestRepo.findById(requestID).orElseThrow(()-> new RuntimeException("Request not found"));
-        request.setRequestState(2);
+        rejectRequestById(requestID);
+    }
+    private void rejectRequestById(Long requestID) {
+        Request request = requestRepo.findById(requestID)
+            .orElseThrow(() -> new RuntimeException(REQUEST_NOT_FOUND_MESSAGE));
+        request.setRequestState(2); // 2 = Rejected
         requestRepo.save(request);
     }
-    // public List<AddingGameRequestDTO> getAllAddingGameRequest(){
-    //     List<AddingGameRequest> addingGameRequestList = addingGameRequestRepo.findAll();
-    //     List<AddingGameRequestDTO> addingGameRequestDTOList = new ArrayList<>();
-    //     for(AddingGameRequest addingGameRequest : addingGameRequestList){
-    //         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
-    //         AddingGameRequestDTO addingGameRequestDTO = modelMapper.map(addingGameRequest, AddingGameRequestDTO.class);
-    //         addingGameRequestDTOList.add(addingGameRequestDTO);
-    //     }
-    //     return addingGameRequestDTOList;
-    // }
 
     public Page<AddingGameRequestDTO> getAllAddingGameRequest(Pageable pageable) {
         Page<AddingGameRequest> addingGameRequestPage = addingGameRequestRepo.findAllByRequestStateZero(pageable);
@@ -186,12 +192,11 @@ public class RequestService {
             return null; 
         }
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
-        PublisherApplyRequestDTO publisherApplyRequestDTO = modelMapper.map(publisherApplyRequest, PublisherApplyRequestDTO.class);
-        return publisherApplyRequestDTO;
+        return modelMapper.map(publisherApplyRequest, PublisherApplyRequestDTO.class);
     }
 
-    public void addPublisher(PublisherApplyRequestDTO publisherApplyRequestDTO, Long UserID){
-        User user = userRepo.findById(UserID).orElseThrow(()-> new RuntimeException("User not found"));
+    public void addPublisher(PublisherApplyRequestDTO publisherApplyRequestDTO, Long userId){
+        User user = userRepo.findById(userId).orElseThrow(()-> new RuntimeException(USER_NOT_FOUND_MESSAGE));
         Request request = new Request();
         request.setUser(user);
         request.setRequestType("Publisher Submission");
@@ -203,8 +208,8 @@ public class RequestService {
         publisherApplyRequest.setRequest(savedRequest);
         publisherApplyRequestRepo.save(publisherApplyRequest);
     }
-    public void addFeedback(FeedbackDTO feedbackDTO, Long UserID){
-        User user = userRepo.findById(UserID).orElseThrow(()-> new RuntimeException("User not found"));
+    public void addFeedback(FeedbackDTO feedbackDTO, Long userId){
+        User user = userRepo.findById(userId).orElseThrow(()-> new RuntimeException(USER_NOT_FOUND_MESSAGE));
         Request request = new Request();
         request.setUser(user);
         request.setRequestType("Feedback");

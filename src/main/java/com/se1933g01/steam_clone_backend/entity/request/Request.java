@@ -48,17 +48,9 @@ public class Request {
     @JoinColumn(name = "UserID")
     private User user;
 
-    // @OneToOne(mappedBy = "request")
-    // private PublisherApplyRequest pAR;
 
     @OneToOne(mappedBy = "request",cascade = jakarta.persistence.CascadeType.ALL)
     private AddingGameRequest addingGameRequest;
 
-    // @OneToOne(mappedBy = "request")
-    // private Feedback feedback;
-
-    // public void setpAR(PublisherApplyRequest pAR) {
-    //     this.pAR = pAR;
-    // }
 
 }

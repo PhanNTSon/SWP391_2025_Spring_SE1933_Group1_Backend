@@ -183,7 +183,7 @@ public class UserService {
     public Page<BannedUserDTO> getAllBannedUser(int page) {
         PageRequest pageable = PageRequest.of(page, 10, Sort.by("username").descending());
         return userRepo.findAllByBannedStatus(pageable).map(u -> new BannedUserDTO(
-                u.getUserID(),
+                u.getUserId(),
                 u.getUsername(),
                 u.getRole().getRoleName()));
     }
@@ -226,7 +226,7 @@ public class UserService {
      */
     public UserDetailDTO findUserDetailById(Long userId) {
         return userRepo.findById(userId).map(user -> new UserDetailDTO(
-                user.getUserID(),
+                user.getUserId(),
                 user.getEmail(),
                 user.getUsername(),
                 user.getWalletBalance(),

@@ -110,7 +110,7 @@ public class AuthService {
             CustomUserDetail userDetails = (CustomUserDetail) authentication.getPrincipal();
 
             // Tạo JWT token
-            String token = jwtUtil.generateToken(userDetails.getUsername(), userDetails.getUser().getUserID(),
+            String token = jwtUtil.generateToken(userDetails.getUsername(), userDetails.getUser().getUserId(),
                     userDetails.getUser().getRole().getRoleName());
 
             // Trả về cho client
@@ -150,7 +150,7 @@ public class AuthService {
         }
 
         // Generate JWT
-        return jwtUtil.generateToken(user.getUsername(), user.getUserID(), user.getRole().getRoleName()); // Adjust by
+        return jwtUtil.generateToken(user.getUsername(), user.getUserId(), user.getRole().getRoleName()); // Adjust by
                                                                                                           // Phan NT SOn
                                                                                                           // 18-06-2025
     }

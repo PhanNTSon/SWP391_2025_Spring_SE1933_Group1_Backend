@@ -91,12 +91,12 @@ public class ReviewService {
             reviewRepo.findByGame_GameId(gameId).forEach(review -> {
                 ReviewDTO reviewDTO = new ReviewDTO();
 
-                reviewDTO.setUserId(review.getUser().getUserID());
+                reviewDTO.setUserId(review.getUser().getUserId());
                 reviewDTO.setUserName(review.getUser().getUsername());
                 reviewDTO.setRecommended(review.isRecommended());
                 reviewDTO.setReviewContent(review.getReviewContent());
-                reviewDTO.setHelpful(reviewRepo.countLikedByUsers(gameId, review.getUser().getUserID()));
-                reviewDTO.setNotHelpful(reviewRepo.countUnLikedByUsers(gameId, review.getUser().getUserID()));
+                reviewDTO.setHelpful(reviewRepo.countLikedByUsers(gameId, review.getUser().getUserId()));
+                reviewDTO.setNotHelpful(reviewRepo.countUnLikedByUsers(gameId, review.getUser().getUserId()));
                 reviewDTO.setTimeCreated(review.getTimeCreated());
 
                 reviews.add(reviewDTO);

@@ -55,7 +55,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             userRepo.save(user);
         }
 
-        String jwt = jwtUtil.generateToken(user.getUsername(), user.getUserID(), user.getRole().getRoleName());
+        String jwt = jwtUtil.generateToken(user.getUsername(), user.getUserId(), user.getRole().getRoleName());
 
         // Redirect to frontend
         String redirectUrl = "http://localhost:5173/home?token=" + jwt;

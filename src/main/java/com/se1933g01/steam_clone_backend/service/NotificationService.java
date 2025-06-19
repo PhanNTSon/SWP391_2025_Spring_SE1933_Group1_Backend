@@ -35,7 +35,7 @@ public class NotificationService {
      * @return
      */
     public List<NotificationDTO> getNotificationsList(Long userId) {
-        List<Notification> resultFromDB = notificationsRepo.findByUser_userID(userId);
+        List<Notification> resultFromDB = notificationsRepo.findByUser_userId(userId);
         List<NotificationDTO> resultListDtos = new ArrayList<>();
         resultFromDB.stream().forEach(notif -> {
             NotificationDTO dto = new NotificationDTO();
@@ -56,7 +56,7 @@ public class NotificationService {
      * @return
      */
     public List<NotificationDTO> getUnreadNotifList(Long userId) {
-        List<Notification> resultFromDB = notificationsRepo.findByUser_userID(userId);
+        List<Notification> resultFromDB = notificationsRepo.findByUser_userId(userId);
         List<NotificationDTO> resultListDtos = new ArrayList<>();
         resultFromDB.stream().forEach(notif -> {
             // If notification is not read

@@ -2,7 +2,6 @@ package com.se1933g01.steam_clone_backend.config;
 
 import com.google.api.services.drive.Drive;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
-import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.json.jackson2.JacksonFactory; // ✅ Use JacksonFactory
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,12 +27,13 @@ public class GoogleDriveConfig {
 
             return new Drive.Builder(new com.google.api.client.http.javanet.NetHttpTransport(),
                     JSON_FACTORY, // ✅ Use JacksonFactory instead
-                    (HttpRequestInitializer) credentials)
+                    credentials)
                     .setApplicationName("MyApp")
                     .build();
         } catch (Exception e) {
             e.printStackTrace(); // Logs the actual error
-            throw new RuntimeException("Failed to initialize Google Drive service", e);
+            throw new IllegalArgumentException("Invalid config for Google Drive", e);
+
         }
     }
 }

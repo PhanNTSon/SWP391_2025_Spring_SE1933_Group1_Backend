@@ -10,9 +10,6 @@ import lombok.AllArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SystemRequirementDTO {
-    // Không cần gameId ở đây nữa vì nó sẽ được lồng trong GameDetailDTO
-    // Nếu bạn muốn sys_req_id (PK của SystemRequirement) thì thêm vào
-    // private Integer id;
     private String os;
     private String storage;
     private String processor;

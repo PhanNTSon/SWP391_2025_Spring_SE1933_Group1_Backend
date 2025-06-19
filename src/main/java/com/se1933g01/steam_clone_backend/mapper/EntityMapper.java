@@ -121,7 +121,7 @@ public class EntityMapper {
 
     public static UserDetailDTO toUserDetailDTO(User user) {
         return new UserDetailDTO(
-                user.getUserID(),
+                user.getUserId(),
                 user.getEmail(),
                 user.getUsername(),
                 user.getWalletBalance(),

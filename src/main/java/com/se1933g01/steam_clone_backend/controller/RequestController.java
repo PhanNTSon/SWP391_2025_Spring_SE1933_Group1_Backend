@@ -42,144 +42,114 @@ import org.springframework.web.bind.annotation.PatchMapping;
 @RestController
 @RequestMapping("/request")
 public class RequestController {
-    @Autowired
-    RequestService requestService;
-    @Autowired
-    GoogleDriveService googleDriveService;
+    private static final String RESPONSE_MESSAGE_KEY = "message";
+    private final RequestService requestService;
+    private final GoogleDriveService googleDriveService;
+    private final RequestService publisherService;
+    private final CloudinaryService cloudinaryService;
+    private final UserService userService;
 
-    @Autowired
-    private RequestService publisherService;
-
-    @Autowired
-    private CloudinaryService cloudinaryService;
-
-    // Added by Phan NT Son
-    @Autowired
-    UserService userService;
-    // --!!
+    public RequestController(
+    RequestService requestService,
+    GoogleDriveService googleDriveService,
+    RequestService publisherService,
+    CloudinaryService cloudinaryService,
+    UserService userService
+) {
+    this.requestService = requestService;
+    this.googleDriveService = googleDriveService;
+    this.publisherService = publisherService;
+    this.cloudinaryService = cloudinaryService;
+    this.userService = userService;
+}
+    private ResponseEntity<Map<String, String>> handleAction(Runnable action, String successMsg, String failMsg) {
+        Map<String, String> response = new HashMap<>();
+        try {
+            action.run();
+            response.put(RESPONSE_MESSAGE_KEY, successMsg);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put(RESPONSE_MESSAGE_KEY, failMsg);
+            response.put("e", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
 
     @PatchMapping("/approve/{requestID}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> approveGame(@PathVariable String requestID) {
-        try {
-            requestService.approveGame(Long.parseLong(requestID));
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Game Approved");
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Game Approve Failed");
-            response.put("e", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        }
+        return handleAction(() -> requestService.approveGame(Long.parseLong(requestID)),
+                "Game Approved", "Game Approve Failed");
     }
 
     @PatchMapping("/reject/{requestID}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> rejectGame(@PathVariable String requestID) {
-        try {
-            requestService.rejectGame(Long.parseLong(requestID));
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Game Rejected");
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Game Reject Failed");
-            response.put("e", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        }
+        return handleAction(() -> requestService.rejectGame(Long.parseLong(requestID)),
+                "Game Rejected", "Game Reject Failed");
     }
 
     @PatchMapping("/approvepublisher/{requestID}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> approvePublisher(@PathVariable String requestID) {
-        try {
-            requestService.approvePublisher(Long.parseLong(requestID));
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "This user are now publisher");
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Failed to approve");
-            response.put("e", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        }
+        return handleAction(() -> requestService.approvePublisher(Long.parseLong(requestID)),
+                "This user is now a publisher", "Failed to approve");
     }
 
     @PatchMapping("/rejectpublisher/{requestID}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> rejectPublisher(@PathVariable String requestID) {
-        try {
-            requestService.rejectPublisher(Long.parseLong(requestID));
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "User Rejected");
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Game Reject Failed");
-            response.put("e", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        }
+        return handleAction(() -> requestService.rejectPublisher(Long.parseLong(requestID)),
+                "User Rejected", "Game Reject Failed");
     }
 
     @GetMapping("/gameRequest/{page}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<AddingGameRequestDTO>> getGameRequest(@PathVariable int page) {
-        Pageable pageable = PageRequest.of(page, 10, Sort.by("requestId").descending());// Hard-coded size to 10
-        Page<AddingGameRequestDTO> gameRequestPage = requestService.getAllAddingGameRequest(pageable);
-        return ResponseEntity.ok(gameRequestPage);
+        Pageable pageable = PageRequest.of(page, 10, Sort.by("requestId").descending());
+        return ResponseEntity.ok(requestService.getAllAddingGameRequest(pageable));
     }
 
     @GetMapping("/publisherApplyRequest/{page}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<PublisherApplyRequestDTO>> getPublisherApplyRequest(@PathVariable int page) {
-        Pageable pageable = PageRequest.of(page, 10, Sort.by("requestId").descending());// Hard-coded size to 10
-        Page<PublisherApplyRequestDTO> publisherApplyRequestPage = requestService.getAllPublisherApplyRequest(pageable);
-        return ResponseEntity.ok(publisherApplyRequestPage);
+        Pageable pageable = PageRequest.of(page, 10, Sort.by("requestId").descending());
+        return ResponseEntity.ok(requestService.getAllPublisherApplyRequest(pageable));
     }
 
     @GetMapping("/gameRequest/details/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AddingGameRequestDTO> getGameRequest(@PathVariable Long id) {
-        AddingGameRequestDTO gameDetails = requestService.getGameDetails(id);
-        if (gameDetails == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
-        return ResponseEntity.ok(gameDetails);
+        AddingGameRequestDTO details = requestService.getGameDetails(id);
+        return details == null
+                ? ResponseEntity.status(HttpStatus.NOT_FOUND).body(null)
+                : ResponseEntity.ok(details);
     }
 
     @GetMapping("/publisherApplyRequest/details/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PublisherApplyRequestDTO> getPublisherApplyRequest(@PathVariable Long id) {
-        PublisherApplyRequestDTO publisherApplyRequestDetails = requestService.getPublisherDetails(id);
-        if (publisherApplyRequestDetails == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
-        return ResponseEntity.ok(publisherApplyRequestDetails);
+        PublisherApplyRequestDTO details = requestService.getPublisherDetails(id);
+        return details == null
+                ? ResponseEntity.status(HttpStatus.NOT_FOUND).body(null)
+                : ResponseEntity.ok(details);
     }
 
-    /**
-     * @apiNote Author Phan NT Son
-     * @return
-     */
     @GetMapping("/banned-users/{page}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Page<BannedUserDTO>> getAllBannedUser(@PathVariable(name = "page") int pageNum) {
-        Page<BannedUserDTO> result = userService.getAllBannedUser(pageNum);
-        return ResponseEntity.ok(result);
+    public ResponseEntity<Page<BannedUserDTO>> getAllBannedUser(@PathVariable("page") int pageNum) {
+        return ResponseEntity.ok(userService.getAllBannedUser(pageNum));
     }
 
     @PostMapping("/addGame")
     @PreAuthorize("hasRole('PUBLISHER')")
     public ResponseEntity<Map<String, String>> addGame(
-            @RequestBody AddingGameRequestDTO addingGameRequestDTO, @AuthenticationPrincipal CustomUserDetail me) {
+            @RequestBody AddingGameRequestDTO dto, @AuthenticationPrincipal CustomUserDetail me) {
         try {
-            publisherService.addGame(addingGameRequestDTO, me.getUser().getUserID());
-            Map<String, String> map = Map.of("message", "Game added successfully");
-            return ResponseEntity.ok(map);
+            publisherService.addGame(dto, me.getUser().getUserId());
+            return ResponseEntity.ok(Map.of(RESPONSE_MESSAGE_KEY, "Game added successfully"));
         } catch (Exception e) {
-            Map<String, String> map = Map.of("message", e.getMessage());
-            return ResponseEntity.badRequest().body(map);
+            return ResponseEntity.badRequest().body(Map.of(RESPONSE_MESSAGE_KEY, e.getMessage()));
         }
     }
 
@@ -190,13 +160,13 @@ public class RequestController {
             List<String> urls = cloudinaryService.uploadFiles(files);
             Map<String, Object> response = new HashMap<>();
             response.put("status", "success");
-            response.put("message", "Files uploaded successfully");
+            response.put(RESPONSE_MESSAGE_KEY, "Files uploaded successfully");
             response.put("imageUrls", urls);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             Map<String, Object> response = new HashMap<>();
             response.put("status", "error");
-            response.put("message", e.getMessage());
+            response.put(RESPONSE_MESSAGE_KEY, e.getMessage());
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -206,34 +176,33 @@ public class RequestController {
     public ResponseEntity<Map<String, String>> uploadFile(@RequestParam("file") MultipartFile file) throws IOException {
         List<String> fileId = googleDriveService.uploadFile(file);
         googleDriveService.makeFilePublic(fileId.get(0));
-        return ResponseEntity
-                .ok(Map.of("message", "Upload Successful!", "fileId", fileId.get(0), "fileName", fileId.get(1)));
+        return ResponseEntity.ok(Map.of(
+                RESPONSE_MESSAGE_KEY, "Upload Successful!",
+                "fileId", fileId.get(0),
+                "fileName", fileId.get(1)));
     }
 
     @GetMapping("/download/{fileId}")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
     public ResponseEntity<String> downloadFile(@PathVariable("fileId") String fileId) throws IOException {
-        String downloadUrl = googleDriveService.generateDownloadUrl(fileId);
-        System.out.println(downloadUrl);
-        return ResponseEntity.ok(downloadUrl);
+        return ResponseEntity.ok(googleDriveService.generateDownloadUrl(fileId));
     }
 
     @DeleteMapping("/delete/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> deleteGame(@PathVariable("id") String fileId) throws IOException {
         googleDriveService.deleteFile(fileId);
-        Map<String, String> map = Map.of("message", "File deleted successfully");
-        return ResponseEntity.ok(map);
+        return ResponseEntity.ok(Map.of(RESPONSE_MESSAGE_KEY, "File deleted successfully"));
     }
 
     @PostMapping("/sendpublisher")
     @PreAuthorize("hasRole('STANDARD')")
     public ResponseEntity<Map<String, Object>> sendPublisherApplyRequest(
-            @RequestBody PublisherApplyRequestDTO publisherApplyRequestDTO) {
+            @RequestBody PublisherApplyRequestDTO dto) {
         Map<String, Object> response = new HashMap<>();
         try {
-            requestService.addPublisher(publisherApplyRequestDTO, 2L);
-            response.put("message", "Sending publisher apply request successfully");
+            requestService.addPublisher(dto, 2L);
+            response.put(RESPONSE_MESSAGE_KEY, "Sending publisher apply request successfully");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(response);
@@ -246,10 +215,11 @@ public class RequestController {
         Map<String, Object> response = new HashMap<>();
         try {
             requestService.addFeedback(feedbackDTO, 2L);
-            response.put("message", "Sending feedback successfully");
+            response.put(RESPONSE_MESSAGE_KEY, "Sending feedback successfully");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(response);
         }
     }
 }
+

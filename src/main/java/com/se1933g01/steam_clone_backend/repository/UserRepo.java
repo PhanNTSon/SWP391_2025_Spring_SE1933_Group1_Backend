@@ -12,10 +12,10 @@ import org.springframework.stereotype.Repository;
 import com.se1933g01.steam_clone_backend.entity.user.User;
 @Repository
 public interface UserRepo extends JpaRepository<User,Long>{
-    @Query("SELECT u FROM User u LEFT JOIN FETCH u.cartGames WHERE u.userID = :userId")
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.cartGames WHERE u.userId = :userId")
     User findByIdWithCartGames(@Param("userId") Long userId);
 
-    @Query("SELECT u FROM User u LEFT JOIN FETCH u.games WHERE u.userID = :userId")
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.games WHERE u.userId = :userId")
     User findByIdWithLibraryGames(@Param("userId") Long userId);
     
     
