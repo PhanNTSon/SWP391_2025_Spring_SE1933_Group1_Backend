@@ -276,11 +276,11 @@ public class UserController {
      * UserID get in Security Context
      * @return
      */
-    @GetMapping("/profile")
+    @GetMapping("/profile/{userId}")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
     public ResponseEntity<UserDetailDTO> getUserProfile(@PathVariable Long userId) {
         UserDetailDTO userDto = userService.findUserDetailById(userId);
-        return ResponseEntity.ok(userDto);
+        return ResponseEntity.ok(userDto);//
     }
 
     @PutMapping("/edit")
