@@ -1,5 +1,7 @@
 package com.se1933g01.steam_clone_backend.controller;
 
+import com.se1933g01.steam_clone_backend.dto.CartDTO;
+import com.se1933g01.steam_clone_backend.dto.FeedbackDTO;
 import com.se1933g01.steam_clone_backend.dto.GameBasicDTO;
 import com.se1933g01.steam_clone_backend.dto.LibraryDTO;
 import com.se1933g01.steam_clone_backend.dto.PublisherApplyRequestDTO;
@@ -327,4 +329,17 @@ public class UserController {
         }
     }
 
+    @PostMapping("/sendfeedback")
+    public ResponseEntity<Map<String, Object>> sendFeedback(@RequestBody FeedbackDTO feedbackDTO) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            requestService.addFeedback(feedbackDTO,2L);
+            response.put("message", "Sending feedback successfully");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+    
+    
 }

@@ -115,11 +115,17 @@ public class AdminController {
     @GetMapping("/gameRequest/details/{id}")
     public ResponseEntity<AddingGameRequestDTO> getGameRequest(@PathVariable Long id) {
         AddingGameRequestDTO gameDetails = requestService.getGameDetails(id);
+        if (gameDetails == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
         return ResponseEntity.ok(gameDetails);
     }
     @GetMapping("/publisherApplyRequest/details/{id}")
     public ResponseEntity<PublisherApplyRequestDTO> getPublisherApplyRequest(@PathVariable Long id) {
         PublisherApplyRequestDTO publisherApplyRequestDetails = requestService.getPublisherDetails(id);
+        if (publisherApplyRequestDetails == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
         return ResponseEntity.ok(publisherApplyRequestDetails);
     }
     @GetMapping("/download/{fileId}")
