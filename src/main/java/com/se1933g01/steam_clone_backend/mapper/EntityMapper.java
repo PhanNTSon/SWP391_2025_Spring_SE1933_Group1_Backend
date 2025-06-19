@@ -1,11 +1,13 @@
 package com.se1933g01.steam_clone_backend.mapper;
 
 import com.se1933g01.steam_clone_backend.dto.*;
+import com.se1933g01.steam_clone_backend.dto.User.UserDetailDTO;
 import com.se1933g01.steam_clone_backend.entity.game.Game;
 import com.se1933g01.steam_clone_backend.entity.game.Media;
 import com.se1933g01.steam_clone_backend.entity.game.Tag;
 import com.se1933g01.steam_clone_backend.entity.game.SystemRequirement;
 import com.se1933g01.steam_clone_backend.entity.user.Publisher;
+import com.se1933g01.steam_clone_backend.entity.user.User;
 
 import java.util.Collections;
 import java.util.Optional;
@@ -160,5 +162,19 @@ public class EntityMapper {
         }
 
         return dto;
+    }
+
+    public static UserDetailDTO toUserDetailDTO(User user) {
+        return new UserDetailDTO(
+                user.getUserID(),
+                user.getEmail(),
+                user.getUsername(),
+                user.getWalletBalance(),
+                user.getCountry(),
+                user.getDob(),
+                user.getGender(),
+                user.getProfileName(),
+                user.getSummary(),
+                user.isBanStatus());
     }
 }

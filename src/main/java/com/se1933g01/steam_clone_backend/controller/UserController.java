@@ -3,6 +3,8 @@ package com.se1933g01.steam_clone_backend.controller;
 import com.se1933g01.steam_clone_backend.dto.GameBasicDTO;
 import com.se1933g01.steam_clone_backend.dto.LibraryDTO;
 import com.se1933g01.steam_clone_backend.dto.PublisherApplyRequestDTO;
+import com.se1933g01.steam_clone_backend.dto.User.UserDetailDTO;
+import com.se1933g01.steam_clone_backend.dto.User.UserUpdateDTO;
 import com.se1933g01.steam_clone_backend.entity.transaction.Transaction;
 import com.se1933g01.steam_clone_backend.entity.user.User;
 import com.se1933g01.steam_clone_backend.service.CartService;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -282,6 +285,25 @@ public class UserController {
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Internal server error");
         }
+    }
+
+    /**
+     * Author: kerri
+     * 
+     * @return
+     */
+    @GetMapping("/profile/{userId}")
+    public ResponseEntity<UserDetailDTO> getUserProfile(@PathVariable Long userId) {
+        UserDetailDTO userDto = userService.findUserDetailById(userId);
+        return ResponseEntity.ok(userDto);
+    }
+
+    @PutMapping("/edit/{userId}")
+    public ResponseEntity<UserDetailDTO> updateUserProfile(
+            @PathVariable Long userId,
+            @RequestBody UserUpdateDTO userUpdateDTO) {
+        UserDetailDTO updatedUser = userService.updateUserProfile(userId, userUpdateDTO);
+        return ResponseEntity.ok(updatedUser);
     }
 
     @GetMapping("/download/{fileId}")

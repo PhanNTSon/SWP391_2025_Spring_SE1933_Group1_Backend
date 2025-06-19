@@ -1,6 +1,7 @@
 package com.se1933g01.steam_clone_backend.entity.user;
 
 import java.sql.Date;
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
