@@ -32,8 +32,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 public class ReviewController {
 
     private final ReviewService reviewService;
-    private final String RESPONSE_STRING_OK = "SUCCESS";
-    private final String RESPONSE_STRING_ERROR = "SERVER ERROR";
+    private static final String responseStringOk = "SUCCESS";
+    private static final String responseStringError = "SERVER ERROR";
 
     ReviewController(ReviewService reviewService) {
         this.reviewService = reviewService;
@@ -46,7 +46,7 @@ public class ReviewController {
      * @param gameId
      * @return
      */
-    @PostMapping("/post/{gameId}")
+    @PostMapping("/post")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
     public ResponseEntity<CreateReviewDTO> createReview(@RequestBody CreateReviewDTO dto,
             @AuthenticationPrincipal CustomUserDetail me) {
@@ -110,9 +110,9 @@ public class ReviewController {
             @AuthenticationPrincipal CustomUserDetail me) {
         try {
             reviewService.patchLikeReview(me.getUser().getUserId(), dto.getGameId(), dto.getAuthorId());
-            return ResponseEntity.ok().body(RESPONSE_STRING_OK);
+            return ResponseEntity.ok().body(responseStringOk);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(RESPONSE_STRING_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseStringError);
         }
     }
 
@@ -128,9 +128,9 @@ public class ReviewController {
             @AuthenticationPrincipal CustomUserDetail me) {
         try {
             reviewService.patchUnLikeReview(me.getUser().getUserId(), dto.getGameId(), dto.getAuthorId());
-            return ResponseEntity.ok().body(RESPONSE_STRING_OK);
+            return ResponseEntity.ok().body(responseStringOk);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(RESPONSE_STRING_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseStringError);
         }
     }
 
@@ -145,9 +145,9 @@ public class ReviewController {
             @AuthenticationPrincipal CustomUserDetail me) {
         try {
             reviewService.deleteReactionReview(me.getUser().getUserId(), dto.getGameId(), dto.getAuthorId());
-            return ResponseEntity.ok().body(RESPONSE_STRING_OK);
+            return ResponseEntity.ok().body(responseStringOk);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(RESPONSE_STRING_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseStringError);
         }
     }
 
