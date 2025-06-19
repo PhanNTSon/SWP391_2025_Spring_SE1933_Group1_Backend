@@ -19,7 +19,6 @@ import jakarta.transaction.Transactional;
 
 import com.se1933g01.steam_clone_backend.repository.TransactionRepo;
 
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -231,6 +230,7 @@ public class UserService {
                 user.getEmail(),
                 user.getUsername(),
                 user.getWalletBalance(),
+                user.getAvatarUrl(),
                 user.getCountry(),
                 user.getDob(),
                 user.getGender(),

@@ -170,6 +170,7 @@ public class EntityMapper {
                 user.getEmail(),
                 user.getUsername(),
                 user.getWalletBalance(),
+                user.getAvatarUrl(),
                 user.getCountry(),
                 user.getDob(),
                 user.getGender(),

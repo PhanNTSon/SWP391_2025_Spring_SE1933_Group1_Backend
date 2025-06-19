@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -49,6 +50,7 @@ public class PublisherController {
     private PublisherService publisherService1;
 
     @GetMapping("/list")
+    @PreAuthorize("permitAll()")
     public ResponseEntity<List<PublisherBasicDTO>> getAllPublishers() {
         List<PublisherBasicDTO> publishers = publisherService1.getAllPublishersBasicDTO();
         if (publishers.isEmpty()) {

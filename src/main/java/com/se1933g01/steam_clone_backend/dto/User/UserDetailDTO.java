@@ -25,6 +25,8 @@ public class UserDetailDTO {
 
     private Double walletBalance;
 
+    private String avatarUrl;
+
     private String country;
 
     private Date dob;
