@@ -38,7 +38,6 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         var attributes = oauthToken.getPrincipal().getAttributes();
 
         String email = (String) attributes.get("email");
-        String name = (String) attributes.get("name");
 
         // Check if user exists
         User user = userRepo.findByEmail(email).orElse(null);

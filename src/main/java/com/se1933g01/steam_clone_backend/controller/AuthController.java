@@ -42,7 +42,7 @@ public class AuthController {
 
     @GetMapping("/check-email")
     @PreAuthorize("permitAll()")
-    public ResponseEntity<?> checkEmail(@RequestParam String email) {
+    public ResponseEntity<Map<String, Boolean>> checkEmail(@RequestParam String email) {
         boolean emailExists = authService.emailExists(email);
         return ResponseEntity.ok().body(Map.of("available", !emailExists));
     }
