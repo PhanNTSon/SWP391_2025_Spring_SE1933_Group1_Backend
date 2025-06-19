@@ -62,7 +62,7 @@ public class AuthService {
 
         user.setCountry(request.getCountry());
         user.setWalletBalance(0.0); // default balance
-        user.setBanStatus(true); // default status
+        user.setBanStatus(false); // default status
 
         Role userRole = new Role();
         userRole.setRoleId(1L);
@@ -135,7 +135,7 @@ public class AuthService {
             user.setUsername(email); // tạo username bằng email
             user.setPassword(""); // rỗng vì OAuth2 không sử dụng mật khẩu
             user.setWalletBalance(0.0);
-            user.setBanStatus(false);
+            user.setBanStatus(false); // default status
     
             Role userRole = new Role();
             userRole.setRoleId(1L); // Default user role
