@@ -34,9 +34,7 @@ public class JwtUtil {
      */
     private final Key getSignedKey() {
         byte[] keyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
-        System.out.println("[JwtUtil] secretKey.length=" + keyBytes.length);
         Key key = Keys.hmacShaKeyFor(keyBytes);
-        System.out.println("[JwtUtil] derived key algorithm=" + key.getAlgorithm());
         return key;
     }
 
@@ -57,7 +55,6 @@ public class JwtUtil {
                 .setExpiration(new Date(System.currentTimeMillis() + expirationMs))
                 .signWith(getSignedKey(), SignatureAlgorithm.HS256)
                 .compact();
-        System.out.println("[JwtUtil] generated JWT: " + jwt);
         return jwt;
     }
 
@@ -69,7 +66,6 @@ public class JwtUtil {
      * @exception Throws JwtException (ExpiredJwtException, etc.) if invalid/expired
      */
     public Claims parseClaims(String token) {
-        System.out.println("[JwtUtil] parseClaims got token: " + token);
         try {
             return Jwts.parserBuilder()
                     .setSigningKey(getSignedKey())
@@ -77,8 +73,6 @@ public class JwtUtil {
                     .parseClaimsJws(token)
                     .getBody();
         } catch (JwtException e) {
-            System.out.println("[JwtUtil] parseClaims failed: " + e.getClass().getSimpleName()
-                    + " — " + e.getMessage());
             throw new RuntimeException("Invalid or expired Token");
         }
     }

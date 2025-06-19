@@ -26,8 +26,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 @RequestMapping("/notification")
 public class NotificationController {
 
-    @Autowired
-    private NotificationService notifService;
+    private final NotificationService notifService;
+
+    public NotificationController(NotificationService notifService) {
+        this.notifService = notifService;
+    }
 
     /**
      * Get list of all Notifications
@@ -84,6 +87,7 @@ public class NotificationController {
 
     /**
      * Delete a notifcation
+     * 
      * @param notificationId
      * @return
      */

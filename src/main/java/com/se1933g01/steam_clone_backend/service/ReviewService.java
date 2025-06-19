@@ -75,7 +75,7 @@ public class ReviewService {
 
         reviewRepo.save(review);
 
-        return new CreateReviewDTO(isRecommended, userId, reviewContent);
+        return new CreateReviewDTO(gameId, isRecommended, reviewContent);
     }
 
     /**
@@ -129,7 +129,7 @@ public class ReviewService {
 
     @Transactional
     public UpdateReviewDTO updateReview(long gameId, UpdateReviewDTO dto) {
-        ReviewKey key = new ReviewKey(gameId, dto.getUserId());
+        ReviewKey key = new ReviewKey(gameId, dto.getAuthorId());
         Review target = reviewRepo.findById(key).orElse(null);
         if (target != null) {
 
