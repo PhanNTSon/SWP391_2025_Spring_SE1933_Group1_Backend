@@ -7,15 +7,18 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-
+import lombok.Data;
+@Data
 @Entity
-@Table(name = "ReportRequest")
-public class ReportRequest {
+@Table(name = "Feedback")
+public class Feedback {
     @Id
     @Column(name = "RequestID")
     private long requestId;
 
-    @Column(name = "Message")
+    @Column(name = "Subject",columnDefinition = "NVARCHAR(256)")
+    private String subject;
+    @Column(name = "Message",columnDefinition = "NVARCHAR(2048)")
     private String message;
 
     // ================ Relationships =============

@@ -5,11 +5,15 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.se1933g01.steam_clone_backend.dto.TagDTO;
 import com.se1933g01.steam_clone_backend.service.TagService;
 
+/**
+ * @author TS Huy
+ */
 @RestController
 @RequestMapping("/tags") // URL cơ sở cho các API liên quan đến tag
 public class TagController {
@@ -23,6 +27,7 @@ public class TagController {
 
 
     @GetMapping
+    @PreAuthorize("permitAll()")
     public ResponseEntity<List<TagDTO>> getAllTags() {
         List<TagDTO> tags = tagService.getAllTags();
 

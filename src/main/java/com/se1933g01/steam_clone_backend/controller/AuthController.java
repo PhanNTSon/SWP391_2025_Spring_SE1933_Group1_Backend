@@ -18,11 +18,14 @@ import com.se1933g01.steam_clone_backend.service.EmailService;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * @author Loc Phan
+ */
 @RestController
 @RequestMapping("/api/auth")
-// @CrossOrigin(origins = "*") // allow frontend access
 public class AuthController {
 
     @Autowired
@@ -31,18 +34,21 @@ public class AuthController {
     private EmailService emailService; 
 
     @PostMapping("/register")
+    @PreAuthorize("permitAll()")
     public ResponseEntity<String> register(@RequestBody RegisterRequestDTO request) {
         authService.register(request);
         return ResponseEntity.ok("Registration successful!");
     }
 
     @GetMapping("/check-email")
+    @PreAuthorize("permitAll()")
     public ResponseEntity<?> checkEmail(@RequestParam String email) {
         boolean emailExists = authService.emailExists(email);
         return ResponseEntity.ok().body(Map.of("available", !emailExists));
     }
 
     @PostMapping("/login")
+    @PreAuthorize("permitAll()")
     public ResponseEntity<?> login(@RequestBody LoginDTO request) {
         return authService.login(request);
     }

@@ -5,11 +5,11 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -44,7 +44,8 @@ public class ReviewController {
      * @param gameId
      * @return
      */
-    @PostMapping("/user/review/post")
+    @PostMapping("/post/{gameId}")
+    @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
     public ResponseEntity<CreateReviewDTO> createReview(@RequestBody CreateReviewDTO dto,
             @AuthenticationPrincipal CustomUserDetail me) {
         CreateReviewDTO result = reviewService.createReview(me.getUser().getUserID(), dto.getGameId(),
@@ -59,13 +60,14 @@ public class ReviewController {
      * @param gameId
      * @return
      */
-    @GetMapping("/game/{gameId}/reviews/{page}")
-    public ResponseEntity<List<ReviewDTO>> getReviewList(@PathVariable("gameId") Long gameId,
-            @PathVariable(name = "page") int pageNum) {
+    @GetMapping("/list/{gameId}")
+    @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
+    public ResponseEntity<List<ReviewDTO>> getReviewList(@PathVariable("gameId") Long gameId) {
         return ResponseEntity.ok(reviewService.getGameReviewList(gameId));
     }
 
     @GetMapping("/{gameId}/{authorId}/check")
+    @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
     public ResponseEntity<?> getUserReaction(@RequestParam Long userId,
             @PathVariable("gameId") long reviewGameId,
             @PathVariable("authorId") long reviewAuthorId) {
@@ -84,7 +86,8 @@ public class ReviewController {
      * @param gameId
      * @return
      */
-    @PutMapping("/{gameId}/update-review")
+    @PutMapping("/update/{gameId}")
+    @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
     public ResponseEntity<UpdateReviewDTO> updateReview(@RequestBody UpdateReviewDTO dto,
             @PathVariable("gameId") Long gameId) {
         UpdateReviewDTO result = reviewService.updateReview(gameId, dto);
@@ -99,7 +102,8 @@ public class ReviewController {
      * @param reviewAuthorId
      * @return
      */
-    @PatchMapping("/{gameId}/{authorId}/helpful")
+    @PatchMapping("/vote/helpful")
+    @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
     public ResponseEntity<String> likeReview(@RequestBody UpdateReviewDTO dto,
             @PathVariable("gameId") long reviewGameId,
             @PathVariable("authorId") long reviewAuthorId) {
@@ -114,12 +118,11 @@ public class ReviewController {
     /**
      * Update Review Not helpful count
      * 
-     * @param userId
-     * @param reviewGameId
-     * @param reviewAuthorId
+     * @param dto include ReviewGameID & ReviewAuthorID
      * @return
      */
-    @PatchMapping("/{gameId}/{authorId}/not-helpful")
+    @PatchMapping("/vote/unhelpful")
+    @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
     public ResponseEntity<String> dislikeReview(@RequestBody UpdateReviewDTO dto,
             @PathVariable("gameId") long reviewGameId,
             @PathVariable("authorId") long reviewAuthorId) {
@@ -131,7 +134,13 @@ public class ReviewController {
         }
     }
 
-    @PatchMapping("/{gameId}/{authorId}/clean-reaction")
+    /**
+     * 
+     * @param dto include ReviewGameID & ReviewAuthorID
+     * @return
+     */
+    @PatchMapping("/vote/clean")
+    @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
     public ResponseEntity<String> reactionReview(@RequestBody UpdateReviewDTO dto,
             @PathVariable("gameId") long reviewGameId,
             @PathVariable("authorId") long reviewAuthorId) {
@@ -148,10 +157,10 @@ public class ReviewController {
      * Delete Review
      * 
      * @param userId
-     * @param gameId
      * @return
      */
-    @DeleteMapping("/{gameId}/delete-review/{userId}")
+    @DeleteMapping("/delete")
+    @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
     public ResponseEntity<Void> deleteReview(@PathVariable("userId") Long userId,
             @PathVariable("gameId") Long gameId) {
         reviewService.deleteReview(userId, gameId);
