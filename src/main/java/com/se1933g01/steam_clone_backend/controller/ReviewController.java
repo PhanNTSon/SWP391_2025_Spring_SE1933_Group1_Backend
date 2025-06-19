@@ -32,8 +32,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 public class ReviewController {
 
     private final ReviewService reviewService;
-    private static final String responseStringOk = "SUCCESS";
-    private static final String responseStringError = "SERVER ERROR";
+    private static final String RESPONSE_STRING_OK = "SUCCESS";
+    private static final String RESPONSE_STRING_ERROR = "SERVER ERROR";
 
     ReviewController(ReviewService reviewService) {
         this.reviewService = reviewService;
@@ -110,9 +110,9 @@ public class ReviewController {
             @AuthenticationPrincipal CustomUserDetail me) {
         try {
             reviewService.patchLikeReview(me.getUser().getUserId(), dto.getGameId(), dto.getAuthorId());
-            return ResponseEntity.ok().body(responseStringOk);
+            return ResponseEntity.ok().body(RESPONSE_STRING_OK);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseStringError);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(RESPONSE_STRING_ERROR);
         }
     }
 
@@ -128,9 +128,9 @@ public class ReviewController {
             @AuthenticationPrincipal CustomUserDetail me) {
         try {
             reviewService.patchUnLikeReview(me.getUser().getUserId(), dto.getGameId(), dto.getAuthorId());
-            return ResponseEntity.ok().body(responseStringOk);
+            return ResponseEntity.ok().body(RESPONSE_STRING_OK);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseStringError);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(RESPONSE_STRING_ERROR);
         }
     }
 
@@ -145,9 +145,9 @@ public class ReviewController {
             @AuthenticationPrincipal CustomUserDetail me) {
         try {
             reviewService.deleteReactionReview(me.getUser().getUserId(), dto.getGameId(), dto.getAuthorId());
-            return ResponseEntity.ok().body(responseStringOk);
+            return ResponseEntity.ok().body(RESPONSE_STRING_OK);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseStringError);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(RESPONSE_STRING_ERROR);
         }
     }
 

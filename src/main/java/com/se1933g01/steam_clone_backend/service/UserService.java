@@ -36,14 +36,14 @@ public class UserService {
     private UserRepo userRepo;
     private TransactionRepo transactionRepo;
     private EntityMapper entityMapper;
+    private static final String USER_NOT_FOUND_MSG = "User not found";
 
     public User getUser(Long userId) {
         return userRepo.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_MSG));
     }
 
     // String constant for user not found message
-    private static final String messageNotFound = "User not found";
 
     // author: Ba Thanh
     // Get userId from SecurityContextHolder
@@ -60,7 +60,7 @@ public class UserService {
     public List<Transaction> showTransactions() {
         Long userId = getCurrentUserId();
         User user = userRepo.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException(messageNotFound));
+                .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_MSG));
         return transactionRepo.findByUser(user);
     }
 
@@ -79,7 +79,7 @@ public class UserService {
         Long userId = getCurrentUserId();
         User user = userRepo.findByIdWithLibraryGames(userId);
         if (user == null)
-            throw new EntityNotFoundException(messageNotFound);
+            throw new EntityNotFoundException(USER_NOT_FOUND_MSG);
         LibraryDTO libraryDTO = new LibraryDTO();
         List<GameDetailDTO> gameDetailList = new ArrayList<>();
         for (Game game : user.getGames()) {
@@ -146,7 +146,7 @@ public class UserService {
     public double getUserBalance() {
         Long userId = getCurrentUserId();
         User user = userRepo.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException(messageNotFound));
+                .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_MSG));
         return user.getWalletBalance();
     }
 
@@ -157,7 +157,7 @@ public class UserService {
         if (amount == null || amount <= 0)
             throw new IllegalArgumentException("Amount must be positive");
         Long userId = getCurrentUserId();
-        User user = userRepo.findById(userId).orElseThrow(() -> new EntityNotFoundException(messageNotFound));
+        User user = userRepo.findById(userId).orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_MSG));
         user.setWalletBalance(user.getWalletBalance() + amount);
         userRepo.save(user);
         return user.getWalletBalance();
@@ -170,7 +170,7 @@ public class UserService {
         if (amount == null || amount <= 0)
             throw new IllegalArgumentException("Amount must be positive");
         Long userId = getCurrentUserId();
-        User user = userRepo.findById(userId).orElseThrow(() -> new EntityNotFoundException(messageNotFound));
+        User user = userRepo.findById(userId).orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_MSG));
         if (user.getWalletBalance() < amount) {
             throw new IllegalArgumentException("Insufficient balance");
         }
@@ -189,7 +189,7 @@ public class UserService {
      */
     public User getUser(String username) {
         return userRepo.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException(messageNotFound));
+                .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND_MSG));
     }
 
     /**
@@ -254,6 +254,6 @@ public class UserService {
                 user.getProfileName(),
                 user.getSummary(),
                 user.isBanStatus()))
-                .orElseThrow(() -> new RuntimeException(messageNotFound));
+                .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND_MSG));
     }
 }
