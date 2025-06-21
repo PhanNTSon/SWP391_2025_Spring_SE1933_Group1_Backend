@@ -75,49 +75,49 @@ public class RequestController {
         }
     }
 
-    @PatchMapping("/approve/{requestID}")
+    @PatchMapping("/game/approve/{requestID}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> approveGame(@PathVariable String requestID) {
         return handleAction(() -> requestService.approveGame(Long.parseLong(requestID)),
                 "Game Approved", "Game Approve Failed");
     }
 
-    @PatchMapping("/reject/{requestID}")
+    @PatchMapping("/game/reject/{requestID}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> rejectGame(@PathVariable String requestID) {
         return handleAction(() -> requestService.rejectGame(Long.parseLong(requestID)),
                 "Game Rejected", "Game Reject Failed");
     }
 
-    @PatchMapping("/approvepublisher/{requestID}")
+    @PatchMapping("/publisher/approve/{requestID}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> approvePublisher(@PathVariable String requestID) {
         return handleAction(() -> requestService.approvePublisher(Long.parseLong(requestID)),
                 "This user is now a publisher", "Failed to approve");
     }
 
-    @PatchMapping("/rejectpublisher/{requestID}")
+    @PatchMapping("/publisher/reject/{requestID}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> rejectPublisher(@PathVariable String requestID) {
         return handleAction(() -> requestService.rejectPublisher(Long.parseLong(requestID)),
                 "User Rejected", "Game Reject Failed");
     }
 
-    @GetMapping("/gameRequest/{page}")
+    @GetMapping("/game/{page}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<AddingGameRequestDTO>> getGameRequest(@PathVariable int page) {
         Pageable pageable = PageRequest.of(page, 10, Sort.by("requestId").descending());
         return ResponseEntity.ok(requestService.getAllAddingGameRequest(pageable));
     }
 
-    @GetMapping("/publisherApplyRequest/{page}")
+    @GetMapping("/publisher/{page}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<PublisherApplyRequestDTO>> getPublisherApplyRequest(@PathVariable int page) {
         Pageable pageable = PageRequest.of(page, 10, Sort.by("requestId").descending());
         return ResponseEntity.ok(requestService.getAllPublisherApplyRequest(pageable));
     }
 
-    @GetMapping("/gameRequest/details/{id}")
+    @GetMapping("/game/details/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AddingGameRequestDTO> getGameRequest(@PathVariable Long id) {
         AddingGameRequestDTO details = requestService.getGameDetails(id);
@@ -126,7 +126,7 @@ public class RequestController {
                 : ResponseEntity.ok(details);
     }
 
-    @GetMapping("/publisherApplyRequest/details/{id}")
+    @GetMapping("/publisher/details/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PublisherApplyRequestDTO> getPublisherApplyRequest(@PathVariable Long id) {
         PublisherApplyRequestDTO details = requestService.getPublisherDetails(id);
@@ -141,7 +141,7 @@ public class RequestController {
         return ResponseEntity.ok(userService.getAllBannedUser(pageNum));
     }
 
-    @PostMapping("/addGame")
+    @PostMapping("/game/add")
     @PreAuthorize("hasRole('PUBLISHER')")
     public ResponseEntity<Map<String, String>> addGame(
             @RequestBody AddingGameRequestDTO dto, @AuthenticationPrincipal CustomUserDetail me) {
@@ -153,7 +153,7 @@ public class RequestController {
         }
     }
 
-    @PostMapping("/uploadImage")
+    @PostMapping("/image/upload")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
     public ResponseEntity<Map<String, Object>> uploadImage(@RequestParam("files") MultipartFile[] files) {
         try {
@@ -171,7 +171,7 @@ public class RequestController {
         }
     }
 
-    @PostMapping("/upload")
+    @PostMapping("/file/upload")
     @PreAuthorize("hasRole('PUBLISHER')")
     public ResponseEntity<Map<String, String>> uploadFile(@RequestParam("file") MultipartFile file) throws IOException {
         List<String> fileId = googleDriveService.uploadFile(file);
@@ -182,20 +182,20 @@ public class RequestController {
                 "fileName", fileId.get(1)));
     }
 
-    @GetMapping("/download/{fileId}")
+    @GetMapping("/file/download/{fileId}")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
     public ResponseEntity<String> downloadFile(@PathVariable("fileId") String fileId) throws IOException {
         return ResponseEntity.ok(googleDriveService.generateDownloadUrl(fileId));
     }
 
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/file/delete/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> deleteGame(@PathVariable("id") String fileId) throws IOException {
         googleDriveService.deleteFile(fileId);
         return ResponseEntity.ok(Map.of(RESPONSE_MESSAGE_KEY, "File deleted successfully"));
     }
 
-    @PostMapping("/sendpublisher")
+    @PostMapping("/publisher/send")
     @PreAuthorize("hasRole('STANDARD')")
     public ResponseEntity<Map<String, Object>> sendPublisherApplyRequest(
             @RequestBody PublisherApplyRequestDTO dto) {
@@ -209,7 +209,7 @@ public class RequestController {
         }
     }
 
-    @PostMapping("/sendfeedback")
+    @PostMapping("/feedback/send")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER')")
     public ResponseEntity<Map<String, Object>> sendFeedback(@RequestBody FeedbackDTO feedbackDTO) {
         Map<String, Object> response = new HashMap<>();
