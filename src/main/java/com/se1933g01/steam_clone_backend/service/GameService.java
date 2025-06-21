@@ -16,6 +16,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional; // QUAN TRỌNG cho lazy loading
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -40,7 +41,7 @@ public class GameService {
 
 
     @Transactional(readOnly = true)
-    public Page<GameBasicDTO> findGamesByCriteria(String searchTerm, Double maxPrice, List<Integer> tagIds,
+    public Page<GameBasicDTO> findGamesByCriteria(String searchTerm, BigDecimal maxPrice, List<Integer> tagIds,
             List<Long> publisherIds, Pageable pageable) {
         Specification<Game> spec = Specification
                 .where(GameSpecification.hasSearchTerm(searchTerm)) // <-- THÊM ĐIỀU KIỆN MỚI

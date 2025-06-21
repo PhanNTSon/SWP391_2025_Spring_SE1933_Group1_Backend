@@ -10,6 +10,7 @@ import com.se1933g01.steam_clone_backend.utils.JwtUtil;
 
 import jakarta.transaction.Transactional;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -65,7 +66,7 @@ public class AuthService {
         user.setPassword(hashed);
 
         user.setCountry(request.getCountry());
-        user.setWalletBalance(0.0); // default balance
+        user.setWalletBalance(BigDecimal.ZERO); // Changed by Pha Son 21-06
         user.setBanStatus(false); // default status
 
         Role userRole = new Role();
@@ -138,7 +139,7 @@ public class AuthService {
             user.setEmail(email);
             user.setUsername(email); // tạo username bằng email
             user.setPassword(""); // rỗng vì OAuth2 không sử dụng mật khẩu
-            user.setWalletBalance(0.0);
+            user.setWalletBalance(BigDecimal.ZERO); // Changed by Pha Son 21-06
             user.setBanStatus(false); // default status
 
             Role userRole = new Role();

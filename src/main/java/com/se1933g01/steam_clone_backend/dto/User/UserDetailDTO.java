@@ -5,8 +5,8 @@ import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Date;
 
 /**
  * @author kerri
@@ -23,13 +23,13 @@ public class UserDetailDTO {
 
     private String username;
 
-    private Double walletBalance;
+    private BigDecimal walletBalance; // Changed by Phan Son 21-06
 
     private String avatarUrl;
 
     private String country;
 
-    private Date dob;
+    private LocalDate dob; // Changed by Phan Son 21-06
 
     private Character gender;
 

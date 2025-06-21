@@ -16,6 +16,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 
 /**
  * @author Loc Phan
@@ -33,7 +34,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     @Override
     @Transactional
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
-                                         Authentication authentication) throws IOException {
+            Authentication authentication) throws IOException {
         var oauthToken = (OAuth2AuthenticationToken) authentication;
         var attributes = oauthToken.getPrincipal().getAttributes();
 
@@ -46,7 +47,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             user.setEmail(email);
             user.setUsername(email);
             user.setPassword(""); // OAuth2 = no password
-            user.setWalletBalance(0.0);
+            user.setWalletBalance(BigDecimal.ZERO); // Changed by Phan Son 21-06
             user.setBanStatus(false);
             Role userRole = new Role();
             userRole.setRoleId(1L);

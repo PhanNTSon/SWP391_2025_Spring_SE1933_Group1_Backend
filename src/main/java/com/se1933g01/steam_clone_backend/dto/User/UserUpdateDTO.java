@@ -1,23 +1,21 @@
 package com.se1933g01.steam_clone_backend.dto.User;
 
-import java.time.LocalDate;
-import java.sql.Date;
 
-import lombok.Getter;
-import lombok.Setter;
+import java.time.LocalDate;
+
+import lombok.Data;
 
 /**
  * @author kerri
  */
-@Getter
-@Setter
+@Data
 public class UserUpdateDTO {
     // annotation validation
     private String profileName;
     private String email;
     private String avatarUrl;
     private String country;
-    private Date dob;
+    private LocalDate dob; // Changed by Phan NT Son 21-06
     private Character gender;
     private String summary;
 }

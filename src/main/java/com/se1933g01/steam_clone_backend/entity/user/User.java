@@ -1,7 +1,7 @@
 package com.se1933g01.steam_clone_backend.entity.user;
 
 import java.math.BigDecimal;
-import java.sql.Date;
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -65,7 +65,7 @@ public class User {
         private String country;
 
         @Column(name = "DoB")
-        private Date dob;
+        private LocalDate dob;
 
         @Column(name = "Gender")
         private Character gender;
@@ -79,6 +79,8 @@ public class User {
         @Column(name = "BanStatus")
         private boolean banStatus;
 
+        @Column(name = "CreatedAt")
+        private LocalDate createdAt;
         // ================ Relationships =============
         @OneToMany(mappedBy = "user")
         private List<Request> requests;

@@ -1,6 +1,6 @@
 package com.se1933g01.steam_clone_backend.entity.community;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import com.se1933g01.steam_clone_backend.entity.user.User;
 
@@ -45,6 +45,6 @@ public class Conversation {
     private User user2;
 
     @Column(name = "CreatedAt")
-    private LocalDateTime createdAt;
+    private LocalDate createdAt;
 
 }
