@@ -198,10 +198,12 @@ public class RequestController {
     @PostMapping("/publisher/send")
     @PreAuthorize("hasRole('STANDARD')")
     public ResponseEntity<Map<String, Object>> sendPublisherApplyRequest(
-            @RequestBody PublisherApplyRequestDTO dto) {
+            @RequestBody PublisherApplyRequestDTO dto,
+            @AuthenticationPrincipal CustomUserDetail me
+            ) {
         Map<String, Object> response = new HashMap<>();
         try {
-            requestService.addPublisher(dto, 2L);
+            requestService.addPublisher(dto, me.getUser().getUserId());
             response.put(RESPONSE_MESSAGE_KEY, "Sending publisher apply request successfully");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
