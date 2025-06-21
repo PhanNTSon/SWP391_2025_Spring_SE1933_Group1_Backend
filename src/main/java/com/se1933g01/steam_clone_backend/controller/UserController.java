@@ -2,13 +2,16 @@ package com.se1933g01.steam_clone_backend.controller;
 
 import com.se1933g01.steam_clone_backend.dto.CartDTO;
 import com.se1933g01.steam_clone_backend.dto.LibraryDTO;
+import com.se1933g01.steam_clone_backend.dto.User.FriendDTO;
 import com.se1933g01.steam_clone_backend.dto.User.UserDetailDTO;
 import com.se1933g01.steam_clone_backend.dto.User.UserUpdateDTO;
 import com.se1933g01.steam_clone_backend.entity.transaction.Transaction;
+import com.se1933g01.steam_clone_backend.entity.user.CustomUserDetail;
 import com.se1933g01.steam_clone_backend.service.CartService;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,7 +40,7 @@ public class UserController {
 
     /**
      * @Author: Ba Thanh
-     * UserID get in Security Context
+     *          UserID get in Security Context
      */
     @GetMapping("/cart")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
@@ -191,6 +194,7 @@ public class UserController {
     /**
      * Author: kerri
      * UserID get in Security Context
+     * 
      * @return
      */
     @GetMapping("/profile/{userId}")
@@ -208,6 +212,18 @@ public class UserController {
         UserDetailDTO updatedUser = userService.updateUserProfile(userId, userUpdateDTO);
         return ResponseEntity.ok(updatedUser);
     }
-    
+
+    /**
+     * @author Phan NT Son
+     * @since 21-06-2025
+     * @param me
+     * @return
+     */
+    @GetMapping("/friends")
+    @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
+    public ResponseEntity<List<FriendDTO>> getListFriend(@AuthenticationPrincipal CustomUserDetail me) {
+        return ResponseEntity.ok().body(userService.getFriends(me.getUser().getUserId()));
+    }
+
     
 }

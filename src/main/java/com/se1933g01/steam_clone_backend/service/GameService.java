@@ -12,7 +12,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import jakarta.persistence.EntityNotFoundException; // Hoặc exception tùy chỉnh
 import org.hibernate.Hibernate; // Để khởi tạo các collection lazy
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional; // QUAN TRỌNG cho lazy loading
@@ -29,7 +28,6 @@ public class GameService {
 
     private final GameRepository gameRepository;
 
-    @Autowired
     public GameService(GameRepository gameRepository) {
         this.gameRepository = gameRepository;
     }

@@ -5,8 +5,10 @@ import com.se1933g01.steam_clone_backend.dto.LibraryDTO;
 import com.se1933g01.steam_clone_backend.dto.MediaDTO;
 import com.se1933g01.steam_clone_backend.dto.PublisherBasicDTO;
 import com.se1933g01.steam_clone_backend.dto.TagDTO;
+import com.se1933g01.steam_clone_backend.dto.User.FriendDTO;
 import com.se1933g01.steam_clone_backend.dto.User.UserDetailDTO;
 import com.se1933g01.steam_clone_backend.dto.User.UserUpdateDTO;
+import com.se1933g01.steam_clone_backend.entity.community.Friendship;
 import com.se1933g01.steam_clone_backend.entity.game.Game;
 import com.se1933g01.steam_clone_backend.dto.BannedUserDTO;
 import com.se1933g01.steam_clone_backend.entity.transaction.Transaction;
@@ -18,6 +20,7 @@ import com.se1933g01.steam_clone_backend.mapper.EntityMapper;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
+import com.se1933g01.steam_clone_backend.repository.FriendshipRepo;
 import com.se1933g01.steam_clone_backend.repository.TransactionRepo;
 
 import org.springframework.data.domain.Page;
@@ -36,12 +39,16 @@ public class UserService {
     private UserRepo userRepo;
     private TransactionRepo transactionRepo;
     private EntityMapper entityMapper;
+    private final FriendshipRepo friendshipRepo; // Added by Phan NT Son 21-06-2025
+
     private static final String USER_NOT_FOUND_MSG = "User not found";
 
-    public UserService(UserRepo userRepo, TransactionRepo transactionRepo, EntityMapper entityMapper) {
+    public UserService(UserRepo userRepo, TransactionRepo transactionRepo, EntityMapper entityMapper,
+            FriendshipRepo friendshipRepo) {
         this.userRepo = userRepo;
         this.transactionRepo = transactionRepo;
         this.entityMapper = entityMapper;
+        this.friendshipRepo = friendshipRepo;
     }
 
     public User getUser(Long userId) {
@@ -261,5 +268,25 @@ public class UserService {
                 user.getSummary(),
                 user.isBanStatus()))
                 .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND_MSG));
+    }
+
+    /**
+     * @author Phan NT Son
+     * @since 21-06-2025
+     * 
+     * Get friends list base on UserID
+     * 
+     * @param userId
+     * @return
+     */
+    public List<FriendDTO> getFriends(Long userId) {
+        List<Friendship> queryResultList = friendshipRepo.findAllByUserId(userId);
+        List<FriendDTO> mappingResult = queryResultList.stream()
+                .map(friendship -> new FriendDTO(
+                        friendship.getFriend().getUserId(),
+                        friendship.getFriend().getUsername(),
+                        friendship.getFriend().getAvatarUrl()))
+                .collect(Collectors.toList());
+        return mappingResult;
     }
 }
