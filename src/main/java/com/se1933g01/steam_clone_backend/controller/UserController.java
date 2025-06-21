@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.se1933g01.steam_clone_backend.service.UserService;
 
+import java.math.BigDecimal;
 import java.util.List;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -156,9 +157,9 @@ public class UserController {
     // api get user account balance
     @GetMapping("/wallet")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<Double> getUserBalance() {
+    public ResponseEntity<BigDecimal> getUserBalance() {
         try {
-            Double balance = userService.getUserBalance();
+            BigDecimal balance = userService.getUserBalance();
             return ResponseEntity.ok(balance);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
@@ -169,9 +170,9 @@ public class UserController {
     // api add user account balance
     @PostMapping("/wallet/add")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<Double> addBalance(@RequestParam Double amount) {
+    public ResponseEntity<BigDecimal> addBalance(@RequestParam BigDecimal amount) {
         try {
-            Double newBalance = userService.addUserBalance(amount);
+            BigDecimal newBalance = userService.addUserBalance(amount);
             return ResponseEntity.ok(newBalance);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
@@ -182,9 +183,9 @@ public class UserController {
     // api add user account balance
     @PostMapping("/wallet/subtract")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<Double> subtractBalance(@RequestParam Double amount) {
+    public ResponseEntity<BigDecimal> subtractBalance(@RequestParam BigDecimal amount) {
         try {
-            Double newBalance = userService.subtractUserBalance(amount);
+            BigDecimal newBalance = userService.subtractUserBalance(amount);
             return ResponseEntity.ok(newBalance);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
