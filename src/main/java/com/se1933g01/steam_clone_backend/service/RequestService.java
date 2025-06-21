@@ -159,12 +159,20 @@ public class RequestService {
         });
     }
     public Page<PublisherApplyRequestDTO> getAllPublisherApplyRequest(Pageable pageable) {
-        Page<PublisherApplyRequest> publisherApplyRequestPage = publisherApplyRequestRepo.findAll(pageable);
+        Page<PublisherApplyRequest> publisherApplyRequestPage = publisherApplyRequestRepo.findAllByRequestStateZero(pageable);
         return publisherApplyRequestPage.map(publisherApplyRequest -> {
             modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
             return modelMapper.map(publisherApplyRequest, PublisherApplyRequestDTO.class);
         });
     }
+    public Page<FeedbackDTO> getAllFeedback(Pageable pageable) {
+        Page<Feedback> feedbackPage = feedbackRepo.findAllByRequestStateZero(pageable);
+        return feedbackPage.map(feedback -> {
+            modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+            return modelMapper.map(feedback, FeedbackDTO.class);
+        });
+    }
+
     public AddingGameRequestDTO getGameDetails(Long requestId){
         AddingGameRequest addingGameRequest = addingGameRequestRepo.findById(requestId).orElseThrow(()-> new RuntimeException("AddingGameRequest not found"));
         int status = addingGameRequest.getRequest().getRequestState();
@@ -184,6 +192,16 @@ public class RequestService {
         }
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
         return modelMapper.map(publisherApplyRequest, PublisherApplyRequestDTO.class);
+    }
+
+    public FeedbackDTO getFeedbackDetails(Long requestId){
+        Feedback feedback = feedbackRepo.findById(requestId).orElseThrow(()-> new RuntimeException("Feedback not found"));
+        int status = feedback.getRequest().getRequestState();
+        if (status == 1 || status == 2) {
+            return null; 
+        }
+        modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+        return modelMapper.map(feedback, FeedbackDTO.class);
     }
 
     public void addPublisher(PublisherApplyRequestDTO publisherApplyRequestDTO, Long userId){

@@ -117,6 +117,13 @@ public class RequestController {
         return ResponseEntity.ok(requestService.getAllPublisherApplyRequest(pageable));
     }
 
+    @GetMapping("/feedback/{page}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<FeedbackDTO>> getFeedback(@PathVariable int page) {
+        Pageable pageable = PageRequest.of(page, 10, Sort.by("requestId").descending());
+        return ResponseEntity.ok(requestService.getAllFeedback(pageable));
+    }
+
     @GetMapping("/game/details/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AddingGameRequestDTO> getGameRequest(@PathVariable Long id) {
@@ -134,6 +141,16 @@ public class RequestController {
                 ? ResponseEntity.status(HttpStatus.NOT_FOUND).body(null)
                 : ResponseEntity.ok(details);
     }
+
+    @GetMapping("/feedback/details/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<FeedbackDTO> getFeedbackDetails(@PathVariable Long id) {
+        FeedbackDTO details = requestService.getFeedbackDetails(id);
+        return details == null
+                ? ResponseEntity.status(HttpStatus.NOT_FOUND).body(null)
+                : ResponseEntity.ok(details);
+    }
+    
 
     @GetMapping("/banned-users/{page}")
     @PreAuthorize("hasRole('ADMIN')")
@@ -213,10 +230,12 @@ public class RequestController {
 
     @PostMapping("/feedback/send")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER')")
-    public ResponseEntity<Map<String, Object>> sendFeedback(@RequestBody FeedbackDTO feedbackDTO) {
+    public ResponseEntity<Map<String, Object>> sendFeedback(@RequestBody FeedbackDTO feedbackDTO,
+            @AuthenticationPrincipal CustomUserDetail me
+            ) {
         Map<String, Object> response = new HashMap<>();
         try {
-            requestService.addFeedback(feedbackDTO, 2L);
+            requestService.addFeedback(feedbackDTO, me.getUser().getUserId());
             response.put(RESPONSE_MESSAGE_KEY, "Sending feedback successfully");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
