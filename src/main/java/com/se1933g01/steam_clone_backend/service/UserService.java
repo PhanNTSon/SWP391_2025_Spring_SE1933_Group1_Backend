@@ -9,9 +9,11 @@ import com.se1933g01.steam_clone_backend.dto.User.FriendDTO;
 import com.se1933g01.steam_clone_backend.dto.User.UserDetailDTO;
 import com.se1933g01.steam_clone_backend.dto.User.UserUpdateDTO;
 import com.se1933g01.steam_clone_backend.entity.community.Friendship;
+import com.se1933g01.steam_clone_backend.entity.CompositedKey;
 import com.se1933g01.steam_clone_backend.entity.game.Game;
 import com.se1933g01.steam_clone_backend.dto.BannedUserDTO;
 import com.se1933g01.steam_clone_backend.entity.transaction.Transaction;
+import com.se1933g01.steam_clone_backend.entity.transaction.TransactionDetail;
 import com.se1933g01.steam_clone_backend.entity.user.CustomUserDetail;
 import com.se1933g01.steam_clone_backend.entity.user.User;
 import com.se1933g01.steam_clone_backend.repository.UserRepo;
@@ -30,6 +32,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -67,6 +70,12 @@ public class UserService {
         return userDetails.getUser().getUserId();
     }
 
+
+    public List<User> getAllUsers() {
+        return userRepo.findAll();
+    }
+
+
     /**
      * Author: Ba Thanh
      * // Show all transactions of a user.
@@ -78,8 +87,45 @@ public class UserService {
         return transactionRepo.findByUser(user);
     }
 
-    public List<User> getAllUsers() {
-        return userRepo.findAll();
+    // Tạo transaction cho từng game - author: Ba Thanh
+    public void createTransaction(Game game) {
+        Long userId = getCurrentUserId();
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_MSG));
+        Transaction transaction = new Transaction();
+        transaction.setUser(user);
+        transaction.setTotalAmount(game.getPrice());
+        transaction.setCreatedAt(LocalDate.now());
+        transaction = transactionRepo.save(transaction);
+
+        List<TransactionDetail> transactionDetails = new ArrayList<>();
+        TransactionDetail detail = new TransactionDetail();
+        CompositedKey key = new CompositedKey();
+        key.setKey1(transaction.getTransactionId());
+        key.setKey2(game.getGameId());
+        detail.setId(key);
+        detail.setTransaction(transaction);
+        detail.setGame(game);
+        detail.setPrice(game.getPrice());
+        transactionDetails.add(detail);
+        transaction.setTransactionDetail(transactionDetails);
+        transactionRepo.save(transaction);
+
+        // Cập nhật số lượng mua
+        game.setTotalPurchased(game.getTotalPurchased() + 1);
+    }
+
+
+    // Thêm game vào library - author: Ba Thanh
+    public void addGameToLibrary(Game game) {
+        Long userId = getCurrentUserId();
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_MSG));
+        java.util.Set<Game> ownedGames = user.getGames() != null
+            ? user.getGames() : new java.util.HashSet<>();
+        ownedGames.add(game);
+        user.setGames(ownedGames);
+        userRepo.save(user);
     }
 
     /**
