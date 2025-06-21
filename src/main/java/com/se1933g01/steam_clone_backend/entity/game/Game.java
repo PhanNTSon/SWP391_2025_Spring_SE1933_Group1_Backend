@@ -1,6 +1,6 @@
 package com.se1933g01.steam_clone_backend.entity.game;
 
-import java.sql.Date;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
@@ -50,7 +50,7 @@ public class Game {
     private Boolean state;
 
     @Column(name = "Price")
-    private double price;
+    private BigDecimal price;
 
     @Column(name = "ShortDescription", columnDefinition = "NVARCHAR(MAX)")
     private String shortDescription;

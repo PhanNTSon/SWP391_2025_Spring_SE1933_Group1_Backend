@@ -1,5 +1,7 @@
 package com.se1933g01.steam_clone_backend.entity.transaction;
 
+import java.math.BigDecimal;
+
 import com.se1933g01.steam_clone_backend.entity.CompositedKey;
 import com.se1933g01.steam_clone_backend.entity.game.Game;
 
@@ -10,16 +12,22 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "TransactionDetail")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class TransactionDetail {
     //================ Attributes =============
     @EmbeddedId
     private CompositedKey id;
 
     @Column(name = "Price")
-    private double price;
+    private BigDecimal price;
 
     //================ Relationships =============
     @ManyToOne
@@ -33,35 +41,5 @@ public class TransactionDetail {
     private Game game;
 
     //================ Getter & Setter =============
-    public CompositedKey getId() {
-        return id;
-    }
-
-    public void setId(CompositedKey id) {
-        this.id = id;
-    }
-
-    public double getPrice() {
-        return price;
-    }
-
-    public void setPrice(double price) {
-        this.price = price;
-    }
-
-    public Transaction getTransaction() {
-        return transaction;
-    }
-
-    public void setTransaction(Transaction transaction) {
-        this.transaction = transaction;
-    }
-
-    public Game getGame() {
-        return game;
-    }
-
-    public void setGame(Game game) {
-        this.game = game;
-    }
+    
 }

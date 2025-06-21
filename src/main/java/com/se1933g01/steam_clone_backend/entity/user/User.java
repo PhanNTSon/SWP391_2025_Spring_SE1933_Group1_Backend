@@ -1,5 +1,6 @@
 package com.se1933g01.steam_clone_backend.entity.user;
 
+import java.math.BigDecimal;
 import java.sql.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -55,7 +56,7 @@ public class User {
         private String password;
 
         @Column(name = "WalletBalance")
-        private Double walletBalance;
+        private BigDecimal walletBalance;
 
         @Column(name = "AvatarUrl")
         private String avatarUrl;

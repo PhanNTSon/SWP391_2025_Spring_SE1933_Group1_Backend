@@ -9,6 +9,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -36,11 +37,11 @@ public class Conversation {
      * due to the constrains in DB → for no duplicate
      */
     @ManyToOne
-    @Column(name = "UserID1", nullable = false)
+    @JoinColumn(name = "UserID1", nullable = false)
     private User user1;
 
     @ManyToOne
-    @Column(name = "UserID2", nullable = false)
+    @JoinColumn(name = "UserID2", nullable = false)
     private User user2;
 
     @Column(name = "CreatedAt")
