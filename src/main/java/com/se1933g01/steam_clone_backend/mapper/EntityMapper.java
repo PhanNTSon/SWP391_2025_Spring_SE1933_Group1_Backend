@@ -5,7 +5,6 @@ import com.se1933g01.steam_clone_backend.dto.User.UserDetailDTO;
 import com.se1933g01.steam_clone_backend.entity.game.Game;
 import com.se1933g01.steam_clone_backend.entity.game.Media;
 import com.se1933g01.steam_clone_backend.entity.game.Tag;
-import com.se1933g01.steam_clone_backend.entity.game.SystemRequirement;
 import com.se1933g01.steam_clone_backend.entity.user.Publisher;
 import com.se1933g01.steam_clone_backend.entity.user.User;
 
@@ -13,9 +12,12 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.stereotype.Component;
+
 /**
  * Author: TS Huy
  */
+@Component
 public class EntityMapper {
 
     public static TagDTO toTagDTO(Tag tag) {

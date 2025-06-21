@@ -2,19 +2,19 @@ package com.se1933g01.steam_clone_backend.controller;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.se1933g01.steam_clone_backend.dto.Notification.CreateNotificationDTO;
 import com.se1933g01.steam_clone_backend.dto.Notification.NotificationDTO;
+import com.se1933g01.steam_clone_backend.entity.user.CustomUserDetail;
 import com.se1933g01.steam_clone_backend.service.NotificationService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,8 +26,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 @RequestMapping("/notification")
 public class NotificationController {
 
-    @Autowired
-    private NotificationService notifService;
+    private final NotificationService notifService;
+
+    public NotificationController(NotificationService notifService) {
+        this.notifService = notifService;
+    }
 
     /**
      * Get list of all Notifications
@@ -37,8 +40,8 @@ public class NotificationController {
      */
     @GetMapping("/list")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<List<NotificationDTO>> getNotificationList(@RequestParam Long userId) {
-        List<NotificationDTO> result = notifService.getNotificationsList(userId);
+    public ResponseEntity<List<NotificationDTO>> getNotificationList(@AuthenticationPrincipal CustomUserDetail me) {
+        List<NotificationDTO> result = notifService.getNotificationsList(me.getUser().getUserId());
         return ResponseEntity.ok(result);
     }
 
@@ -50,8 +53,9 @@ public class NotificationController {
      */
     @GetMapping("/list/unread")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<List<NotificationDTO>> getUnreadNotificationList(@RequestParam Long userId) {
-        List<NotificationDTO> result = notifService.getUnreadNotifList(userId);
+    public ResponseEntity<List<NotificationDTO>> getUnreadNotificationList(
+            @AuthenticationPrincipal CustomUserDetail me) {
+        List<NotificationDTO> result = notifService.getUnreadNotifList(me.getUser().getUserId());
         return ResponseEntity.ok(result);
     }
 
@@ -64,7 +68,7 @@ public class NotificationController {
     @PostMapping("/create")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
     public ResponseEntity<CreateNotificationDTO> createNotificatioin(@RequestBody CreateNotificationDTO dto) {
-        CreateNotificationDTO result = notifService.createNotif(dto.getUserId(), dto.getNotificationType(),
+        CreateNotificationDTO result = notifService.createNotif(dto.getReceiverId(), dto.getNotificationType(),
                 dto.getNotificationContent());
         return ResponseEntity.ok(result);
     }
@@ -84,6 +88,7 @@ public class NotificationController {
 
     /**
      * Delete a notifcation
+     * 
      * @param notificationId
      * @return
      */

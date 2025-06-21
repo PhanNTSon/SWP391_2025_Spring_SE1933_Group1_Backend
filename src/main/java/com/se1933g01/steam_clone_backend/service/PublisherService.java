@@ -16,19 +16,20 @@ import org.springframework.transaction.annotation.Transactional;
 import com.se1933g01.steam_clone_backend.dto.PublisherBasicDTO;
 import com.se1933g01.steam_clone_backend.entity.user.Publisher;
 import com.se1933g01.steam_clone_backend.mapper.EntityMapper;
+
 @Service
 public class PublisherService {
 
-    private final PublisherRepo PublisherRepo;
+    private final PublisherRepo publisherRepo;
 
     @Autowired
-    public PublisherService(PublisherRepo PublisherRepo) {
-        this.PublisherRepo = PublisherRepo;
+    public PublisherService(PublisherRepo publisherRepo) {
+        this.publisherRepo = publisherRepo;
     }
 
     @Transactional(readOnly = true)
     public List<PublisherBasicDTO> getAllPublishersBasicDTO() {
-        return PublisherRepo.findAll().stream()
+        return publisherRepo.findAll().stream()
                 .map(EntityMapper::toPublisherBasicDTO)
                 .collect(Collectors.toList());
     }

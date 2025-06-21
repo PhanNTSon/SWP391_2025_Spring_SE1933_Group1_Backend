@@ -30,3 +30,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+scan.bat
+
+scan2.bat
