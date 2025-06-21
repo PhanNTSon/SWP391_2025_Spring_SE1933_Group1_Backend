@@ -64,32 +64,24 @@ public class UserService {
 
     // author: Ba Thanh
     // Get userId from SecurityContextHolder
-    private Long getCurrentUserId() {
-        CustomUserDetail userDetails = (CustomUserDetail) SecurityContextHolder.getContext().getAuthentication()
-                .getPrincipal();
-        return userDetails.getUser().getUserId();
-    }
 
 
     public List<User> getAllUsers() {
         return userRepo.findAll();
     }
 
-
     /**
      * Author: Ba Thanh
      * // Show all transactions of a user.
      */
-    public List<Transaction> showTransactions() {
-        Long userId = getCurrentUserId();
+    public List<Transaction> showTransactions(Long userId) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_MSG));
         return transactionRepo.findByUser(user);
     }
 
     // Tạo transaction cho từng game - author: Ba Thanh
-    public void createTransaction(Game game) {
-        Long userId = getCurrentUserId();
+    public void createTransaction(Long userId, Game game) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_MSG));
         Transaction transaction = new Transaction();
@@ -117,8 +109,7 @@ public class UserService {
 
 
     // Thêm game vào library - author: Ba Thanh
-    public void addGameToLibrary(Game game) {
-        Long userId = getCurrentUserId();
+    public void addGameToLibrary(Long userId, Game game) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_MSG));
         java.util.Set<Game> ownedGames = user.getGames() != null
@@ -135,8 +126,7 @@ public class UserService {
      * @param userId
      * @return LibraryDTO containing user's library
      */
-    public LibraryDTO showLibrary() {
-        Long userId = getCurrentUserId();
+    public LibraryDTO showLibrary(Long userId) {
         User user = userRepo.findByIdWithLibraryGames(userId);
         if (user == null)
             throw new EntityNotFoundException(USER_NOT_FOUND_MSG);
@@ -180,8 +170,7 @@ public class UserService {
      * check if game is in cart
      * return true if game is in cart, false otherwise.
      */
-    public boolean isGameInCart(Long gameId) {
-        Long userId = getCurrentUserId();
+    public boolean isGameInCart(Long userId, Long gameId) {
         User user = userRepo.findByIdWithCartGames(userId);
         if (user == null)
             return false;
@@ -193,8 +182,7 @@ public class UserService {
      * check if game is in library
      * return true if game is in library, false otherwise.
      */
-    public boolean isGameOwned(Long gameId) {
-        Long userId = getCurrentUserId();
+    public boolean isGameOwned(Long userId, Long gameId) {
         User user = userRepo.findByIdWithLibraryGames(userId);
         if (user == null)
             return false;
@@ -203,8 +191,7 @@ public class UserService {
 
     /* author: bathanh */
     // get user's balance
-    public BigDecimal getUserBalance() { // Changed by Phan Son 21-06
-        Long userId = getCurrentUserId();
+    public BigDecimal getUserBalance(Long userId) { // Changed by Phan Son 21-06
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_MSG));
         return user.getWalletBalance();
@@ -213,10 +200,9 @@ public class UserService {
     /* author: bathanh */
     // add money to user's wallet
     @Transactional
-    public BigDecimal addUserBalance(BigDecimal amount) {
+    public BigDecimal addUserBalance(Long userId, BigDecimal amount) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) < 0) // Changed by Phan Son 21-06
             throw new IllegalArgumentException("Amount must be positive");
-        Long userId = getCurrentUserId();
         User user = userRepo.findById(userId).orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_MSG));
         user.setWalletBalance(user.getWalletBalance().add(amount)); // Changed by Phan Son 21-06
         userRepo.save(user);
@@ -226,10 +212,9 @@ public class UserService {
     /* author: bathanh */
     // deduct user's wallet
     @Transactional
-    public BigDecimal subtractUserBalance(BigDecimal amount) { // Changed by Phan Son 21-06
+    public BigDecimal subtractUserBalance(Long userId, BigDecimal amount) { // Changed by Phan Son 21-06
         if (amount == null || amount.compareTo(BigDecimal.ZERO) < 0)
             throw new IllegalArgumentException("Amount must be positive");
-        Long userId = getCurrentUserId();
         User user = userRepo.findById(userId).orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_MSG));
         if (user.getWalletBalance().compareTo(amount) < 0) { // Changed by Phan Son 21-06
             throw new IllegalArgumentException("Insufficient balance");

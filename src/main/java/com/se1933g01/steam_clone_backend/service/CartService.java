@@ -38,16 +38,8 @@ public class CartService {
         this.userService = userService;
     }
 
-    // Get current user ID from security context
-    private Long getCurrentUserId() {
-        CustomUserDetail userDetails = (CustomUserDetail) SecurityContextHolder.getContext().getAuthentication()
-                .getPrincipal();
-        return userDetails.getUser().getUserId();
-    }
-
     // show cart- author: Ba Thanh
-    public CartDTO getCart() {
-        Long userId = getCurrentUserId();
+    public CartDTO getCart(Long userId) {
         User user = userRepo.findByIdWithCartGames(userId);
         if (user == null)
             throw new EntityNotFoundException("User not found");
@@ -69,8 +61,7 @@ public class CartService {
     }
 
     // add games to cart- author: Ba Thanh
-    public CartDTO addGameToCart(Long gameId) {
-        Long userId = getCurrentUserId();
+    public CartDTO addGameToCart(Long userId, Long gameId) {
         User user = userRepo.findByIdWithCartGames(userId);
         if (user == null)
             throw new EntityNotFoundException("User not found");
@@ -88,12 +79,11 @@ public class CartService {
                 .orElseThrow(() -> new EntityNotFoundException("Game not found"));
         user.getCartGames().add(game);
         userRepo.save(user);
-        return getCart();
+        return getCart(userId);
     }
 
     // remove games from cart- author: Ba Thanh
-    public CartDTO removeGameFromCart(Long gameId) {
-        Long userId = getCurrentUserId();
+    public CartDTO removeGameFromCart(Long userId, Long gameId) {
         User user = userRepo.findByIdWithCartGames(userId);
         if (user == null)
             throw new EntityNotFoundException("User not found");
@@ -102,12 +92,11 @@ public class CartService {
         }
         user.getCartGames().removeIf(game -> gameId.equals(game.getGameId()));
         userRepo.save(user);
-        return getCart();
+        return getCart(userId);
     }
 
     // calculate total price of cart- author: Ba Thanh
-    public BigDecimal calculateCartTotal() {
-        Long userId = getCurrentUserId();
+    public BigDecimal calculateCartTotal(Long userId) {
         User user = userRepo.findByIdWithCartGames(userId);
         if (user == null)
             throw new EntityNotFoundException("User not found");
@@ -123,29 +112,28 @@ public class CartService {
     }
 
     
-    public CartDTO checkout() {
-        Long userId = getCurrentUserId();
+    public CartDTO checkout(Long userId) {
         User user = userRepo.findByIdWithCartGames(userId);
         if (user == null) throw new EntityNotFoundException("User not found");
         if (user.getCartGames() == null || user.getCartGames().isEmpty()) {
             throw new IllegalArgumentException("Cart is empty");
         };
-        BigDecimal totalAmount = calculateCartTotal();
+        BigDecimal totalAmount = calculateCartTotal(userId);
 
         //trừ tiền trong ví của người dùng
-        userService.subtractUserBalance(totalAmount);
+        userService.subtractUserBalance(userId, totalAmount);
         
         for (Game game : user.getCartGames()) {
             // Tạo transaction cho từng game
-            userService.createTransaction(game);
+            userService.createTransaction(userId, game);
             // Thêm game vào library
-            userService.addGameToLibrary(game);
+            userService.addGameToLibrary(userId, game);
         }
         
         // Xóa cart
         user.setCartGames(new HashSet<>());
         userRepo.save(user);
         
-        return getCart();
+        return getCart(userId);
     }
 }

@@ -45,9 +45,9 @@ public class UserController {
      */
     @GetMapping("/cart")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<CartDTO> showCart() {
+    public ResponseEntity<CartDTO> showCart(@AuthenticationPrincipal CustomUserDetail me) {
         try {
-            CartDTO cart = cartService.getCart();
+            CartDTO cart = cartService.getCart(me.getUser().getUserId());
             return ResponseEntity.ok(cart);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
@@ -60,9 +60,9 @@ public class UserController {
     // Add games to cart
     @PostMapping("/cart/add")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<CartDTO> addGameToCart(@RequestParam Long gameId) {
+    public ResponseEntity<CartDTO> addGameToCart(@AuthenticationPrincipal CustomUserDetail me, @RequestParam Long gameId) {
         try {
-            CartDTO cart = cartService.addGameToCart(gameId);
+            CartDTO cart = cartService.addGameToCart(me.getUser().getUserId(), gameId);
             return ResponseEntity.ok(cart);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
@@ -75,9 +75,9 @@ public class UserController {
     // Remove games from cart
     @DeleteMapping("/cart/remove")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<CartDTO> removeFromCart(@RequestParam Long gameId) {
+    public ResponseEntity<CartDTO> removeFromCart(@AuthenticationPrincipal CustomUserDetail me, @RequestParam Long gameId) {
         try {
-            CartDTO cart = cartService.removeGameFromCart(gameId);
+            CartDTO cart = cartService.removeGameFromCart(me.getUser().getUserId(), gameId);
             return ResponseEntity.ok(cart);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
@@ -90,9 +90,9 @@ public class UserController {
     // Checkout cart
     @PostMapping("/cart/checkout")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<CartDTO> checkoutCart() {
+    public ResponseEntity<CartDTO> checkoutCart(@AuthenticationPrincipal CustomUserDetail me) {
         try {
-            CartDTO cart = cartService.checkout();
+            CartDTO cart = cartService.checkout(me.getUser().getUserId());
             return ResponseEntity.ok(cart);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
@@ -105,9 +105,9 @@ public class UserController {
     // Show transaction history (chỉ trả về các trường cần thiết)
     @GetMapping("/transaction")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<List<Transaction>> showTransaction() {
+    public ResponseEntity<List<Transaction>> showTransaction(@AuthenticationPrincipal CustomUserDetail me) {
         try {
-            List<Transaction> transactions = userService.showTransactions();
+            List<Transaction> transactions = userService.showTransactions(me.getUser().getUserId());
             return ResponseEntity.ok(transactions);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
@@ -118,9 +118,9 @@ public class UserController {
     // show library
     @GetMapping("/library")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<LibraryDTO> showLibrary() {
+    public ResponseEntity<LibraryDTO> showLibrary(@AuthenticationPrincipal CustomUserDetail me) {
         try {
-            LibraryDTO library = userService.showLibrary();
+            LibraryDTO library = userService.showLibrary(me.getUser().getUserId());
             return ResponseEntity.ok(library);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
@@ -131,9 +131,9 @@ public class UserController {
     // api check if game is in cart or not
     @GetMapping("/cart/contain/{gameId}")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<Boolean> isGameInCart(@PathVariable Long gameId) {
+    public ResponseEntity<Boolean> isGameInCart(@AuthenticationPrincipal CustomUserDetail me, @PathVariable Long gameId) {
         try {
-            boolean isGameInCart = userService.isGameInCart(gameId);
+            boolean isGameInCart = userService.isGameInCart(me.getUser().getUserId(), gameId);
             return ResponseEntity.ok(isGameInCart);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
@@ -144,9 +144,9 @@ public class UserController {
     // api check if game is in library or not
     @GetMapping("/library/contain/{gameId}")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<Boolean> isGameOwned(@PathVariable Long gameId) {
+    public ResponseEntity<Boolean> isGameOwned(@AuthenticationPrincipal CustomUserDetail me, @PathVariable Long gameId) {
         try {
-            boolean isGameOwned = userService.isGameOwned(gameId);
+            boolean isGameOwned = userService.isGameOwned(me.getUser().getUserId(), gameId);
             return ResponseEntity.ok(isGameOwned);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
@@ -157,9 +157,9 @@ public class UserController {
     // api get user account balance
     @GetMapping("/wallet")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<BigDecimal> getUserBalance() {
+    public ResponseEntity<BigDecimal> getUserBalance(@AuthenticationPrincipal CustomUserDetail me) {
         try {
-            BigDecimal balance = userService.getUserBalance();
+            BigDecimal balance = userService.getUserBalance(me.getUser().getUserId());
             return ResponseEntity.ok(balance);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
@@ -170,9 +170,9 @@ public class UserController {
     // api add user account balance
     @PostMapping("/wallet/add")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<BigDecimal> addBalance(@RequestParam BigDecimal amount) {
+    public ResponseEntity<BigDecimal> addBalance(@AuthenticationPrincipal CustomUserDetail me, @RequestParam BigDecimal amount) {
         try {
-            BigDecimal newBalance = userService.addUserBalance(amount);
+            BigDecimal newBalance = userService.addUserBalance(me.getUser().getUserId(), amount);
             return ResponseEntity.ok(newBalance);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
@@ -183,9 +183,9 @@ public class UserController {
     // api add user account balance
     @PostMapping("/wallet/subtract")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<BigDecimal> subtractBalance(@RequestParam BigDecimal amount) {
+    public ResponseEntity<BigDecimal> subtractBalance(@AuthenticationPrincipal CustomUserDetail me, @RequestParam BigDecimal amount) {
         try {
-            BigDecimal newBalance = userService.subtractUserBalance(amount);
+            BigDecimal newBalance = userService.subtractUserBalance(me.getUser().getUserId(), amount);
             return ResponseEntity.ok(newBalance);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
