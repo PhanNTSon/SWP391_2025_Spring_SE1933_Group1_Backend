@@ -17,6 +17,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -54,7 +55,7 @@ public class GameController {
     @PreAuthorize("permitAll()")
     public ResponseEntity<Page<GameBasicDTO>> getFilteredGames(
             @RequestParam(required = false) String searchTerm,
-            @RequestParam(required = false) Double maxPrice,
+            @RequestParam(required = false) BigDecimal maxPrice, // Changed by Phan Son 21-06
             @RequestParam(required = false) List<Integer> tags,
             @RequestParam(required = false) List<Long> publishers,
             @RequestParam(defaultValue = "0") int page,

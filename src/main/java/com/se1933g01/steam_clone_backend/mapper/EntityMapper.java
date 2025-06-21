@@ -8,6 +8,7 @@ import com.se1933g01.steam_clone_backend.entity.game.Tag;
 import com.se1933g01.steam_clone_backend.entity.user.Publisher;
 import com.se1933g01.steam_clone_backend.entity.user.User;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -65,13 +66,15 @@ public class EntityMapper {
             dto.setImageUrl("https://via.placeholder.com/184x69.png?text=No+Image"); // URL placeholder nếu không có ảnh
         }
 
-        // 2. Xử lý giá và giảm giá
-        double originalPrice = game.getPrice(); // Giá gốc từ entity
+        
+        // Changed by Phan Son 21-06
+        BigDecimal originalPrice = game.getPrice(); // Giá gốc từ entity
         dto.setOriginalPrice(originalPrice);
-        double discountPrice = originalPrice;
-        double currentPrice = originalPrice; 
+        BigDecimal discountPrice = originalPrice;
+        BigDecimal currentPrice = originalPrice;
         dto.setDiscountPrice(discountPrice);
         dto.setPrice(currentPrice); // price trong DTO là giá bán hiệu lực
+        // --!!
 
         // Added by Phan NT Son 17-06-2025
         dto.setReleaseDate(game.getReleaseDate());

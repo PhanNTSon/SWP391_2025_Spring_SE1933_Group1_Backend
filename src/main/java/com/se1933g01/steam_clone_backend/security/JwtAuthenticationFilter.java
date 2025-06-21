@@ -9,7 +9,6 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.se1933g01.steam_clone_backend.entity.user.CustomUserDetail;
 import com.se1933g01.steam_clone_backend.service.UserDetailsServiceImpl;
 import com.se1933g01.steam_clone_backend.utils.JwtUtil;
 

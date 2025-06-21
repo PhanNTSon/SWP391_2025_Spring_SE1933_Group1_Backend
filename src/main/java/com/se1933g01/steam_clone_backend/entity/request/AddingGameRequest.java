@@ -1,4 +1,6 @@
 package com.se1933g01.steam_clone_backend.entity.request;
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -35,7 +37,7 @@ public class AddingGameRequest {
     @Column(name = "ReleaseDate")
     private LocalDate releaseDate;
     @Column(name = "Price")
-    private double price;
+    private BigDecimal price;
     @Column(name = "ShortDescription", columnDefinition = "NVARCHAR(MAX)")
     private String shortDescription;
     @Column(name = "FullDescription", columnDefinition = "NVARCHAR(MAX)")
@@ -56,7 +58,7 @@ public class AddingGameRequest {
     private String gameUrl;
     @Column(name = "IconUrl")
     private String iconUrl;
-    
+
     @Column(name = "MediaUrls")
     @ElementCollection
     @CollectionTable(name = "AddingGameRequest_mediaUrls", joinColumns = @JoinColumn(name = "AddingGameRequest_RequestID"))
@@ -70,9 +72,5 @@ public class AddingGameRequest {
     private Request request;
 
     // ================ Getter & Setter =============
-
-    
-
-    
 
 }

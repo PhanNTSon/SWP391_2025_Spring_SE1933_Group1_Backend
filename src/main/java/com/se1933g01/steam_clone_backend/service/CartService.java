@@ -17,7 +17,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -37,15 +37,17 @@ public class CartService {
 
     // Get current user ID from security context
     private Long getCurrentUserId() {
-        CustomUserDetail userDetails = (CustomUserDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        CustomUserDetail userDetails = (CustomUserDetail) SecurityContextHolder.getContext().getAuthentication()
+                .getPrincipal();
         return userDetails.getUser().getUserId();
     }
 
-     //show cart- author: Ba Thanh
+    // show cart- author: Ba Thanh
     public CartDTO getCart() {
         Long userId = getCurrentUserId();
         User user = userRepo.findByIdWithCartGames(userId);
-        if (user == null) throw new EntityNotFoundException("User not found");
+        if (user == null)
+            throw new EntityNotFoundException("User not found");
         CartDTO cartDTO = new CartDTO();
         List<GameBasicDTO> listCart = new ArrayList<>();
         for (Game game : user.getCartGames()) {
@@ -53,8 +55,9 @@ public class CartService {
             gameInCart.setId(game.getGameId());
             gameInCart.setTitle(game.getName());
             gameInCart.setPrice(game.getPrice());
-            gameInCart.setDiscountPrice(0);
-            gameInCart.setOriginalPrice(gameInCart.getPrice()+gameInCart.getDiscountPrice());
+            gameInCart.setDiscountPrice(BigDecimal.ZERO); // Changed by Pha Son 21-06
+            gameInCart.setOriginalPrice(gameInCart.getPrice().add(gameInCart.getDiscountPrice())); // Changed by Pha Son
+                                                                                                   // 21-06
             listCart.add(gameInCart);
         }
         cartDTO.setUserId(userId);
@@ -62,11 +65,12 @@ public class CartService {
         return cartDTO;
     }
 
-    //add games to cart- author: Ba Thanh
+    // add games to cart- author: Ba Thanh
     public CartDTO addGameToCart(Long gameId) {
         Long userId = getCurrentUserId();
         User user = userRepo.findByIdWithCartGames(userId);
-        if (user == null) throw new EntityNotFoundException("User not found");
+        if (user == null)
+            throw new EntityNotFoundException("User not found");
         if (user.getCartGames() == null) {
             user.setCartGames(new HashSet<>());
         }
@@ -84,11 +88,12 @@ public class CartService {
         return getCart();
     }
 
-    //remove games from cart- author: Ba Thanh
+    // remove games from cart- author: Ba Thanh
     public CartDTO removeGameFromCart(Long gameId) {
         Long userId = getCurrentUserId();
         User user = userRepo.findByIdWithCartGames(userId);
-        if (user == null) throw new EntityNotFoundException("User not found");
+        if (user == null)
+            throw new EntityNotFoundException("User not found");
         if (user.getCartGames() == null) {
             user.setCartGames(new HashSet<>());
         }
@@ -97,37 +102,55 @@ public class CartService {
         return getCart();
     }
 
-    //calculate total price of cart- author: Ba Thanh
-    public double calculateCartTotal() {
+    // calculate total price of cart- author: Ba Thanh
+    public BigDecimal calculateCartTotal() {
         Long userId = getCurrentUserId();
         User user = userRepo.findByIdWithCartGames(userId);
-        if (user == null) throw new EntityNotFoundException("User not found");
-        return user.getCartGames().stream().mapToDouble(Game::getPrice).sum();
+        if (user == null)
+            throw new EntityNotFoundException("User not found");
+        /**
+         * Changed by Phan Son 21-06
+         */
+        BigDecimal result = BigDecimal.ZERO;
+        for (Game game : user.getCartGames()) {
+            result = result.add(game.getPrice());
+        }
+        return result;
+        // --!!
     }
 
-    //checkout- author: Ba Thanh
+    // checkout- author: Ba Thanh
     public CartDTO checkout() {
         Long userId = getCurrentUserId();
         User user = userRepo.findByIdWithCartGames(userId);
-        if (user == null) throw new EntityNotFoundException("User not found");
+        if (user == null)
+            throw new EntityNotFoundException("User not found");
         if (user.getCartGames().isEmpty())
             throw new IllegalArgumentException("Cart is empty");
         // Only checkout games not already owned
         java.util.Set<Game> ownedGames = user.getGames() != null ? user.getGames() : new java.util.HashSet<>();
         List<Game> gamesToBuy = user.getCartGames().stream()
-            .filter(game -> ownedGames.stream().noneMatch(owned -> owned.getGameId().equals(game.getGameId())))
-            .toList();
+                .filter(game -> ownedGames.stream().noneMatch(owned -> owned.getGameId().equals(game.getGameId())))
+                .toList();
         if (gamesToBuy.isEmpty()) {
             throw new IllegalArgumentException("All games in cart are already owned");
         }
-        double total = gamesToBuy.stream().mapToDouble(Game::getPrice).sum();
-        if (user.getWalletBalance() < total) {
+
+        /**
+         * Changed by Phan Son 21-06
+         */
+
+        BigDecimal total = BigDecimal.ZERO;
+        for (Game game : gamesToBuy) {
+            total = total.add(game.getPrice());
+        }
+        if (user.getWalletBalance().compareTo(total) < 0) {
             throw new IllegalArgumentException("Insufficient balance");
         }
-        // Lưu lại balance trước khi trừ
-        double oldBalance = user.getWalletBalance();
-        // Trừ tiền
-        user.setWalletBalance(oldBalance - total);
+        BigDecimal oldBalance = user.getWalletBalance();
+        user.setWalletBalance(oldBalance.subtract(total));
+        // --!!
+
         // Tạo transaction cho từng game chưa sở hữu
         for (Game game : gamesToBuy) {
             Transaction transaction = new Transaction();
@@ -161,5 +184,4 @@ public class CartService {
         return getCart();
     }
 
-   
 }

@@ -5,6 +5,7 @@ import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Getter
@@ -15,14 +16,14 @@ public class GameBasicDTO {
     private long id; // Tương ứng với gameId
     private String title; // Tương ứng với name
     private String imageUrl; // Sẽ lấy từ Media entity
-    private double price; // Giá bán hiệu lực (sau khi đã áp dụng giảm giá nếu có)
-    private double discountPrice; // Giá sau khi giảm giá (nếu không có giảm giá, có thể bằng originalPrice)
-    private double originalPrice; // Giá gốc của sản phẩm (từ game.price)
+    private BigDecimal price; // Changed by Phan Son 21-06
+    private BigDecimal discountPrice; // Changed by Phan Son 21-06
+    private BigDecimal originalPrice; // Changed by Phan Son 21-06
 
     // Added by Phan NT Son 17-06-2025
     private LocalDate releaseDate;
 
-    public GameBasicDTO(long gameId, String gameName, double price) {
+    public GameBasicDTO(long gameId, String gameName, BigDecimal price) { // Changed by Phan Son 21-06
         this.id = gameId;
         this.title = gameName;
         this.price = price;

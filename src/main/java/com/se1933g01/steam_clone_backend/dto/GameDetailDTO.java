@@ -5,6 +5,7 @@ import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Set;
 import java.util.List;
@@ -19,7 +20,7 @@ public class GameDetailDTO {
     private String name;
     private LocalDate releaseDate;
     private Boolean state;
-    private double price;
+    private BigDecimal price; // Changed by Phan Son 21-06
     private String shortDescription;
     private String fullDescription;
     private Integer totalPurchased;

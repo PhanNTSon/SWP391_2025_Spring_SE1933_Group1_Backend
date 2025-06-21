@@ -1,5 +1,6 @@
 package com.se1933g01.steam_clone_backend.entity.transaction;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -35,7 +36,7 @@ public class Transaction {
     private Long transactionId;
 
     @Column(name = "TotalAmount")
-    private Double totalAmount;
+    private BigDecimal totalAmount;
 
     @Column(name = "CreatedAt")
     private LocalDate createdAt;
