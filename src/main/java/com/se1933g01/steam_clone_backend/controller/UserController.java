@@ -37,7 +37,7 @@ public class UserController {
 
     /**
      * @Author: Ba Thanh
-     * UserID get in Security Context
+     *          UserID get in Security Context
      */
     @GetMapping("/cart")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
@@ -190,7 +190,7 @@ public class UserController {
 
     /**
      * Author: kerri
-     * UserID get in Security Context
+     * 
      * @return
      */
     @GetMapping("/profile/{userId}")
@@ -200,14 +200,18 @@ public class UserController {
         return ResponseEntity.ok(userDto);//
     }
 
-    @PutMapping("/edit")
-    @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
+    /**
+     * Author: kerri
+     * 
+     * @return
+     */
+    @PutMapping("/profile/{userId}/edit/info")
+    @PreAuthorize("principal.getUser().getUserId() == #userId or hasRole('ADMIN')")
     public ResponseEntity<UserDetailDTO> updateUserProfile(
             @PathVariable Long userId,
             @RequestBody UserUpdateDTO userUpdateDTO) {
         UserDetailDTO updatedUser = userService.updateUserProfile(userId, userUpdateDTO);
         return ResponseEntity.ok(updatedUser);
     }
-    
-    
+
 }
