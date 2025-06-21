@@ -50,7 +50,7 @@ public class NotificationService {
     }
 
     /**
-     * Get a list of unread Notifications
+     * Get a list of unread Notifications of a User based on their ID
      * 
      * @param userId
      * @return
@@ -74,16 +74,17 @@ public class NotificationService {
     }
 
     /**
-     * Create new Notification
+     * Create new Notification to a person based on their ID
+     * which are receiverId.
      * 
-     * @param userId
+     * @param receiverId
      * @param notifType
      * @param notifContent
      * @return
      */
     @Transactional
-    public CreateNotificationDTO createNotif(long userId, String notifType, String notifContent) {
-        User user = entityManager.getReference(User.class, userId);
+    public CreateNotificationDTO createNotif(long receiverId, String notifType, String notifContent) {
+        User user = entityManager.getReference(User.class, receiverId);
 
         Notification newNotif = new Notification();
         newNotif.setUser(user);
@@ -96,10 +97,14 @@ public class NotificationService {
         CreateNotificationDTO returnNotif = new CreateNotificationDTO();
         returnNotif.setNotificationContent(notifContent);
         returnNotif.setNotificationType(notifType);
-        returnNotif.setUserId(userId);
+        returnNotif.setReceiverId(receiverId);
         return returnNotif;
     }
 
+    /**
+     * Set a notification status from Not-read to have-Read.
+     * @param notifId
+     */
     @Transactional
     public void patchNotif(long notifId) {
         Notification target = notificationsRepo.findById(notifId).orElseThrow();

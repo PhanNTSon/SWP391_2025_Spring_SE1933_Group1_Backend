@@ -34,23 +34,24 @@ public class AuthService {
     /**
      * @author Phan NT Son
      */
-    
+
     private AuthenticationManager authenticationManager;
     @Autowired
     private JwtUtil jwtUtil;
+    
     @Autowired
     private PasswordEncoder passwordEncoder;
+    
+    private final UserRepo userRepo;
 
     AuthService(UserRepo userRepo) {
-        this.userRepo = userRepo;
+    this.userRepo = userRepo;
     }
 
     @Autowired
     public void setAuthenticationManager(AuthenticationManager authenticationManager) {
         this.authenticationManager = authenticationManager;
     }
-
-    private final UserRepo userRepo;
 
     @Transactional // Added by Phan NT Son
     public ResponseEntity<String> register(RegisterRequestDTO request) {

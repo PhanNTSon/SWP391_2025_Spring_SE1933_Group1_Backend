@@ -38,6 +38,12 @@ public class UserService {
     private EntityMapper entityMapper;
     private static final String USER_NOT_FOUND_MSG = "User not found";
 
+    public UserService(UserRepo userRepo, TransactionRepo transactionRepo, EntityMapper entityMapper) {
+        this.userRepo = userRepo;
+        this.transactionRepo = transactionRepo;
+        this.entityMapper = entityMapper;
+    }
+
     public User getUser(Long userId) {
         return userRepo.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_MSG));
