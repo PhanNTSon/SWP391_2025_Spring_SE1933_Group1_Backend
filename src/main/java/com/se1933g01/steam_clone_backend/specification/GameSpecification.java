@@ -2,12 +2,12 @@ package com.se1933g01.steam_clone_backend.specification;
 
 import com.se1933g01.steam_clone_backend.entity.game.Game;
 import com.se1933g01.steam_clone_backend.entity.game.Tag;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Join;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.CollectionUtils; // Import tiện ích của Spring
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public class GameSpecification {
@@ -18,9 +18,10 @@ public class GameSpecification {
      * @param maxPrice Giá tối đa.
      * @return Specification hoặc null nếu maxPrice không hợp lệ.
      */
-    public static Specification<Game> hasMaxPrice(Double maxPrice) {
+    public static Specification<Game> hasMaxPrice(BigDecimal maxPrice) { // Changed by Phan Son
         return (root, query, criteriaBuilder) -> {
-            if (maxPrice == null || maxPrice >= 60) { // Giả sử 60 là giá trị "Any"
+            // Changed by Phan Son
+            if (maxPrice == null || maxPrice.compareTo(BigDecimal.valueOf(60)) > 0) { // Giả sử 60 là giá trị "Any"
                 return null; // Trả về null để không áp dụng điều kiện lọc này
             }
             // root.get("price") -> trỏ đến thuộc tính 'price' trong Game entity

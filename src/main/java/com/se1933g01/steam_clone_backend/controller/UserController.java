@@ -2,13 +2,16 @@ package com.se1933g01.steam_clone_backend.controller;
 
 import com.se1933g01.steam_clone_backend.dto.CartDTO;
 import com.se1933g01.steam_clone_backend.dto.LibraryDTO;
+import com.se1933g01.steam_clone_backend.dto.User.FriendDTO;
 import com.se1933g01.steam_clone_backend.dto.User.UserDetailDTO;
 import com.se1933g01.steam_clone_backend.dto.User.UserUpdateDTO;
 import com.se1933g01.steam_clone_backend.entity.transaction.Transaction;
+import com.se1933g01.steam_clone_backend.entity.user.CustomUserDetail;
 import com.se1933g01.steam_clone_backend.service.CartService;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.se1933g01.steam_clone_backend.service.UserService;
 
+import java.math.BigDecimal;
 import java.util.List;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -37,7 +41,7 @@ public class UserController {
 
     /**
      * @Author: Ba Thanh
-     * UserID get in Security Context
+     *          UserID get in Security Context
      */
     @GetMapping("/cart")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
@@ -153,9 +157,9 @@ public class UserController {
     // api get user account balance
     @GetMapping("/wallet")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<Double> getUserBalance() {
+    public ResponseEntity<BigDecimal> getUserBalance() {
         try {
-            Double balance = userService.getUserBalance();
+            BigDecimal balance = userService.getUserBalance();
             return ResponseEntity.ok(balance);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
@@ -166,9 +170,9 @@ public class UserController {
     // api add user account balance
     @PostMapping("/wallet/add")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<Double> addBalance(@RequestParam Double amount) {
+    public ResponseEntity<BigDecimal> addBalance(@RequestParam BigDecimal amount) {
         try {
-            Double newBalance = userService.addUserBalance(amount);
+            BigDecimal newBalance = userService.addUserBalance(amount);
             return ResponseEntity.ok(newBalance);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
@@ -179,9 +183,9 @@ public class UserController {
     // api add user account balance
     @PostMapping("/wallet/subtract")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<Double> subtractBalance(@RequestParam Double amount) {
+    public ResponseEntity<BigDecimal> subtractBalance(@RequestParam BigDecimal amount) {
         try {
-            Double newBalance = userService.subtractUserBalance(amount);
+            BigDecimal newBalance = userService.subtractUserBalance(amount);
             return ResponseEntity.ok(newBalance);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
@@ -191,6 +195,7 @@ public class UserController {
     /**
      * Author: kerri
      * UserID get in Security Context
+     * 
      * @return
      */
     @GetMapping("/profile/{userId}")
@@ -208,6 +213,18 @@ public class UserController {
         UserDetailDTO updatedUser = userService.updateUserProfile(userId, userUpdateDTO);
         return ResponseEntity.ok(updatedUser);
     }
-    
+
+    /**
+     * @author Phan NT Son
+     * @since 21-06-2025
+     * @param me
+     * @return
+     */
+    @GetMapping("/friends")
+    @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
+    public ResponseEntity<List<FriendDTO>> getListFriend(@AuthenticationPrincipal CustomUserDetail me) {
+        return ResponseEntity.ok().body(userService.getFriends(me.getUser().getUserId()));
+    }
+
     
 }

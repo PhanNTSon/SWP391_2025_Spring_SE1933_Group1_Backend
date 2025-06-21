@@ -1,5 +1,6 @@
 package com.se1933g01.steam_clone_backend.dto;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import lombok.Data;
@@ -8,7 +9,7 @@ import lombok.Data;
 public class AddingGameRequestDTO {
     private Long requestId;
     private String gameName;
-    private double price;
+    private BigDecimal price; // Changed by Phan Son 21-06
     private String shortDescription;
     private String fullDescription;
     private String os;

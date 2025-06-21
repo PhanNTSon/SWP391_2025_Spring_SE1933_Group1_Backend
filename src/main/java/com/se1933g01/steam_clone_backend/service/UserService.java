@@ -5,8 +5,10 @@ import com.se1933g01.steam_clone_backend.dto.LibraryDTO;
 import com.se1933g01.steam_clone_backend.dto.MediaDTO;
 import com.se1933g01.steam_clone_backend.dto.PublisherBasicDTO;
 import com.se1933g01.steam_clone_backend.dto.TagDTO;
+import com.se1933g01.steam_clone_backend.dto.User.FriendDTO;
 import com.se1933g01.steam_clone_backend.dto.User.UserDetailDTO;
 import com.se1933g01.steam_clone_backend.dto.User.UserUpdateDTO;
+import com.se1933g01.steam_clone_backend.entity.community.Friendship;
 import com.se1933g01.steam_clone_backend.entity.game.Game;
 import com.se1933g01.steam_clone_backend.dto.BannedUserDTO;
 import com.se1933g01.steam_clone_backend.entity.transaction.Transaction;
@@ -18,6 +20,7 @@ import com.se1933g01.steam_clone_backend.mapper.EntityMapper;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
+import com.se1933g01.steam_clone_backend.repository.FriendshipRepo;
 import com.se1933g01.steam_clone_backend.repository.TransactionRepo;
 
 import org.springframework.data.domain.Page;
@@ -26,6 +29,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -36,12 +40,16 @@ public class UserService {
     private UserRepo userRepo;
     private TransactionRepo transactionRepo;
     private EntityMapper entityMapper;
+    private final FriendshipRepo friendshipRepo; // Added by Phan NT Son 21-06-2025
+
     private static final String USER_NOT_FOUND_MSG = "User not found";
 
-    public UserService(UserRepo userRepo, TransactionRepo transactionRepo, EntityMapper entityMapper) {
+    public UserService(UserRepo userRepo, TransactionRepo transactionRepo, EntityMapper entityMapper,
+            FriendshipRepo friendshipRepo) {
         this.userRepo = userRepo;
         this.transactionRepo = transactionRepo;
         this.entityMapper = entityMapper;
+        this.friendshipRepo = friendshipRepo;
     }
 
     public User getUser(Long userId) {
@@ -149,7 +157,7 @@ public class UserService {
 
     /* author: bathanh */
     // get user's balance
-    public double getUserBalance() {
+    public BigDecimal getUserBalance() { // Changed by Phan Son 21-06
         Long userId = getCurrentUserId();
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_MSG));
@@ -159,12 +167,12 @@ public class UserService {
     /* author: bathanh */
     // add money to user's wallet
     @Transactional
-    public Double addUserBalance(Double amount) {
-        if (amount == null || amount <= 0)
+    public BigDecimal addUserBalance(BigDecimal amount) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) < 0) // Changed by Phan Son 21-06
             throw new IllegalArgumentException("Amount must be positive");
         Long userId = getCurrentUserId();
         User user = userRepo.findById(userId).orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_MSG));
-        user.setWalletBalance(user.getWalletBalance() + amount);
+        user.setWalletBalance(user.getWalletBalance().add(amount)); // Changed by Phan Son 21-06
         userRepo.save(user);
         return user.getWalletBalance();
     }
@@ -172,17 +180,17 @@ public class UserService {
     /* author: bathanh */
     // deduct user's wallet
     @Transactional
-    public Double subtractUserBalance(Double amount) {
-        if (amount == null || amount <= 0)
+    public BigDecimal subtractUserBalance(BigDecimal amount) { // Changed by Phan Son 21-06
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) < 0)
             throw new IllegalArgumentException("Amount must be positive");
         Long userId = getCurrentUserId();
         User user = userRepo.findById(userId).orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_MSG));
-        if (user.getWalletBalance() < amount) {
+        if (user.getWalletBalance().compareTo(amount) < 0) { // Changed by Phan Son 21-06
             throw new IllegalArgumentException("Insufficient balance");
         }
-        user.setWalletBalance(user.getWalletBalance() - amount);
+        user.setWalletBalance(user.getWalletBalance().subtract(amount)); // Changed by Phan Son 21-06
         userRepo.save(user);
-        return user.getWalletBalance();
+        return user.getWalletBalance(); 
     }
 
     /**
@@ -261,5 +269,25 @@ public class UserService {
                 user.getSummary(),
                 user.isBanStatus()))
                 .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND_MSG));
+    }
+
+    /**
+     * @author Phan NT Son
+     * @since 21-06-2025
+     * 
+     *        Get friends list base on UserID
+     * 
+     * @param userId
+     * @return
+     */
+    public List<FriendDTO> getFriends(Long userId) {
+        List<Friendship> queryResultList = friendshipRepo.findAllByUserId(userId);
+        List<FriendDTO> mappingResult = queryResultList.stream()
+                .map(friendship -> new FriendDTO(
+                        friendship.getFriend().getUserId(),
+                        friendship.getFriend().getUsername(),
+                        friendship.getFriend().getAvatarUrl()))
+                .collect(Collectors.toList());
+        return mappingResult;
     }
 }

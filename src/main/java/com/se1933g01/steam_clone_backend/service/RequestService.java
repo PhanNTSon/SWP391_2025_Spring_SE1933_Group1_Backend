@@ -1,24 +1,15 @@
 // Author: Vu Quoc Hoang - HE194781
 package com.se1933g01.steam_clone_backend.service;
 
-import java.sql.Date;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
-import org.modelmapper.TypeToken;
 import org.modelmapper.convention.MatchingStrategies;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.support.MultipartFilter;
 
 import com.se1933g01.steam_clone_backend.dto.AddingGameRequestDTO;
 import com.se1933g01.steam_clone_backend.dto.FeedbackDTO;
