@@ -7,11 +7,17 @@ import com.se1933g01.steam_clone_backend.dto.User.UserDetailDTO;
 import com.se1933g01.steam_clone_backend.dto.User.UserUpdateDTO;
 import com.se1933g01.steam_clone_backend.entity.transaction.Transaction;
 import com.se1933g01.steam_clone_backend.entity.user.CustomUserDetail;
+import com.se1933g01.steam_clone_backend.entity.user.User;
+import com.se1933g01.steam_clone_backend.repository.UserRepo;
+import com.se1933g01.steam_clone_backend.service.AvatarService;
 import com.se1933g01.steam_clone_backend.service.CartService;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,11 +25,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.se1933g01.steam_clone_backend.service.UserService;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
+
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -33,10 +43,15 @@ public class UserController {
 
     private final UserService userService;
     private final CartService cartService;
+    private final UserRepo userRepo;
+    private final AvatarService AvatarService;
 
-    public UserController(UserService userService, CartService cartService) {
+    public UserController(UserService userService, CartService cartService, UserRepo userRepo,
+            AvatarService AvatarService) {
         this.userService = userService;
         this.cartService = cartService;
+        this.userRepo = userRepo;
+        this.AvatarService = AvatarService;
     }
 
     /**
@@ -60,7 +75,8 @@ public class UserController {
     // Add games to cart
     @PostMapping("/cart/add")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<CartDTO> addGameToCart(@AuthenticationPrincipal CustomUserDetail me, @RequestParam Long gameId) {
+    public ResponseEntity<CartDTO> addGameToCart(@AuthenticationPrincipal CustomUserDetail me,
+            @RequestParam Long gameId) {
         try {
             CartDTO cart = cartService.addGameToCart(me.getUser().getUserId(), gameId);
             return ResponseEntity.ok(cart);
@@ -75,7 +91,8 @@ public class UserController {
     // Remove games from cart
     @DeleteMapping("/cart/remove")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<CartDTO> removeFromCart(@AuthenticationPrincipal CustomUserDetail me, @RequestParam Long gameId) {
+    public ResponseEntity<CartDTO> removeFromCart(@AuthenticationPrincipal CustomUserDetail me,
+            @RequestParam Long gameId) {
         try {
             CartDTO cart = cartService.removeGameFromCart(me.getUser().getUserId(), gameId);
             return ResponseEntity.ok(cart);
@@ -131,7 +148,8 @@ public class UserController {
     // api check if game is in cart or not
     @GetMapping("/cart/contain/{gameId}")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<Boolean> isGameInCart(@AuthenticationPrincipal CustomUserDetail me, @PathVariable Long gameId) {
+    public ResponseEntity<Boolean> isGameInCart(@AuthenticationPrincipal CustomUserDetail me,
+            @PathVariable Long gameId) {
         try {
             boolean isGameInCart = userService.isGameInCart(me.getUser().getUserId(), gameId);
             return ResponseEntity.ok(isGameInCart);
@@ -144,7 +162,8 @@ public class UserController {
     // api check if game is in library or not
     @GetMapping("/library/contain/{gameId}")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<Boolean> isGameOwned(@AuthenticationPrincipal CustomUserDetail me, @PathVariable Long gameId) {
+    public ResponseEntity<Boolean> isGameOwned(@AuthenticationPrincipal CustomUserDetail me,
+            @PathVariable Long gameId) {
         try {
             boolean isGameOwned = userService.isGameOwned(me.getUser().getUserId(), gameId);
             return ResponseEntity.ok(isGameOwned);
@@ -170,7 +189,8 @@ public class UserController {
     // api add user account balance
     @PostMapping("/wallet/add")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<BigDecimal> addBalance(@AuthenticationPrincipal CustomUserDetail me, @RequestParam BigDecimal amount) {
+    public ResponseEntity<BigDecimal> addBalance(@AuthenticationPrincipal CustomUserDetail me,
+            @RequestParam BigDecimal amount) {
         try {
             BigDecimal newBalance = userService.addUserBalance(me.getUser().getUserId(), amount);
             return ResponseEntity.ok(newBalance);
@@ -183,7 +203,8 @@ public class UserController {
     // api add user account balance
     @PostMapping("/wallet/subtract")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<BigDecimal> subtractBalance(@AuthenticationPrincipal CustomUserDetail me, @RequestParam BigDecimal amount) {
+    public ResponseEntity<BigDecimal> subtractBalance(@AuthenticationPrincipal CustomUserDetail me,
+            @RequestParam BigDecimal amount) {
         try {
             BigDecimal newBalance = userService.subtractUserBalance(me.getUser().getUserId(), amount);
             return ResponseEntity.ok(newBalance);
@@ -219,6 +240,21 @@ public class UserController {
         return ResponseEntity.ok(updatedUser);
     }
 
+    @PostMapping("/profile/{userId}/avatar/upload")
+    @PreAuthorize("principal.getUser().getUserId() == #userId or hasAuthority('ADMIN')")
+    public ResponseEntity<?> uploadAvatar(
+            @PathVariable Long userId,
+            @RequestParam("file") MultipartFile file) {
+        try {
+            String fileUrl = userService.uploadAndSetNewAvatar(userId, file);
+            return ResponseEntity.ok(Map.of("url", fileUrl));
+        } catch (IOException e) {
+            // Use proper logging instead of System.out.println
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to upload avatar file");
+        }
+    }
+
     /**
      * @author Phan NT Son
      * @since 21-06-2025
@@ -231,5 +267,4 @@ public class UserController {
         return ResponseEntity.ok().body(userService.getFriends(me.getUser().getUserId()));
     }
 
-    
 }

@@ -30,7 +30,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -40,6 +42,8 @@ import java.util.stream.Collectors;
 @Service
 public class UserService {
 
+    private final AvatarService avatarService;
+
     private UserRepo userRepo;
     private TransactionRepo transactionRepo;
     private EntityMapper entityMapper;
@@ -48,11 +52,12 @@ public class UserService {
     private static final String USER_NOT_FOUND_MSG = "User not found";
 
     public UserService(UserRepo userRepo, TransactionRepo transactionRepo, EntityMapper entityMapper,
-            FriendshipRepo friendshipRepo) {
+            FriendshipRepo friendshipRepo, AvatarService avatarService) {
         this.userRepo = userRepo;
         this.transactionRepo = transactionRepo;
         this.entityMapper = entityMapper;
         this.friendshipRepo = friendshipRepo;
+        this.avatarService = avatarService;
     }
 
     public User getUser(Long userId) {
@@ -64,7 +69,6 @@ public class UserService {
 
     // author: Ba Thanh
     // Get userId from SecurityContextHolder
-
 
     public List<User> getAllUsers() {
         return userRepo.findAll();
@@ -107,13 +111,13 @@ public class UserService {
         game.setTotalPurchased(game.getTotalPurchased() + 1);
     }
 
-
     // Thêm game vào library - author: Ba Thanh
     public void addGameToLibrary(Long userId, Game game) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_MSG));
         java.util.Set<Game> ownedGames = user.getGames() != null
-            ? user.getGames() : new java.util.HashSet<>();
+                ? user.getGames()
+                : new java.util.HashSet<>();
         ownedGames.add(game);
         user.setGames(ownedGames);
         userRepo.save(user);
@@ -221,7 +225,7 @@ public class UserService {
         }
         user.setWalletBalance(user.getWalletBalance().subtract(amount)); // Changed by Phan Son 21-06
         userRepo.save(user);
-        return user.getWalletBalance(); 
+        return user.getWalletBalance();
     }
 
     /**
@@ -300,6 +304,17 @@ public class UserService {
                 user.getSummary(),
                 user.isBanStatus()))
                 .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND_MSG));
+    }
+    
+    @Transactional // Đảm bảo các thao tác là một giao dịch
+    public String uploadAndSetNewAvatar(Long userId, MultipartFile file) throws IOException {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+        String fileUrl = avatarService.store(file);
+        user.setAvatarUrl(fileUrl);
+        userRepo.save(user);
+
+        return fileUrl;
     }
 
     /**

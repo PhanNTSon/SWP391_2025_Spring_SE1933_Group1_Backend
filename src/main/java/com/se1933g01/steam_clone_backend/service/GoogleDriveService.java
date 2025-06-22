@@ -11,8 +11,17 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.io.InputStream;
 
-import java.util.ArrayList;
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.services.drive.DriveScopes;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.web.multipart.MultipartFile;
@@ -50,11 +59,49 @@ public class GoogleDriveService {
     public void deleteFile(String fileId) throws IOException {
         driveService.files().delete(fileId).execute();
     }
+
     public void makeFilePublic(String fileId) throws IOException {
         Permission permission = new Permission()
-                .setType("anyone")  // ✅ Allows anyone to view
+                .setType("anyone") // ✅ Allows anyone to view
                 .setRole("reader"); // ✅ Read-only access
 
         driveService.permissions().create(fileId, permission).execute();
+    }
+    
+    @Value("${gdrive.service_account.key_file_path}")
+    private Resource serviceAccountKey;
+
+    @Value("${gdrive.folder.avatars.id}")
+    private String avatarFolderId;
+
+    private static final String APPLICATION_NAME = "Steam Clone Backend";
+    private static final JsonFactory JSON_FACTORY = com.google.api.client.json.jackson2.JacksonFactory.getDefaultInstance();
+
+    private Drive getDriveService() throws IOException {
+        HttpTransport httpTransport = new NetHttpTransport();
+        GoogleCredential credential = GoogleCredential.fromStream(serviceAccountKey.getInputStream())
+                .createScoped(Collections.singleton(DriveScopes.DRIVE));
+        return new Drive.Builder(httpTransport, JSON_FACTORY, credential)
+                .setApplicationName(APPLICATION_NAME).build();
+    }
+
+    public String uploadFile(MultipartFile multipartFile, String fileName) throws IOException {
+        Drive driveService = getDriveService();
+
+        File fileMetadata = new File();
+        fileMetadata.setName(fileName);
+        fileMetadata.setParents(List.of(avatarFolderId));
+
+        InputStreamContent mediaContent = new InputStreamContent(
+                multipartFile.getContentType(),
+                multipartFile.getInputStream());
+
+        File uploadedFile = driveService.files().create(fileMetadata, mediaContent)
+                .setFields("id, webContentLink, webViewLink").execute();
+
+        Permission permission = new Permission().setType("anyone").setRole("reader");
+        driveService.permissions().create(uploadedFile.getId(), permission).execute();
+
+        return "https://drive.google.com/uc?export=view&id=" + uploadedFile.getId();
     }
 }
