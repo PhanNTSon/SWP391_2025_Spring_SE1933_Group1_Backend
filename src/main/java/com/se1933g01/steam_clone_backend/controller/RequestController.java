@@ -103,6 +103,19 @@ public class RequestController {
                 "User Rejected", "Game Reject Failed");
     }
 
+    @PatchMapping("/feedback/approve/{requestID}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, String>> approveFeedback(@PathVariable String requestID) {
+        return handleAction(() -> requestService.approveFeedback(Long.parseLong(requestID)),
+                "Feedback Approved", "Feedback Approve Failed");
+    }
+    @PatchMapping("/feedback/reject/{requestID}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, String>> rejectFeedback(@PathVariable String requestID) {
+        return handleAction(() -> requestService.rejectFeedback(Long.parseLong(requestID)),
+                "Feedback Rejected", "Feedback Reject Failed");
+    }
+
     @GetMapping("/game/{page}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<AddingGameRequestDTO>> getGameRequest(@PathVariable int page) {

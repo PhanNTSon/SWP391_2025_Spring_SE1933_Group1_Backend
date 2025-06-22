@@ -137,6 +137,14 @@ public class RequestService {
         requestRepo.save(request);
 
     }
+    public void approveFeedback(Long requestId){
+        Request request = requestRepo.findById(requestId).orElseThrow(()-> new RuntimeException(REQUEST_NOT_FOUND_MESSAGE));
+        request.setRequestState(1);
+        requestRepo.save(request);
+    }
+    public void rejectFeedback(Long requestId){
+        rejectRequestById(requestId);
+    }
     public void rejectPublisher(Long requestID) {
         rejectRequestById(requestID);
     }
@@ -169,7 +177,10 @@ public class RequestService {
         Page<Feedback> feedbackPage = feedbackRepo.findAllByRequestStateZero(pageable);
         return feedbackPage.map(feedback -> {
             modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
-            return modelMapper.map(feedback, FeedbackDTO.class);
+            FeedbackDTO feedbackDTO = modelMapper.map(feedback, FeedbackDTO.class);
+            feedbackDTO.setUserName(feedbackRepo.findUserNameByRequestId(feedback.getRequest().getRequestId()));
+            feedbackDTO.setUserId(Long.parseLong(feedbackRepo.findUserIdByRequestId(feedback.getRequest().getRequestId())));
+            return feedbackDTO;
         });
     }
 
@@ -201,7 +212,10 @@ public class RequestService {
             return null; 
         }
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
-        return modelMapper.map(feedback, FeedbackDTO.class);
+        FeedbackDTO feedbackDTO = modelMapper.map(feedback, FeedbackDTO.class);
+        feedbackDTO.setUserName(feedbackRepo.findUserNameByRequestId(requestId));
+        feedbackDTO.setUserId(Long.parseLong(feedbackRepo.findUserIdByRequestId(requestId)));
+        return feedbackDTO;
     }
 
     public void addPublisher(PublisherApplyRequestDTO publisherApplyRequestDTO, Long userId){
