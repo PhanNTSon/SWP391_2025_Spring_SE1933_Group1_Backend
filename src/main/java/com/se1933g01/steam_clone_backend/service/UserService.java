@@ -23,6 +23,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
 import com.se1933g01.steam_clone_backend.repository.FriendshipRepo;
+import com.se1933g01.steam_clone_backend.repository.GameRepo;
 import com.se1933g01.steam_clone_backend.repository.TransactionRepo;
 
 import org.springframework.data.domain.Page;
@@ -42,15 +43,17 @@ public class UserService {
 
     private UserRepo userRepo;
     private TransactionRepo transactionRepo;
+    private final GameRepo gameRepo;
     private EntityMapper entityMapper;
     private final FriendshipRepo friendshipRepo; // Added by Phan NT Son 21-06-2025
 
     private static final String USER_NOT_FOUND_MSG = "User not found";
 
-    public UserService(UserRepo userRepo, TransactionRepo transactionRepo, EntityMapper entityMapper,
+    public UserService(UserRepo userRepo, TransactionRepo transactionRepo, GameRepo gameRepo, EntityMapper entityMapper,
             FriendshipRepo friendshipRepo) {
         this.userRepo = userRepo;
         this.transactionRepo = transactionRepo;
+        this.gameRepo = gameRepo;
         this.entityMapper = entityMapper;
         this.friendshipRepo = friendshipRepo;
     }
@@ -80,16 +83,17 @@ public class UserService {
         return transactionRepo.findByUser(user);
     }
 
-    // Tạo transaction cho từng game - author: Ba Thanh
-    public void createTransaction(Long userId, Game game) {
-        User user = userRepo.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_MSG));
+    public Transaction createTransaction(User user, Game game) {
+        // Create new transaction
         Transaction transaction = new Transaction();
         transaction.setUser(user);
         transaction.setTotalAmount(game.getPrice());
         transaction.setCreatedAt(LocalDate.now());
+
+        // Save transaction to generate ID
         transaction = transactionRepo.save(transaction);
 
+        // Create transaction detail
         List<TransactionDetail> transactionDetails = new ArrayList<>();
         TransactionDetail detail = new TransactionDetail();
         CompositedKey key = new CompositedKey();
@@ -100,11 +104,12 @@ public class UserService {
         detail.setGame(game);
         detail.setPrice(game.getPrice());
         transactionDetails.add(detail);
-        transaction.setTransactionDetail(transactionDetails);
-        transactionRepo.save(transaction);
 
-        // Cập nhật số lượng mua
-        game.setTotalPurchased(game.getTotalPurchased() + 1);
+        // Set transaction details and save
+        transaction.setTransactionDetail(transactionDetails);
+        game.setTotalPurchased(game.getTotalPurchased() + 1); // Increment total purchased count
+        gameRepo.save(game); // Save the game to update total purchased count
+        return transactionRepo.save(transaction);
     }
 
 

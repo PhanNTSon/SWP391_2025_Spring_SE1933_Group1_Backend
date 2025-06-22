@@ -2,6 +2,7 @@ package com.se1933g01.steam_clone_backend.entity.transaction;
 
 import java.math.BigDecimal;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.se1933g01.steam_clone_backend.entity.CompositedKey;
 import com.se1933g01.steam_clone_backend.entity.game.Game;
 

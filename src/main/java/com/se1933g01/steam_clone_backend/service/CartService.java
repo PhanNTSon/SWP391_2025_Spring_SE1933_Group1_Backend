@@ -125,7 +125,7 @@ public class CartService {
         
         for (Game game : user.getCartGames()) {
             // Tạo transaction cho từng game
-            userService.createTransaction(userId, game);
+            userService.createTransaction(user, game);
             // Thêm game vào library
             userService.addGameToLibrary(userId, game);
         }

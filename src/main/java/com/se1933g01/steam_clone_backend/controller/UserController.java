@@ -9,6 +9,7 @@ import com.se1933g01.steam_clone_backend.entity.transaction.Transaction;
 import com.se1933g01.steam_clone_backend.entity.user.CustomUserDetail;
 import com.se1933g01.steam_clone_backend.service.CartService;
 
+import org.apache.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,8 +23,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.se1933g01.steam_clone_backend.service.UserService;
 
+import jakarta.persistence.EntityNotFoundException;
+
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -60,12 +67,12 @@ public class UserController {
     // Add games to cart
     @PostMapping("/cart/add")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<CartDTO> addGameToCart(@AuthenticationPrincipal CustomUserDetail me, @RequestParam Long gameId) {
+    public ResponseEntity<?> addGameToCart(@AuthenticationPrincipal CustomUserDetail me, @RequestParam Long gameId) {
         try {
             CartDTO cart = cartService.addGameToCart(me.getUser().getUserId(), gameId);
             return ResponseEntity.ok(cart);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
@@ -105,12 +112,52 @@ public class UserController {
     // Show transaction history (chỉ trả về các trường cần thiết)
     @GetMapping("/transaction")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<List<Transaction>> showTransaction(@AuthenticationPrincipal CustomUserDetail me) {
+    public ResponseEntity<Map<String, Object>> showTransaction(@AuthenticationPrincipal CustomUserDetail me) {
+        Map<String, Object> response = new HashMap<>();
         try {
-            List<Transaction> transactions = userService.showTransactions(me.getUser().getUserId());
-            return ResponseEntity.ok(transactions);
+            if (me == null) {
+                response.put("success", false);
+                response.put("message", "User authentication required");
+                return ResponseEntity.status(HttpStatus.SC_UNAUTHORIZED).body(response);
+            }
+
+            Long userId = me.getUser().getUserId(); // Assuming CustomUserDetail has getUserId()
+            List<Transaction> transactions = userService.showTransactions(userId);
+
+            List<Map<String, Object>> transactionData = transactions.stream()
+                .map(transaction -> {
+                    Map<String, Object> transactionMap = new HashMap<>();
+                    transactionMap.put("transactionId", transaction.getTransactionId());
+                    transactionMap.put("dateCreated", transaction.getCreatedAt());
+                    transactionMap.put("totalAmount", transaction.getTotalAmount());
+
+                    List<Map<String, Object>> gameDetails = transaction.getTransactionDetail().stream()
+                        .map(detail -> {
+                            Map<String, Object> gameMap = new HashMap<>();
+                            gameMap.put("gameId", detail.getGame() != null ? detail.getGame().getGameId() : null);
+                            gameMap.put("gameName", detail.getGame() != null ? detail.getGame().getName() : "Unknown");
+                            gameMap.put("price", detail.getPrice());
+                            return gameMap;
+                        })
+                        .collect(Collectors.toList());
+
+                    transactionMap.put("games", gameDetails);
+                    return transactionMap;
+                })
+                .collect(Collectors.toList());
+
+            response.put("success", true);
+            response.put("message", "Transactions retrieved successfully");
+            response.put("data", transactionData);
+            return ResponseEntity.ok(response);
+        } catch (EntityNotFoundException e) {
+            response.put("success", false);
+            response.put("message", "User not found: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.SC_NOT_FOUND).body(response);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            response.put("success", false);
+            response.put("message", "Error retrieving transactions: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.SC_INTERNAL_SERVER_ERROR).body(response);
         }
     }
 

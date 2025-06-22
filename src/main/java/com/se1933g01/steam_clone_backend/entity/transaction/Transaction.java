@@ -6,6 +6,7 @@ import java.util.List;
 
 import jakarta.persistence.CascadeType;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.se1933g01.steam_clone_backend.entity.user.User;
 
 import jakarta.persistence.Column;
