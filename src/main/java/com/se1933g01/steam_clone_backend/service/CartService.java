@@ -112,28 +112,58 @@ public class CartService {
     }
 
     
+    //checkout- author: Ba Thanh
     public CartDTO checkout(Long userId) {
         User user = userRepo.findByIdWithCartGames(userId);
-        if (user == null) throw new EntityNotFoundException("User not found");
-        if (user.getCartGames() == null || user.getCartGames().isEmpty()) {
-            throw new IllegalArgumentException("Cart is empty");
-        };
-        BigDecimal totalAmount = calculateCartTotal(userId);
-
-        //trừ tiền trong ví của người dùng
-        userService.subtractUserBalance(userId, totalAmount);
-        
-        for (Game game : user.getCartGames()) {
-            // Tạo transaction cho từng game
-            userService.createTransaction(user, game);
-            // Thêm game vào library
-            userService.addGameToLibrary(userId, game);
+        if (user == null) throw new RuntimeException("User not found");
+        if (user.getCartGames().isEmpty())
+            throw new RuntimeException("Cart is empty");
+        // Only checkout games not already owned
+        java.util.Set<Game> ownedGames = user.getGames() != null ? user.getGames() : new java.util.HashSet<>();
+        List<Game> gamesToBuy = user.getCartGames().stream()
+            .filter(game -> ownedGames.stream().noneMatch(owned -> owned.getGameId().equals(game.getGameId())))
+            .toList();
+        if (gamesToBuy.isEmpty()) {
+            throw new RuntimeException("All games in cart are already owned");
         }
-        
-        // Xóa cart
-        user.setCartGames(new HashSet<>());
+        BigDecimal total = gamesToBuy.stream().map(game -> game.getPrice()).reduce(BigDecimal.ZERO, BigDecimal::add);
+        if (user.getWalletBalance().compareTo(total) < 0) {
+            throw new RuntimeException("Insufficient balance");
+        }
+        // Lưu lại balance trước khi trừ
+        BigDecimal oldBalance = user.getWalletBalance();
+        // Trừ tiền
+        user.setWalletBalance(oldBalance.subtract(total));
+        // Tạo transaction cho từng game chưa sở hữu
+        for (Game game : gamesToBuy) {
+            Transaction transaction = new Transaction();
+            transaction.setUser(user);
+            transaction.setTotalAmount(game.getPrice());
+            transaction.setCreatedAt(LocalDate.now());
+            // Save transaction first to generate ID
+            transaction = transactionRepo.save(transaction);
+            // Always create a new ArrayList for transactionDetails
+            List<TransactionDetail> transactionDetails = new java.util.ArrayList<>();
+            TransactionDetail detail = new TransactionDetail();
+            CompositedKey key = new CompositedKey();
+            key.setKey1(transaction.getTransactionId()); // Map to TransactionID
+            key.setKey2(game.getGameId()); // Map to GameID
+            detail.setId(key);
+            detail.setTransaction(transaction);
+            detail.setGame(game);
+            detail.setPrice(game.getPrice());
+            transactionDetails.add(detail);
+            transaction.setTransactionDetail(transactionDetails);
+            transactionRepo.save(transaction);
+            // count total purchased for the game bought by user
+            game.setTotalPurchased(game.getTotalPurchased() + 1);
+            // Add game to user's library
+            ownedGames.add(game);
+        }
+        // Remove only the games that were just bought from cart
+        user.getCartGames().removeAll(gamesToBuy);
+        user.setGames(ownedGames);
         userRepo.save(user);
-        
         return getCart(userId);
     }
 }

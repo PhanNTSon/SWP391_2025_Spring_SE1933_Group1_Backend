@@ -1,6 +1,7 @@
 package com.se1933g01.steam_clone_backend.controller;
 
 import com.se1933g01.steam_clone_backend.dto.CartDTO;
+import com.se1933g01.steam_clone_backend.dto.GameBasicDTO;
 import com.se1933g01.steam_clone_backend.dto.LibraryDTO;
 import com.se1933g01.steam_clone_backend.dto.User.FriendDTO;
 import com.se1933g01.steam_clone_backend.dto.User.UserDetailDTO;
@@ -64,12 +65,18 @@ public class UserController {
      */
     @GetMapping("/cart")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<CartDTO> showCart(@AuthenticationPrincipal CustomUserDetail me) {
+    public ResponseEntity<Map<String, Object>> showCart(@AuthenticationPrincipal CustomUserDetail me) {
+        Map<String, Object> response = new HashMap<>();
         try {
-            CartDTO cart = cartService.getCart(me.getUser().getUserId());
-            return ResponseEntity.ok(cart);
+            Long userId = me.getUser().getUserId();
+            List<GameBasicDTO> listCart = cartService.getCart(userId).getListCart();
+            response.put("success", true);
+            response.put("data", listCart);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            response.put("success", false);
+            response.put("message", "Failed to get cart: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
@@ -79,12 +86,25 @@ public class UserController {
     // Add games to cart
     @PostMapping("/cart/add")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<?> addGameToCart(@AuthenticationPrincipal CustomUserDetail me, @RequestParam Long gameId) {
+    public ResponseEntity<Map<String, Object>> addGameToCart(
+            @AuthenticationPrincipal CustomUserDetail me,
+            @RequestParam Long gameId) {
+        Map<String, Object> response = new HashMap<>();
         try {
-            CartDTO cart = cartService.addGameToCart(me.getUser().getUserId(), gameId);
-            return ResponseEntity.ok(cart);
+            Long userId = me.getUser().getUserId();
+            if (gameId == null) {
+                response.put("success", false);
+                response.put("message", "Game ID cannot be null");
+                return ResponseEntity.badRequest().body(response);
+            }
+            cartService.addGameToCart(userId, gameId);
+            response.put("success", true);
+            response.put("message", "Adding game to cart successfully");
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            response.put("success", false);
+            response.put("message", "Failed to add game to cart: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
@@ -94,13 +114,25 @@ public class UserController {
     // Remove games from cart
     @DeleteMapping("/cart/remove")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<CartDTO> removeFromCart(@AuthenticationPrincipal CustomUserDetail me,
+    public ResponseEntity<Map<String, Object>> removeGameFromCart(
+            @AuthenticationPrincipal CustomUserDetail me,
             @RequestParam Long gameId) {
+        Map<String, Object> response = new HashMap<>();
         try {
-            CartDTO cart = cartService.removeGameFromCart(me.getUser().getUserId(), gameId);
-            return ResponseEntity.ok(cart);
+            Long userId = me.getUser().getUserId();
+            if (gameId == null) {
+                response.put("success", false);
+                response.put("message", "Game ID cannot be null");
+                return ResponseEntity.badRequest().body(response);
+            }
+            cartService.removeGameFromCart(userId, gameId);
+            response.put("success", true);
+            response.put("message", "Deleting game from cart successfully");
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            response.put("success", false);
+            response.put("message", "Failed to remove game from cart: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
@@ -110,12 +142,22 @@ public class UserController {
     // Checkout cart
     @PostMapping("/cart/checkout")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<CartDTO> checkoutCart(@AuthenticationPrincipal CustomUserDetail me) {
+    public ResponseEntity<Map<String, Object>> checkoutCart(@AuthenticationPrincipal CustomUserDetail me) {
+        Map<String, Object> response = new HashMap<>();
         try {
-            CartDTO cart = cartService.checkout(me.getUser().getUserId());
-            return ResponseEntity.ok(cart);
+            Long userId = me.getUser().getUserId();
+            cartService.checkout(userId);
+            response.put("success", true);
+            response.put("message", "Checkout successfully.");
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            response.put("success", false);
+            response.put("message", "Checkout failed: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            response.put("success", false);
+            response.put("message", "Checkout failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
@@ -125,51 +167,35 @@ public class UserController {
     // Show transaction history (chỉ trả về các trường cần thiết)
     @GetMapping("/transaction")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<Map<String, Object>> showTransaction(@AuthenticationPrincipal CustomUserDetail me) {
+    public ResponseEntity<Map<String, Object>> showTransactions(@AuthenticationPrincipal CustomUserDetail me) {
         Map<String, Object> response = new HashMap<>();
         try {
-            if (me == null) {
-                response.put("success", false);
-                response.put("message", "User authentication required");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-            }
-
-            Long userId = me.getUser().getUserId(); // Assuming CustomUserDetail has getUserId()
+            Long userId = me.getUser().getUserId();
             List<Transaction> transactions = userService.showTransactions(userId);
-
-            List<Map<String, Object>> transactionData = transactions.stream()
-                .map(transaction -> {
-                    Map<String, Object> transactionMap = new HashMap<>();
-                    transactionMap.put("transactionId", transaction.getTransactionId());
-                    transactionMap.put("dateCreated", transaction.getCreatedAt());
-                    transactionMap.put("totalAmount", transaction.getTotalAmount());
-
-                    List<Map<String, Object>> gameDetails = transaction.getTransactionDetail().stream()
-                        .map(detail -> {
-                            Map<String, Object> gameMap = new HashMap<>();
-                            gameMap.put("gameId", detail.getGame() != null ? detail.getGame().getGameId() : null);
-                            gameMap.put("gameName", detail.getGame() != null ? detail.getGame().getName() : "Unknown");
-                            gameMap.put("price", detail.getPrice());
-                            return gameMap;
-                        })
-                        .collect(Collectors.toList());
-
-                    transactionMap.put("games", gameDetails);
-                    return transactionMap;
-                })
-                .collect(Collectors.toList());
-
+            List<Map<String, Object>> result = transactions.stream().map(tran -> {
+                Map<String, Object> map = new HashMap<>();
+                map.put("transactionId", tran.getTransactionId());
+                map.put("dateCreated", tran.getCreatedAt());
+                // Get game info from the first TransactionDetail (each transaction has one
+                // game)
+                if (tran.getTransactionDetail() != null && !tran.getTransactionDetail().isEmpty()) {
+                    var detail = tran.getTransactionDetail().get(0);
+                    map.put("gameId", detail.getGame() != null ? detail.getGame().getGameId() : null);
+                    map.put("gameName", detail.getGame() != null ? detail.getGame().getName() : null);
+                    map.put("price", detail.getPrice());
+                } else {
+                    map.put("gameId", null);
+                    map.put("gameName", null);
+                    map.put("price", null);
+                }
+                return map;
+            }).toList();
             response.put("success", true);
-            response.put("message", "Transactions retrieved successfully");
-            response.put("data", transactionData);
+            response.put("data", result);
             return ResponseEntity.ok(response);
-        } catch (EntityNotFoundException e) {
-            response.put("success", false);
-            response.put("message", "User not found: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         } catch (Exception e) {
             response.put("success", false);
-            response.put("message", "Error retrieving transactions: " + e.getMessage());
+            response.put("message", "Failed to get transactions: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
@@ -179,40 +205,27 @@ public class UserController {
     @GetMapping("/library")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
     public ResponseEntity<LibraryDTO> showLibrary(@AuthenticationPrincipal CustomUserDetail me) {
-        try {
-            LibraryDTO library = userService.showLibrary(me.getUser().getUserId());
-            return ResponseEntity.ok(library);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
+        Long userId = me.getUser().getUserId();
+        LibraryDTO dto = userService.showLibrary(userId);
+        return ResponseEntity.ok(dto);
     }
 
     /* author: bathanh */
     // api check if game is in cart or not
     @GetMapping("/cart/contain/{gameId}")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<Boolean> isGameInCart(@AuthenticationPrincipal CustomUserDetail me,
-            @PathVariable Long gameId) {
-        try {
-            boolean isGameInCart = userService.isGameInCart(me.getUser().getUserId(), gameId);
-            return ResponseEntity.ok(isGameInCart);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
+    public ResponseEntity<Boolean> isGameInCart(@AuthenticationPrincipal CustomUserDetail me, @PathVariable Long gameId) {
+        Long userId = me.getUser().getUserId();
+        return ResponseEntity.ok(userService.isGameInCart(userId, gameId));
     }
 
     /* author: bathanh */
     // api check if game is in library or not
     @GetMapping("/library/contain/{gameId}")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<Boolean> isGameOwned(@AuthenticationPrincipal CustomUserDetail me,
-            @PathVariable Long gameId) {
-        try {
-            boolean isGameOwned = userService.isGameOwned(me.getUser().getUserId(), gameId);
-            return ResponseEntity.ok(isGameOwned);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
+    public ResponseEntity<Boolean> isGameOwned(@AuthenticationPrincipal CustomUserDetail me, @PathVariable Long gameId) {
+        Long userId = me.getUser().getUserId();
+        return ResponseEntity.ok(userService.isGameOwned(userId, gameId));
     }
 
     /* author: bathanh */
@@ -220,40 +233,31 @@ public class UserController {
     @GetMapping("/wallet")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
     public ResponseEntity<BigDecimal> getUserBalance(@AuthenticationPrincipal CustomUserDetail me) {
-        try {
-            BigDecimal balance = userService.getUserBalance(me.getUser().getUserId());
-            return ResponseEntity.ok(balance);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
+        Long userId = me.getUser().getUserId();
+        BigDecimal balance = userService.getUserBalance(userId);
+        return ResponseEntity.ok(balance);
     }
 
     /* author: bathanh */
     // api add user account balance
     @PostMapping("/wallet/add")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<BigDecimal> addBalance(@AuthenticationPrincipal CustomUserDetail me,
+    public ResponseEntity<BigDecimal> addBalance(
+            @AuthenticationPrincipal CustomUserDetail me,
             @RequestParam BigDecimal amount) {
-        try {
-            BigDecimal newBalance = userService.addUserBalance(me.getUser().getUserId(), amount);
-            return ResponseEntity.ok(newBalance);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
+        Long userId = me.getUser().getUserId();
+        BigDecimal newBalance = userService.addUserBalance(userId, amount);
+        return ResponseEntity.ok(newBalance);
     }
 
     /* author: bathanh */
     // api add user account balance
     @PostMapping("/wallet/subtract")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<BigDecimal> subtractBalance(@AuthenticationPrincipal CustomUserDetail me,
-            @RequestParam BigDecimal amount) {
-        try {
-            BigDecimal newBalance = userService.subtractUserBalance(me.getUser().getUserId(), amount);
-            return ResponseEntity.ok(newBalance);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
+    public ResponseEntity<BigDecimal> subtractBalance(@AuthenticationPrincipal CustomUserDetail me, @RequestParam BigDecimal amount) {
+        Long userId = me.getUser().getUserId();
+        BigDecimal newBalance = userService.subtractUserBalance(userId, amount);
+        return ResponseEntity.ok(newBalance);
     }
 
     /**

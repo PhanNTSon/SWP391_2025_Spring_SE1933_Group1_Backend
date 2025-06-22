@@ -87,46 +87,7 @@ public class UserService {
         return transactionRepo.findByUser(user);
     }
 
-    public Transaction createTransaction(User user, Game game) {
-        // Create new transaction
-        Transaction transaction = new Transaction();
-        transaction.setUser(user);
-        transaction.setTotalAmount(game.getPrice());
-        transaction.setCreatedAt(LocalDate.now());
 
-        // Save transaction to generate ID
-        transaction = transactionRepo.save(transaction);
-
-        // Create transaction detail
-        List<TransactionDetail> transactionDetails = new ArrayList<>();
-        TransactionDetail detail = new TransactionDetail();
-        CompositedKey key = new CompositedKey();
-        key.setKey1(transaction.getTransactionId());
-        key.setKey2(game.getGameId());
-        detail.setId(key);
-        detail.setTransaction(transaction);
-        detail.setGame(game);
-        detail.setPrice(game.getPrice());
-        transactionDetails.add(detail);
-
-        // Set transaction details and save
-        transaction.setTransactionDetail(transactionDetails);
-        game.setTotalPurchased(game.getTotalPurchased() + 1); // Increment total purchased count
-        gameRepo.save(game); // Save the game to update total purchased count
-        return transactionRepo.save(transaction);
-    }
-
-    // Thêm game vào library - author: Ba Thanh
-    public void addGameToLibrary(Long userId, Game game) {
-        User user = userRepo.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_MSG));
-        java.util.Set<Game> ownedGames = user.getGames() != null
-                ? user.getGames()
-                : new java.util.HashSet<>();
-        ownedGames.add(game);
-        user.setGames(ownedGames);
-        userRepo.save(user);
-    }
 
     /**
      * Show library of a user.
