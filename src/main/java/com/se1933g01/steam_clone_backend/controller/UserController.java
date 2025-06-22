@@ -305,7 +305,8 @@ public class UserController {
     /**
      * @author Phan NT Son
      * @since 21-06-2025
-     * @param me
+     * Get list Friends of User
+     * @param me - UserID
      * @return
      */
     @GetMapping("/friends")
