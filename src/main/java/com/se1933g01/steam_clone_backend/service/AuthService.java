@@ -39,14 +39,14 @@ public class AuthService {
     private AuthenticationManager authenticationManager;
     @Autowired
     private JwtUtil jwtUtil;
-    
+
     @Autowired
     private PasswordEncoder passwordEncoder;
-    
+
     private final UserRepo userRepo;
 
     AuthService(UserRepo userRepo) {
-    this.userRepo = userRepo;
+        this.userRepo = userRepo;
     }
 
     @Autowired
@@ -111,7 +111,9 @@ public class AuthService {
 
             // Tạo JWT token
             String token = jwtUtil.generateToken(userDetails.getUsername(), userDetails.getUser().getUserId(),
-                    userDetails.getUser().getRole().getRoleName());
+                    userDetails.getUser().getRole().getRoleName(), userDetails.getUser().getAvatarUrl()); // Added by
+                                                                                                          // Phan Son
+                                                                                                          // 21-06
 
             // Trả về cho client
             Map<String, Object> response = new HashMap<>();
@@ -150,9 +152,8 @@ public class AuthService {
         }
 
         // Generate JWT
-        return jwtUtil.generateToken(user.getUsername(), user.getUserId(), user.getRole().getRoleName()); // Adjust by
-                                                                                                          // Phan NT SOn
-                                                                                                          // 18-06-2025
+        return jwtUtil.generateToken(user.getUsername(), user.getUserId(), user.getRole().getRoleName(),
+                user.getAvatarUrl()); // Added by Phan Son 21-06
     }
 
     public boolean emailExists(String email) {
