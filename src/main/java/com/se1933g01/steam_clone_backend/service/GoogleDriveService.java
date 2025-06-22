@@ -7,7 +7,6 @@ import com.google.api.client.http.InputStreamContent;
 
 import org.springframework.stereotype.Service;
 
-
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -49,13 +48,14 @@ public class GoogleDriveService {
         returnData.add(file.getOriginalFilename());
         return returnData; // ✅ Returns File ID
     }
-    
+
     public String generateDownloadUrl(String fileId) throws IOException {
         // Retrieve file metadata to get download link
         File fileMetadata = driveService.files().get(fileId).setFields("webContentLink").execute();
-        
+
         return fileMetadata.getWebContentLink(); // Return the file's public download URL
     }
+
     public void deleteFile(String fileId) throws IOException {
         driveService.files().delete(fileId).execute();
     }
@@ -67,41 +67,6 @@ public class GoogleDriveService {
 
         driveService.permissions().create(fileId, permission).execute();
     }
+
     
-    @Value("${gdrive.service_account.key_file_path}")
-    private Resource serviceAccountKey;
-
-    @Value("${gdrive.folder.avatars.id}")
-    private String avatarFolderId;
-
-    private static final String APPLICATION_NAME = "Steam Clone Backend";
-    private static final JsonFactory JSON_FACTORY = com.google.api.client.json.jackson2.JacksonFactory.getDefaultInstance();
-
-    private Drive getDriveService() throws IOException {
-        HttpTransport httpTransport = new NetHttpTransport();
-        GoogleCredential credential = GoogleCredential.fromStream(serviceAccountKey.getInputStream())
-                .createScoped(Collections.singleton(DriveScopes.DRIVE));
-        return new Drive.Builder(httpTransport, JSON_FACTORY, credential)
-                .setApplicationName(APPLICATION_NAME).build();
-    }
-
-    public String uploadFile(MultipartFile multipartFile, String fileName) throws IOException {
-        Drive driveService = getDriveService();
-
-        File fileMetadata = new File();
-        fileMetadata.setName(fileName);
-        fileMetadata.setParents(List.of(avatarFolderId));
-
-        InputStreamContent mediaContent = new InputStreamContent(
-                multipartFile.getContentType(),
-                multipartFile.getInputStream());
-
-        File uploadedFile = driveService.files().create(fileMetadata, mediaContent)
-                .setFields("id, webContentLink, webViewLink").execute();
-
-        Permission permission = new Permission().setType("anyone").setRole("reader");
-        driveService.permissions().create(uploadedFile.getId(), permission).execute();
-
-        return "https://drive.google.com/uc?export=view&id=" + uploadedFile.getId();
-    }
 }

@@ -43,7 +43,7 @@ import java.util.stream.Collectors;
 @Service
 public class UserService {
 
-    private final AvatarService avatarService;
+    private final CloudinaryService CloudinaryService;
 
     private UserRepo userRepo;
     private TransactionRepo transactionRepo;
@@ -54,13 +54,13 @@ public class UserService {
     private static final String USER_NOT_FOUND_MSG = "User not found";
 
     public UserService(UserRepo userRepo, TransactionRepo transactionRepo, EntityMapper entityMapper,
-            FriendshipRepo friendshipRepo, AvatarService avatarService, GameRepo gameRepo) {
+            FriendshipRepo friendshipRepo, CloudinaryService CloudinaryService, GameRepo gameRepo) {
         this.userRepo = userRepo;
         this.transactionRepo = transactionRepo;
         this.gameRepo = gameRepo;
         this.entityMapper = entityMapper;
         this.friendshipRepo = friendshipRepo;
-        this.avatarService = avatarService;
+        this.CloudinaryService  = CloudinaryService;
     }
 
     public User getUser(Long userId) {
@@ -311,11 +311,11 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND_MSG));
     }
 
-    @Transactional // Đảm bảo các thao tác là một giao dịch
+    @Transactional 
     public String uploadAndSetNewAvatar(Long userId, MultipartFile file) throws IOException {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
-        String fileUrl = avatarService.store(file);
+        String fileUrl = CloudinaryService.uploadFile(file);
         user.setAvatarUrl(fileUrl);
         userRepo.save(user);
 

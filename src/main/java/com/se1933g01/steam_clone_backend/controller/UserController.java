@@ -9,7 +9,6 @@ import com.se1933g01.steam_clone_backend.entity.transaction.Transaction;
 import com.se1933g01.steam_clone_backend.entity.user.CustomUserDetail;
 import com.se1933g01.steam_clone_backend.entity.user.User;
 import com.se1933g01.steam_clone_backend.repository.UserRepo;
-import com.se1933g01.steam_clone_backend.service.AvatarService;
 import com.se1933g01.steam_clone_backend.service.CartService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,14 +47,12 @@ public class UserController {
     private final UserService userService;
     private final CartService cartService;
     private final UserRepo userRepo;
-    private final AvatarService AvatarService;
 
-    public UserController(UserService userService, CartService cartService, UserRepo userRepo,
-            AvatarService AvatarService) {
+    public UserController(UserService userService, CartService cartService, UserRepo userRepo) {
         this.userService = userService;
         this.cartService = cartService;
         this.userRepo = userRepo;
-        this.AvatarService = AvatarService;
+
     }
 
     /**
@@ -138,26 +135,28 @@ public class UserController {
             List<Transaction> transactions = userService.showTransactions(userId);
 
             List<Map<String, Object>> transactionData = transactions.stream()
-                .map(transaction -> {
-                    Map<String, Object> transactionMap = new HashMap<>();
-                    transactionMap.put("transactionId", transaction.getTransactionId());
-                    transactionMap.put("dateCreated", transaction.getCreatedAt());
-                    transactionMap.put("totalAmount", transaction.getTotalAmount());
+                    .map(transaction -> {
+                        Map<String, Object> transactionMap = new HashMap<>();
+                        transactionMap.put("transactionId", transaction.getTransactionId());
+                        transactionMap.put("dateCreated", transaction.getCreatedAt());
+                        transactionMap.put("totalAmount", transaction.getTotalAmount());
 
-                    List<Map<String, Object>> gameDetails = transaction.getTransactionDetail().stream()
-                        .map(detail -> {
-                            Map<String, Object> gameMap = new HashMap<>();
-                            gameMap.put("gameId", detail.getGame() != null ? detail.getGame().getGameId() : null);
-                            gameMap.put("gameName", detail.getGame() != null ? detail.getGame().getName() : "Unknown");
-                            gameMap.put("price", detail.getPrice());
-                            return gameMap;
-                        })
-                        .collect(Collectors.toList());
+                        List<Map<String, Object>> gameDetails = transaction.getTransactionDetail().stream()
+                                .map(detail -> {
+                                    Map<String, Object> gameMap = new HashMap<>();
+                                    gameMap.put("gameId",
+                                            detail.getGame() != null ? detail.getGame().getGameId() : null);
+                                    gameMap.put("gameName",
+                                            detail.getGame() != null ? detail.getGame().getName() : "Unknown");
+                                    gameMap.put("price", detail.getPrice());
+                                    return gameMap;
+                                })
+                                .collect(Collectors.toList());
 
-                    transactionMap.put("games", gameDetails);
-                    return transactionMap;
-                })
-                .collect(Collectors.toList());
+                        transactionMap.put("games", gameDetails);
+                        return transactionMap;
+                    })
+                    .collect(Collectors.toList());
 
             response.put("success", true);
             response.put("message", "Transactions retrieved successfully");

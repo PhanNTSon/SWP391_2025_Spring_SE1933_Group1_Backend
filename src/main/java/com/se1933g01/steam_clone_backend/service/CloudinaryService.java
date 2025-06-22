@@ -16,9 +16,10 @@ import lombok.Data;
 @Data
 public class CloudinaryService {
     private final Cloudinary cloudinary;
-    public List<String> uploadFiles(MultipartFile[] files) throws IOException{
+
+    public List<String> uploadFiles(MultipartFile[] files) throws IOException {
         List<String> urls = new ArrayList<>();
-        for(MultipartFile file: files){
+        for (MultipartFile file : files) {
             try {
                 Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
                 urls.add(uploadResult.get("url").toString());
@@ -27,5 +28,13 @@ public class CloudinaryService {
             }
         }
         return urls;
+    }
+    public String uploadFile(MultipartFile file) throws IOException {
+        try {
+            Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
+            return uploadResult.get("url").toString();
+        } catch (Exception e) {
+            throw new IOException("Failed to process file upload", e);
+        }
     }
 }
