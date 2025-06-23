@@ -45,7 +45,8 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         if (user == null) {
             user = new User();
             user.setEmail(email);
-            user.setUsername(email);
+            String username = email.split("@")[0];
+            user.setUsername(username);
             user.setPassword(""); // OAuth2 = no password
             user.setWalletBalance(BigDecimal.ZERO); // Changed by Phan Son 21-06
             user.setBanStatus(false);
@@ -59,7 +60,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
                 user.getAvatarUrl()); // Added by Phan Son 21-06
 
         // Redirect to frontend
-        String redirectUrl = "http://localhost:5173/?token=" + jwt;
+        String redirectUrl = "http://localhost:5173/oauth2/callback?token=" + jwt;
         response.sendRedirect(redirectUrl);
     }
 }
