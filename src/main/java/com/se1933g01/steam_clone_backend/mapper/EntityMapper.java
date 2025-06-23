@@ -18,8 +18,10 @@ import org.springframework.stereotype.Component;
 /**
  * Author: TS Huy
  */
-@Component
 public class EntityMapper {
+    private EntityMapper() {
+        throw new IllegalStateException("Utility class");
+    }
 
     public static TagDTO toTagDTO(Tag tag) {
         if (tag == null) {
@@ -34,7 +36,6 @@ public class EntityMapper {
             return null;
         return new PublisherBasicDTO(publisher.getPublisherId(), publisher.getPublisherName());
     }
-
 
     // --- Media Mapper ---
     public static MediaDTO toMediaDTO(Media media) {
@@ -66,7 +67,6 @@ public class EntityMapper {
             dto.setImageUrl("https://via.placeholder.com/184x69.png?text=No+Image"); // URL placeholder nếu không có ảnh
         }
 
-        
         // Changed by Phan Son 21-06
         BigDecimal originalPrice = game.getPrice(); // Giá gốc từ entity
         dto.setOriginalPrice(originalPrice);
@@ -113,7 +113,6 @@ public class EntityMapper {
         } else {
             dto.setTags(Collections.emptySet());
         }
-
 
         if (game.getMedia() != null && !game.getMedia().isEmpty()) {
             dto.setMedia(game.getMedia().stream().map(EntityMapper::toMediaDTO).collect(Collectors.toList()));

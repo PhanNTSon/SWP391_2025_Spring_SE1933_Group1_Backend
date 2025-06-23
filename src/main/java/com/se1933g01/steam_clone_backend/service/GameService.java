@@ -39,15 +39,29 @@ public class GameService {
      * @return
      */
 
-
     @Transactional(readOnly = true)
     public Page<GameBasicDTO> findGamesByCriteria(String searchTerm, BigDecimal maxPrice, List<Integer> tagIds,
             List<Long> publisherIds, Pageable pageable) {
-        Specification<Game> spec = Specification
-                .where(GameSpecification.hasSearchTerm(searchTerm)) // <-- THÊM ĐIỀU KIỆN MỚI
-                .and(GameSpecification.hasMaxPrice(maxPrice))
-                .and(GameSpecification.hasTags(tagIds))
-                .and(GameSpecification.hasPublishers(publisherIds));
+        Specification<Game> spec = null;
+
+        if (searchTerm != null) {
+            spec = GameSpecification.hasSearchTerm(searchTerm);
+        }
+
+        if (maxPrice != null) {
+            spec = spec == null ? GameSpecification.hasMaxPrice(maxPrice)
+                    : spec.and(GameSpecification.hasMaxPrice(maxPrice));
+        }
+
+        if (tagIds != null && !tagIds.isEmpty()) {
+            spec = spec == null ? GameSpecification.hasTags(tagIds)
+                    : spec.and(GameSpecification.hasTags(tagIds));
+        }
+
+        if (publisherIds != null && !publisherIds.isEmpty()) {
+            spec = spec == null ? GameSpecification.hasPublishers(publisherIds)
+                    : spec.and(GameSpecification.hasPublishers(publisherIds));
+        }
 
         Page<Game> gamePage = gameRepository.findAll(spec, pageable);
 
@@ -66,14 +80,14 @@ public class GameService {
         Page<Game> gamePage = gameRepository.findByNameContainingIgnoreCase(term, pageable);
         return gamePage.getContent().stream()
                 .map(EntityMapper::toGameBasicDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Transactional(readOnly = true) // Đảm bảo session còn mở để load lazy associations
     public List<GameBasicDTO> getAllGamesBasic() {
         return gameRepository.findAll().stream()
                 .map(EntityMapper::toGameBasicDTO) // Sử dụng method reference của mapper
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Transactional(readOnly = true) // Quan trọng cho việc load các mối quan hệ LAZY

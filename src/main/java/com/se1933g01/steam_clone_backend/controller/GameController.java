@@ -82,7 +82,6 @@ public class GameController {
     @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
     public ResponseEntity<String> downloadFile(@PathVariable("fileId") String fileId) throws IOException {
         String downloadUrl = googleDriveService.generateDownloadUrl(fileId);
-        System.out.println(downloadUrl);
         return ResponseEntity.ok(downloadUrl);
     }
 

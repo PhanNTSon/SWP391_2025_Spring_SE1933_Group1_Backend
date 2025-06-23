@@ -43,17 +43,15 @@ public class UserService {
     private UserRepo userRepo;
     private TransactionRepo transactionRepo;
     private final GameRepo gameRepo;
-    private EntityMapper entityMapper;
     private final FriendshipRepo friendshipRepo; // Added by Phan NT Son 21-06-2025
 
     private static final String USER_NOT_FOUND_MSG = "User not found";
 
-    public UserService(UserRepo userRepo, TransactionRepo transactionRepo, EntityMapper entityMapper,
+    public UserService(UserRepo userRepo, TransactionRepo transactionRepo,
             FriendshipRepo friendshipRepo, CloudinaryService CloudinaryService, GameRepo gameRepo) {
         this.userRepo = userRepo;
         this.transactionRepo = transactionRepo;
         this.gameRepo = gameRepo;
-        this.entityMapper = entityMapper;
         this.friendshipRepo = friendshipRepo;
         this.CloudinaryService  = CloudinaryService;
     }
@@ -243,7 +241,7 @@ public class UserService {
             user.setSummary(userUpdateDTO.getSummary());
         }
         User savedUser = userRepo.save(user);
-        return entityMapper.toUserDetailDTO(savedUser);
+        return EntityMapper.toUserDetailDTO(savedUser);
     }
 
     /**
