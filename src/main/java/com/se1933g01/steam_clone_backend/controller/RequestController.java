@@ -103,6 +103,19 @@ public class RequestController {
                 "User Rejected", "Game Reject Failed");
     }
 
+    @PatchMapping("/feedback/approve/{requestID}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, String>> approveFeedback(@PathVariable String requestID) {
+        return handleAction(() -> requestService.approveFeedback(Long.parseLong(requestID)),
+                "Feedback Approved", "Feedback Approve Failed");
+    }
+    @PatchMapping("/feedback/reject/{requestID}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, String>> rejectFeedback(@PathVariable String requestID) {
+        return handleAction(() -> requestService.rejectFeedback(Long.parseLong(requestID)),
+                "Feedback Rejected", "Feedback Reject Failed");
+    }
+
     @GetMapping("/game/{page}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<AddingGameRequestDTO>> getGameRequest(@PathVariable int page) {
@@ -115,6 +128,13 @@ public class RequestController {
     public ResponseEntity<Page<PublisherApplyRequestDTO>> getPublisherApplyRequest(@PathVariable int page) {
         Pageable pageable = PageRequest.of(page, 10, Sort.by("requestId").descending());
         return ResponseEntity.ok(requestService.getAllPublisherApplyRequest(pageable));
+    }
+
+    @GetMapping("/feedback/{page}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<FeedbackDTO>> getFeedback(@PathVariable int page) {
+        Pageable pageable = PageRequest.of(page, 10, Sort.by("requestId").descending());
+        return ResponseEntity.ok(requestService.getAllFeedback(pageable));
     }
 
     @GetMapping("/game/details/{id}")
@@ -134,6 +154,16 @@ public class RequestController {
                 ? ResponseEntity.status(HttpStatus.NOT_FOUND).body(null)
                 : ResponseEntity.ok(details);
     }
+
+    @GetMapping("/feedback/details/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<FeedbackDTO> getFeedbackDetails(@PathVariable Long id) {
+        FeedbackDTO details = requestService.getFeedbackDetails(id);
+        return details == null
+                ? ResponseEntity.status(HttpStatus.NOT_FOUND).body(null)
+                : ResponseEntity.ok(details);
+    }
+    
 
     @GetMapping("/banned-users/{page}")
     @PreAuthorize("hasRole('ADMIN')")
@@ -198,10 +228,12 @@ public class RequestController {
     @PostMapping("/publisher/send")
     @PreAuthorize("hasRole('STANDARD')")
     public ResponseEntity<Map<String, Object>> sendPublisherApplyRequest(
-            @RequestBody PublisherApplyRequestDTO dto) {
+            @RequestBody PublisherApplyRequestDTO dto,
+            @AuthenticationPrincipal CustomUserDetail me
+            ) {
         Map<String, Object> response = new HashMap<>();
         try {
-            requestService.addPublisher(dto, 2L);
+            requestService.addPublisher(dto, me.getUser().getUserId());
             response.put(RESPONSE_MESSAGE_KEY, "Sending publisher apply request successfully");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -211,15 +243,32 @@ public class RequestController {
 
     @PostMapping("/feedback/send")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER')")
-    public ResponseEntity<Map<String, Object>> sendFeedback(@RequestBody FeedbackDTO feedbackDTO) {
+    public ResponseEntity<Map<String, Object>> sendFeedback(@RequestBody FeedbackDTO feedbackDTO,
+            @AuthenticationPrincipal CustomUserDetail me
+            ) {
         Map<String, Object> response = new HashMap<>();
         try {
-            requestService.addFeedback(feedbackDTO, 2L);
+            requestService.addFeedback(feedbackDTO, me.getUser().getUserId());
             response.put(RESPONSE_MESSAGE_KEY, "Sending feedback successfully");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(response);
         }
     }
+
+    @GetMapping("/game/exist/check")
+    @PreAuthorize("hasAnyRole('PUBLISHER')")
+    public ResponseEntity<Map<String, Object>> checkGameExist(@RequestParam String gameName) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            boolean check = requestService.checkForGameExist(gameName);
+            response.put("debug", gameName);
+            response.put(RESPONSE_MESSAGE_KEY, check);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
 }
 
