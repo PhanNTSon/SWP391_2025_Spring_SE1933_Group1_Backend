@@ -32,13 +32,10 @@ public class ReviewService {
     @PersistenceContext
     private EntityManager entityManager;
 
-    @Autowired
     private final GameRepo gameRepo;
 
-    @Autowired
     private final UserRepo userRepo;
 
-    @Autowired
     private final ReviewRepo reviewRepo;
 
     public ReviewService(GameRepo gameRepo, UserRepo userRepo, ReviewRepo reviewRepo) {

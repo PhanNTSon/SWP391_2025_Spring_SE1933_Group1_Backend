@@ -61,7 +61,7 @@ public class AddingGameRequest {
 
     @Column(name = "MediaUrls")
     @ElementCollection
-    @CollectionTable(name = "AddingGameRequest_mediaUrls", joinColumns = @JoinColumn(name = "AddingGameRequest_RequestID"))
+    @CollectionTable(name = "AddingGameRequest_mediaUrls", joinColumns = @JoinColumn(name = "RequestID"))
     private List<String> mediaUrls;
 
     // ================ Relationships =============

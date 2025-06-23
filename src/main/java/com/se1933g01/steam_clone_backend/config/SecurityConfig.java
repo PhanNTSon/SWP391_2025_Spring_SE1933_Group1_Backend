@@ -49,6 +49,7 @@ public class SecurityConfig {
                         .failureHandler((request, response, exception) ->
                             response.sendRedirect("http://localhost:5173/oauth2/error")
                         ));
+                        
         return http.build(); // by Loc Phan
     }
 
