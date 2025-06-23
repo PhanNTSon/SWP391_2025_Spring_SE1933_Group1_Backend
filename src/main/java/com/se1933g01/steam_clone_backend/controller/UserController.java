@@ -3,6 +3,8 @@ package com.se1933g01.steam_clone_backend.controller;
 import com.se1933g01.steam_clone_backend.dto.CartDTO;
 import com.se1933g01.steam_clone_backend.dto.GameBasicDTO;
 import com.se1933g01.steam_clone_backend.dto.LibraryDTO;
+import com.se1933g01.steam_clone_backend.dto.Community.FriendshipDTO;
+import com.se1933g01.steam_clone_backend.dto.Community.InviteDTO;
 import com.se1933g01.steam_clone_backend.dto.User.FriendDTO;
 import com.se1933g01.steam_clone_backend.dto.User.UserDetailDTO;
 import com.se1933g01.steam_clone_backend.dto.User.UserUpdateDTO;
@@ -11,15 +13,15 @@ import com.se1933g01.steam_clone_backend.entity.user.CustomUserDetail;
 import com.se1933g01.steam_clone_backend.entity.user.User;
 import com.se1933g01.steam_clone_backend.repository.UserRepo;
 import com.se1933g01.steam_clone_backend.service.CartService;
+import com.se1933g01.steam_clone_backend.service.CommunityService;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -48,12 +50,14 @@ public class UserController {
     private final UserService userService;
     private final CartService cartService;
     private final UserRepo userRepo;
+    private final CommunityService communityService; // Added by Phan NT Son 23-06
 
-    public UserController(UserService userService, CartService cartService, UserRepo userRepo) {
+    public UserController(UserService userService, CartService cartService, UserRepo userRepo,
+            CommunityService communityService) {
         this.userService = userService;
         this.cartService = cartService;
         this.userRepo = userRepo;
-
+        this.communityService = communityService;
     }
 
     /**
@@ -211,7 +215,8 @@ public class UserController {
     // api check if game is in cart or not
     @GetMapping("/cart/contain/{gameId}")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<Boolean> isGameInCart(@AuthenticationPrincipal CustomUserDetail me, @PathVariable Long gameId) {
+    public ResponseEntity<Boolean> isGameInCart(@AuthenticationPrincipal CustomUserDetail me,
+            @PathVariable Long gameId) {
         Long userId = me.getUser().getUserId();
         return ResponseEntity.ok(userService.isGameInCart(userId, gameId));
     }
@@ -220,7 +225,8 @@ public class UserController {
     // api check if game is in library or not
     @GetMapping("/library/contain/{gameId}")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<Boolean> isGameOwned(@AuthenticationPrincipal CustomUserDetail me, @PathVariable Long gameId) {
+    public ResponseEntity<Boolean> isGameOwned(@AuthenticationPrincipal CustomUserDetail me,
+            @PathVariable Long gameId) {
         Long userId = me.getUser().getUserId();
         return ResponseEntity.ok(userService.isGameOwned(userId, gameId));
     }
@@ -251,7 +257,8 @@ public class UserController {
     // api add user account balance
     @PostMapping("/wallet/subtract")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<BigDecimal> subtractBalance(@AuthenticationPrincipal CustomUserDetail me, @RequestParam BigDecimal amount) {
+    public ResponseEntity<BigDecimal> subtractBalance(@AuthenticationPrincipal CustomUserDetail me,
+            @RequestParam BigDecimal amount) {
         Long userId = me.getUser().getUserId();
         BigDecimal newBalance = userService.subtractUserBalance(userId, amount);
         return ResponseEntity.ok(newBalance);
@@ -302,7 +309,7 @@ public class UserController {
     /**
      * @author Phan NT Son
      * @since 21-06-2025
-     * Get list Friends of User
+     *        Get list Friends of User
      * @param me - UserID
      * @return
      */
@@ -311,5 +318,92 @@ public class UserController {
     public ResponseEntity<List<FriendDTO>> getListFriend(@AuthenticationPrincipal CustomUserDetail me) {
         return ResponseEntity.ok().body(userService.getFriends(me.getUser().getUserId()));
     }
+
+    /**
+     * @author Phan NT Son
+     * @since 23-06-2025
+     *        Send an Invite to a friend
+     * @param receiverId
+     * @param me
+     * @return
+     */
+    @PostMapping("/sendinvite/{receiverId}")
+    @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
+    public ResponseEntity<FriendshipDTO> sendInvite(@PathVariable(name = "receiverId") long receiverId,
+            @AuthenticationPrincipal CustomUserDetail me) {
+        FriendshipDTO result = communityService.sendInvite(me.getUser().getUserId(), receiverId);
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * @author Phan NT Son
+     * @since 23-06-2025
+     *        Get a list of Pending Invite
+     * @param me
+     * @return
+     */
+    @GetMapping("/pendinginvite")
+    @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
+    public ResponseEntity<List<InviteDTO>> getInvite(@AuthenticationPrincipal CustomUserDetail me) {
+        return ResponseEntity.ok(communityService.getInvite(me.getUser().getUserId()));
+    }
+
+    /**
+     * @author Phan NT Son
+     * @since 23-06-2025
+     *        Accept an Invite
+     * @param friendId
+     * @param me
+     * @return
+     */
+    @PatchMapping("/acceptinvite/{friendId}")
+    @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
+    public ResponseEntity<FriendshipDTO> acceptInvite(@AuthenticationPrincipal CustomUserDetail me,
+            @PathVariable(name = "friendId") long friendId) {
+        // Accept invite
+        FriendshipDTO resDto = communityService.acceptInvite(me.getUser().getUserId(), friendId);
+        // Create Converstaion in DB
+        communityService.createConversation(me.getUser().getUserId(), friendId);
+
+        return ResponseEntity.ok(resDto);
+    }
+
+    /**
+     * @author Phan NT Son
+     * @since 23-06-2025
+     *        Block an Invite
+     * @param friendId
+     * @param me
+     * @return
+     */
+    @PatchMapping("/blockinvite/{targetId}")
+    @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
+    public ResponseEntity<FriendshipDTO> blockInvite(@AuthenticationPrincipal CustomUserDetail me,
+            @PathVariable(name = "targetId") long tId) {
+        // Block invite
+        FriendshipDTO resDto = communityService.blockInvite(me.getUser().getUserId(), tId);
+
+        return ResponseEntity.ok(resDto);
+    }
+
+    /**
+     * @author Phan NT Son
+     * @since 23-06-2025
+     *        Decline an Invite
+     * @param friendId
+     * @param me
+     * @return
+     */
+    @DeleteMapping({ "/declineinvite/{targetId}", "/unfriend/{targetId}" })
+    @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
+    public ResponseEntity<String> declineInvite(@AuthenticationPrincipal CustomUserDetail me,
+            @PathVariable(name = "targetId") long tId) {
+        // Delete invite
+        communityService.deleteFriendship(me.getUser().getUserId(), tId);
+
+        return ResponseEntity.ok("Success");
+    }
+
+    
 
 }

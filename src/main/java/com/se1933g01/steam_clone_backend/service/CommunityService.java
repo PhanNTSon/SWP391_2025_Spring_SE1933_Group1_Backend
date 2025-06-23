@@ -1,0 +1,220 @@
+package com.se1933g01.steam_clone_backend.service;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.se1933g01.steam_clone_backend.dto.ChatMessageDTO;
+import com.se1933g01.steam_clone_backend.dto.Community.ConversationDTO;
+import com.se1933g01.steam_clone_backend.dto.Community.FriendDTO;
+import com.se1933g01.steam_clone_backend.dto.Community.FriendshipDTO;
+import com.se1933g01.steam_clone_backend.dto.Community.InviteDTO;
+import com.se1933g01.steam_clone_backend.dto.Community.MessageDTO;
+import com.se1933g01.steam_clone_backend.entity.community.Conversation;
+import com.se1933g01.steam_clone_backend.entity.community.Friendship;
+import com.se1933g01.steam_clone_backend.entity.community.FriendshipId;
+import com.se1933g01.steam_clone_backend.entity.community.Message;
+import com.se1933g01.steam_clone_backend.entity.user.User;
+import com.se1933g01.steam_clone_backend.repository.ConversationRepo;
+import com.se1933g01.steam_clone_backend.repository.FriendshipRepo;
+import com.se1933g01.steam_clone_backend.repository.MessageRepo;
+import com.se1933g01.steam_clone_backend.repository.UserRepo;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+
+/**
+ * @author Phan NT Son
+ * @since 23-06-2025
+ */
+@Service
+public class CommunityService {
+    @PersistenceContext
+    private final EntityManager entityManager;
+
+    private final FriendshipRepo friendshipRepo;
+    private final ConversationRepo conversationRepo;
+    private final MessageRepo messageRepo;
+    private final UserRepo userRepo;
+
+    public CommunityService(EntityManager entityManager, FriendshipRepo friendshipRepo,
+            ConversationRepo conversationRepo, MessageRepo messageRepo, UserRepo userRepo) {
+        this.entityManager = entityManager;
+        this.friendshipRepo = friendshipRepo;
+        this.conversationRepo = conversationRepo;
+        this.messageRepo = messageRepo;
+        this.userRepo = userRepo;
+    }
+
+    /**
+     * Send an invite to a User by Creating a new Friendship in DB
+     * with Status = "Pending"
+     * 
+     * @param userId
+     * @param friendId
+     * @return
+     */
+    @Transactional
+    public FriendshipDTO sendInvite(long userId, long friendId) {
+        User curUser = entityManager.getReference(User.class, userId);
+        User friend = entityManager.getReference(User.class, friendId);
+
+        FriendshipId id = new FriendshipId(curUser.getUserId(), friend.getUserId());
+
+        Friendship newFriendship = new Friendship(id, curUser, friend, "Pending", LocalDate.now());
+        friendshipRepo.save(newFriendship);
+        return new FriendshipDTO(userId, friendId, "Pending", newFriendship.getCreatedAt());
+    }
+
+    /**
+     * Get all Friendship in DB that have friendId = userId with status = "Pending"
+     * 
+     * @param userId
+     * @return
+     */
+    public List<InviteDTO> getInvite(long userId) {
+        List<Friendship> queryResult = friendshipRepo.findAllInvite(userId);
+        return queryResult.stream().map(friendship -> new InviteDTO(
+                friendship.getFriendshipId().getUserId(),
+                friendship.getUser().getUsername())).toList();
+    }
+
+    /**
+     * First, create new Friendship with userId = userId and friendId = friendId
+     * Then, update Friendship with userId = friendId and friendId = userId status
+     * from "Pending" to "Accepted"
+     * 
+     * @param userId
+     * @param friendId
+     * @return
+     */
+    @Transactional
+    public FriendshipDTO acceptInvite(long userId, long friendId) {
+        // Get references
+        User curUser = entityManager.getReference(User.class, userId);
+        User friend = entityManager.getReference(User.class, friendId);
+
+        // Create new Friendship
+        FriendshipId newId = new FriendshipId(userId, friendId);
+        Friendship newT = new Friendship(newId, curUser, friend, "Accepted", LocalDate.now());
+
+        // Update already Friendship
+        FriendshipId inviteId = new FriendshipId(friendId, userId);
+        Friendship inviteObj = friendshipRepo.findById(inviteId).orElse(null);
+        inviteObj.setStatus("Accepted");
+        inviteObj.setCreatedAt(LocalDate.now());
+
+        // Save to DB
+        friendshipRepo.save(newT);
+        friendshipRepo.save(inviteObj);
+
+        return new FriendshipDTO(userId, friendId, "Accepted", LocalDate.now());
+    }
+
+    @Transactional
+    public FriendshipDTO blockInvite(long userId, long friendId) {
+        // Get references
+        User curUser = entityManager.getReference(User.class, userId);
+        User friend = entityManager.getReference(User.class, friendId);
+
+        // Create new Friendship
+        FriendshipId newId = new FriendshipId(userId, friendId);
+        Friendship newT = new Friendship(newId, curUser, friend, "Blocked", LocalDate.now());
+
+        // Update already Friendship
+        FriendshipId inviteId = new FriendshipId(friendId, userId);
+        Friendship inviteObj = friendshipRepo.findById(inviteId).orElse(null);
+        inviteObj.setStatus("Blocked");
+        inviteObj.setCreatedAt(LocalDate.now());
+
+        // Save to DB
+        friendshipRepo.save(newT);
+        friendshipRepo.save(inviteObj);
+
+        return new FriendshipDTO(userId, friendId, "Blocked", LocalDate.now());
+    }
+
+    /**
+     * Delete a Friendship data base on userId and friendId, find both combination
+     * (userId, friendId) & (friendId, userId)
+     * 
+     * @param userId
+     * @param friendId
+     */
+    @Transactional
+    public void deleteFriendship(long userId, long friendId) {
+        Friendship res = friendshipRepo.findById(new FriendshipId(userId, friendId)).orElse(null);
+        Friendship reverseRes = friendshipRepo.findById(new FriendshipId(friendId, userId)).orElse(null);
+
+        if (res != null) {
+            friendshipRepo.delete(res);
+        }
+
+        if (reverseRes != null) {
+            friendshipRepo.delete(reverseRes);
+        }
+
+    }
+
+    /**
+     * Get list FriendDTO from a list of Friendship found in DB that have
+     * current userId.
+     * 
+     * @param userId
+     * @return
+     */
+    public List<FriendDTO> getFriendList(long userId) {
+        return friendshipRepo.findAllFriend(userId).stream().map(friendship -> new FriendDTO(
+                friendship.getFriend().getUserId(),
+                friendship.getFriend().getUsername())).toList();
+    }
+
+    /**
+     * Create a Conversation and save to DB. Make sure userId < friendId
+     * 
+     * @param userId
+     * @param friendId
+     */
+    @Transactional
+    public void createConversation(long userId, long friendId) {
+        User curUser = entityManager.getReference(User.class, userId);
+        User friend = entityManager.getReference(User.class, friendId);
+
+        Conversation newConversation = new Conversation();
+        newConversation.setUser1((userId < friendId) ? curUser : friend);
+        newConversation.setUser2((userId < friendId) ? friend : curUser);
+        newConversation.setCreatedAt(LocalDate.now());
+
+        conversationRepo.save(newConversation);
+    }
+
+    public ConversationDTO getConversation(long userId, long friendId) {
+        Conversation conversation = (userId > friendId) ? (conversationRepo.findByUser1AndUser2(friendId, userId))
+                : (conversationRepo.findByUser1AndUser2(userId, friendId));
+
+        long conversationId = conversation.getConversationId();
+        List<Message> messages = messageRepo.findAllByConversationId(conversationId);
+
+        return new ConversationDTO(conversationId,
+                messages.stream().map(message -> new MessageDTO(
+                        message.getMessageContent(),
+                        message.getSentAt())).toList());
+    }
+
+    @Transactional
+    public void saveMessage(ChatMessageDTO msg, long senderId) {
+        Message nMessage = new Message();
+        Conversation conver = entityManager.getReference(Conversation.class, msg.getConversationId());
+        User sender = entityManager.getReference(User.class, senderId);
+
+        nMessage.setConversation(conver);
+        nMessage.setSender(sender);
+        nMessage.setMessageContent(msg.getContent());
+        nMessage.setSentAt(LocalDateTime.now());
+
+        messageRepo.save(nMessage);
+    }
+}
