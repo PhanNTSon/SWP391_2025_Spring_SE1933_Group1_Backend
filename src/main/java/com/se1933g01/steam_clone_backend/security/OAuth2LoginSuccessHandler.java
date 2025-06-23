@@ -33,7 +33,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     @Override
     @Transactional
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
-                                         Authentication authentication) throws IOException {
+            Authentication authentication) throws IOException {
         var oauthToken = (OAuth2AuthenticationToken) authentication;
         var attributes = oauthToken.getPrincipal().getAttributes();
 
@@ -44,7 +44,8 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         if (user == null) {
             user = new User();
             user.setEmail(email);
-            user.setUsername(email);
+            String username = email.split("@")[0];
+            user.setUsername(username);
             user.setPassword(""); // OAuth2 = no password
             user.setWalletBalance(0.0);
             user.setBanStatus(false);
@@ -57,7 +58,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         String jwt = jwtUtil.generateToken(user.getUsername(), user.getUserID(), user.getRole().getRoleName());
 
         // Redirect to frontend
-        String redirectUrl = "http://localhost:5173/?token=" + jwt;
+        String redirectUrl = "http://localhost:5173/oauth2/callback?token=" + jwt;
         response.sendRedirect(redirectUrl);
     }
 }
