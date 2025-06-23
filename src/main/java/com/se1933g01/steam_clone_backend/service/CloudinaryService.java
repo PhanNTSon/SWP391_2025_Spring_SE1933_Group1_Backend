@@ -21,7 +21,8 @@ public class CloudinaryService {
         List<String> urls = new ArrayList<>();
         for (MultipartFile file : files) {
             try {
-                Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
+                @SuppressWarnings("unchecked")
+                Map<String, Object> uploadResult = (Map<String, Object>) cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
                 urls.add(uploadResult.get("url").toString());
             } catch (Exception e) {
                 throw new IOException("Failed to process file upload", e);
