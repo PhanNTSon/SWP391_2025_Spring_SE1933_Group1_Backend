@@ -43,6 +43,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 @RequestMapping("/request")
 public class RequestController {
     private static final String RESPONSE_MESSAGE_KEY = "message";
+    private static final String REQUEST_ID = "requestId";
     private final RequestService requestService;
     private final GoogleDriveService googleDriveService;
     private final RequestService publisherService;
@@ -119,21 +120,21 @@ public class RequestController {
     @GetMapping("/game/{page}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<AddingGameRequestDTO>> getGameRequest(@PathVariable int page) {
-        Pageable pageable = PageRequest.of(page, 10, Sort.by("requestId").descending());
+        Pageable pageable = PageRequest.of(page, 10, Sort.by(REQUEST_ID).descending());
         return ResponseEntity.ok(requestService.getAllAddingGameRequest(pageable));
     }
 
     @GetMapping("/publisher/{page}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<PublisherApplyRequestDTO>> getPublisherApplyRequest(@PathVariable int page) {
-        Pageable pageable = PageRequest.of(page, 10, Sort.by("requestId").descending());
+        Pageable pageable = PageRequest.of(page, 10, Sort.by(REQUEST_ID).descending());
         return ResponseEntity.ok(requestService.getAllPublisherApplyRequest(pageable));
     }
 
     @GetMapping("/feedback/{page}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<FeedbackDTO>> getFeedback(@PathVariable int page) {
-        Pageable pageable = PageRequest.of(page, 10, Sort.by("requestId").descending());
+        Pageable pageable = PageRequest.of(page, 10, Sort.by(REQUEST_ID).descending());
         return ResponseEntity.ok(requestService.getAllFeedback(pageable));
     }
 
