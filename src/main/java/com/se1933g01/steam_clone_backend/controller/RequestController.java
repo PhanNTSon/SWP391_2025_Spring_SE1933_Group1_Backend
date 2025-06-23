@@ -255,5 +255,20 @@ public class RequestController {
             return ResponseEntity.badRequest().body(response);
         }
     }
+
+    @GetMapping("/game/exist/check")
+    @PreAuthorize("hasAnyRole('PUBLISHER')")
+    public ResponseEntity<Map<String, Object>> checkGameExist(@RequestParam String gameName) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            boolean check = requestService.checkForGameExist(gameName);
+            response.put("debug", gameName);
+            response.put(RESPONSE_MESSAGE_KEY, check);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
 }
 

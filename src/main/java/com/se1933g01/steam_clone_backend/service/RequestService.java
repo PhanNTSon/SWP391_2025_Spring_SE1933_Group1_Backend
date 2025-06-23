@@ -244,4 +244,12 @@ public class RequestService {
         feedback.setRequest(savedRequest);
         feedbackRepo.save(feedback);
     }
+    public boolean checkForGameExist(String gameName){
+        if(gameRepo.existsByName(gameName)){
+            return true;
+        }else if(addingGameRequestRepo.existsByGameName(gameName)){
+            return true;
+        }
+        return false;
+    }
 }
