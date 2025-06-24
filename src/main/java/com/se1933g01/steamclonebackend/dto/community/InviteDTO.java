@@ -9,5 +9,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class InviteDTO {
     private long invitorId;
+    private String invitorAvatarUrl;
     private String invitorName;
 }
