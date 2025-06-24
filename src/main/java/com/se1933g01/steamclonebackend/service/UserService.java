@@ -281,7 +281,7 @@ public class UserService {
      * @return
      */
     public List<FriendDTO> getFriends(Long userId) {
-        List<Friendship> queryResultList = friendshipRepo.findAllByUserId(userId);
+        List<Friendship> queryResultList = friendshipRepo.findAllFriend(userId);
         List<FriendDTO> mappingResult = queryResultList.stream()
                 .map(friendship -> new FriendDTO(
                         friendship.getFriend().getUserId(),
