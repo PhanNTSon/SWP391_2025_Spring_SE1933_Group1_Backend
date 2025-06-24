@@ -41,16 +41,14 @@ public class UserService {
 
     private UserRepo userRepo;
     private TransactionRepo transactionRepo;
-    private EntityMapper entityMapper;
     private final FriendshipRepo friendshipRepo; // Added by Phan NT Son 21-06-2025
 
     private static final String USER_NOT_FOUND_MSG = "User not found";
 
-    public UserService(UserRepo userRepo, TransactionRepo transactionRepo, EntityMapper entityMapper,
+    public UserService(UserRepo userRepo, TransactionRepo transactionRepo,
             FriendshipRepo friendshipRepo, CloudinaryService cloudinaryService) {
         this.userRepo = userRepo;
         this.transactionRepo = transactionRepo;
-        this.entityMapper = entityMapper;
         this.friendshipRepo = friendshipRepo;
         this.CloudinaryService = cloudinaryService;
     }
@@ -78,8 +76,6 @@ public class UserService {
                 .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_MSG));
         return transactionRepo.findByUser(user);
     }
-
-
 
     /**
      * Show library of a user.
@@ -264,7 +260,7 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND_MSG));
     }
 
-    @Transactional 
+    @Transactional
     public String uploadAndSetNewAvatar(Long userId, MultipartFile file) throws IOException {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
