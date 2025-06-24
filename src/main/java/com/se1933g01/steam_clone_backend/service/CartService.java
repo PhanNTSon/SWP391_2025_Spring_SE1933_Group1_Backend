@@ -115,9 +115,9 @@ public class CartService {
     //checkout- author: Ba Thanh
     public CartDTO checkout(Long userId) {
         User user = userRepo.findByIdWithCartGames(userId);
-        if (user == null) throw new RuntimeException("User not found");
+        if (user == null) throw new EntityNotFoundException("User not found");
         if (user.getCartGames().isEmpty())
-            throw new RuntimeException("Cart is empty");
+            throw new EntityNotFoundException("Cart is empty");
         // Only checkout games not already owned
         java.util.Set<Game> ownedGames = user.getGames() != null ? user.getGames() : new java.util.HashSet<>();
         List<Game> gamesToBuy = user.getCartGames().stream()
