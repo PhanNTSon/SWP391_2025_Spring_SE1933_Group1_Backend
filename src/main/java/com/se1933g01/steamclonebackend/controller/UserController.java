@@ -337,7 +337,7 @@ public class UserController {
     /**
      * @author Phan NT Son
      * @since 23-06-2025
-     *        Get a list of Pending Invite
+     *        Get a list of Pending Invite toward User
      * @param me
      * @return
      */

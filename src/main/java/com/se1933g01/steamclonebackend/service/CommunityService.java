@@ -79,6 +79,7 @@ public class CommunityService {
         List<Friendship> queryResult = friendshipRepo.findAllInvite(userId);
         return queryResult.stream().map(friendship -> new InviteDTO(
                 friendship.getFriendshipId().getUserId(),
+                friendship.getUser().getAvatarUrl(),
                 friendship.getUser().getUsername())).toList();
     }
 
