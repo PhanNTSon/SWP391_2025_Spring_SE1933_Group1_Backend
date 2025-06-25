@@ -217,6 +217,7 @@ public class RequestService {
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
         AddingGameRequestDTO addingGameRequestDTO = modelMapper.map(addingGameRequest, AddingGameRequestDTO.class);
         addingGameRequestDTO.setPublisherName(addingGameRequestRepo.findPublisherNameByRequestId(requestId));
+        addingGameRequestDTO.setPublisherId(addingGameRequestRepo.findPublisherIdByRequestId(requestId));
         return addingGameRequestDTO;
     }
     public PublisherApplyRequestDTO getPublisherDetails(Long requestId){
@@ -226,7 +227,9 @@ public class RequestService {
             return null; 
         }
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
-        return modelMapper.map(publisherApplyRequest, PublisherApplyRequestDTO.class);
+        PublisherApplyRequestDTO publisherApplyRequestDTO = modelMapper.map(publisherApplyRequest, PublisherApplyRequestDTO.class);
+        publisherApplyRequestDTO.setUserId(publisherApplyRequestRepo.findUserIdByRequestId(requestId));
+        return publisherApplyRequestDTO;
     }
 
     public FeedbackDTO getFeedbackDetails(Long requestId){
