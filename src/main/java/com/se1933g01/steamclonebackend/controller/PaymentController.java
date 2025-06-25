@@ -56,38 +56,37 @@ public class PaymentController {
 
     @PostMapping("/create-vnpay-payment")
     public ResponseEntity<?> createPayment(
-            // THAY ĐỔI 1: Thêm các RequestParam tùy chọn
-            @RequestParam("amount") long amount,
+            @RequestParam("amount") double amountUsd, // THÊM 2: Nhận số tiền là USD, có thể là số lẻ
             @RequestParam(required = false) String bankCode,
             @RequestParam(required = false, defaultValue = "vn") String language,
             @AuthenticationPrincipal CustomUserDetail principal,
             HttpServletRequest request) throws UnsupportedEncodingException {
 
+        // THÊM 3: Logic chuyển đổi ngoại tệ
+        // Using a fixed exchange rate of 24,500 VND per USD
+        long amountVND = (long) (amountUsd * 24500);
+
         String vnp_TxnRef = String.valueOf(System.currentTimeMillis());
-        long amountInVND = amount * 100;
+        long amountForVNPay = amountVND * 100; // VNPay yêu cầu số tiền * 100
+
         Map<String, String> vnp_Params = new HashMap<>();
         vnp_Params.put("vnp_Version", "2.1.0");
         vnp_Params.put("vnp_Command", "pay");
         vnp_Params.put("vnp_TmnCode", tmnCode);
-        vnp_Params.put("vnp_Amount", String.valueOf(amountInVND));
-        vnp_Params.put("vnp_CurrCode", "VND");
+        vnp_Params.put("vnp_Amount", String.valueOf(amountForVNPay));
+        vnp_Params.put("vnp_CurrCode", "VND"); // Luôn gửi đi là VND
         vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
-
-        // THAY ĐỔI 2: Tạo thông tin đơn hàng động
-        String orderInfo = "Nap tien cho user " + principal.getUser().getUserId() + " - Ma GD: " + vnp_TxnRef;
-        vnp_Params.put("vnp_OrderInfo", orderInfo);
-
+        vnp_Params.put("vnp_OrderInfo",
+                "Nap " + amountUsd + " USD vao vi cho user: " + principal.getUser().getUserId());
+        // ... các tham số khác giữ nguyên ...
         vnp_Params.put("vnp_OrderType", "other");
-
         if (language != null && !language.isEmpty()) {
             vnp_Params.put("vnp_Locale", language);
         } else {
             vnp_Params.put("vnp_Locale", "vn");
         }
-
         vnp_Params.put("vnp_ReturnUrl", returnUrl);
-        vnp_Params.put("vnp_IpAddr", request.getRemoteAddr()); // Get client IP address from request
-
+        vnp_Params.put("vnp_IpAddr", "127.0.0.1");
         if (bankCode != null && !bankCode.isEmpty()) {
             vnp_Params.put("vnp_BankCode", bankCode);
         }
@@ -107,11 +106,9 @@ public class PaymentController {
             String fieldName = itr.next();
             String fieldValue = vnp_Params.get(fieldName);
             if ((fieldValue != null) && (fieldValue.length() > 0)) {
-                // Build hash data
                 hashData.append(fieldName);
                 hashData.append('=');
                 hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
-                // Build query
                 query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.toString()));
                 query.append('=');
                 query.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
@@ -125,6 +122,8 @@ public class PaymentController {
         String vnp_SecureHash = VNPayConfig.hmacSHA512(hashSecret, hashData.toString());
         queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
         String paymentUrl = vnpayUrl + "?" + queryUrl;
+
+        logger.info("Generated VNPay URL for {} USD ({} VND): {}", amountUsd, amountVND, paymentUrl);
 
         return ResponseEntity.ok(Map.of("paymentUrl", paymentUrl));
     }
