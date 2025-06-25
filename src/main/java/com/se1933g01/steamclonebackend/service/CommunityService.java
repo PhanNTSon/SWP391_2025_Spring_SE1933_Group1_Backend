@@ -216,7 +216,7 @@ public class CommunityService {
 
         return new ConversationDTO(conversationId,
                 messages.stream().map(message -> new MessageDTO(
-                        message.getSender().getUserId(),
+                        message.getSender().getUsername(),
                         message.getMessageContent(),
                         message.getSentAt())).toList());
     }
