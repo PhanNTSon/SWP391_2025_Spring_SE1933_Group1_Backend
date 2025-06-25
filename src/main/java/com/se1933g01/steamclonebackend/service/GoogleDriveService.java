@@ -7,10 +7,12 @@ import com.google.api.client.http.InputStreamContent;
 
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
@@ -18,6 +20,7 @@ import com.google.api.services.drive.DriveScopes;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
+import com.google.api.client.http.AbstractInputStreamContent;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -67,6 +70,25 @@ public class GoogleDriveService {
 
         driveService.permissions().create(fileId, permission).execute();
     }
+
+    public String createResumableUploadSession(String fileName, String mimeType) throws IOException {
+        File fileMetadata = new File();
+        fileMetadata.setName(fileName);
+
+        // Create an empty media content—frontend will send actual bytes
+        InputStream emptyStream = new ByteArrayInputStream(new byte[0]);
+        AbstractInputStreamContent mediaContent = new InputStreamContent(mimeType, emptyStream);
+
+        Drive.Files.Create create = driveService.files().create(fileMetadata, mediaContent);
+        System.out.println("driveService is null: " + (driveService == null));
+        create.getMediaHttpUploader().setDirectUploadEnabled(false); // Enable resumable
+        create.setFields("id");
+
+        HttpResponse response = create.executeUnparsed(); // We only want the upload URL
+        return response.getHeaders().getLocation(); // <-- This is what you send to the frontend
+    }
+
+
 
     
 }

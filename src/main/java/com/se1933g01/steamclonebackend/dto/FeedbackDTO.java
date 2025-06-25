@@ -12,4 +12,7 @@ public class FeedbackDTO {
     private List<String> mediaUrls;
     private String userName;
     private long userId;
+    private int status;
+    private String createdDate;
+    private String response;
 }

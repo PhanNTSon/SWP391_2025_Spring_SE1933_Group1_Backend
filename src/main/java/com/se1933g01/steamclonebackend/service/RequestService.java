@@ -21,6 +21,7 @@ import com.se1933g01.steamclonebackend.entity.request.Feedback;
 import com.se1933g01.steamclonebackend.entity.request.PublisherApplyRequest;
 import com.se1933g01.steamclonebackend.entity.request.Request;
 import com.se1933g01.steamclonebackend.entity.user.Publisher;
+import com.se1933g01.steamclonebackend.entity.user.Role;
 import com.se1933g01.steamclonebackend.entity.user.User;
 import com.se1933g01.steamclonebackend.repository.AddingGameRequestRepo;
 import com.se1933g01.steamclonebackend.repository.FeedbackRepo;
@@ -29,6 +30,7 @@ import com.se1933g01.steamclonebackend.repository.MediaRepo;
 import com.se1933g01.steamclonebackend.repository.PublisherApplyRequestRepo;
 import com.se1933g01.steamclonebackend.repository.PublisherRepo;
 import com.se1933g01.steamclonebackend.repository.RequestRepo;
+import com.se1933g01.steamclonebackend.repository.RoleRepo;
 import com.se1933g01.steamclonebackend.repository.UserRepo;
 
 import jakarta.persistence.EntityManager;
@@ -37,6 +39,8 @@ import jakarta.transaction.Transactional;
 
 @Service
 public class RequestService {
+
+    private final RoleRepo roleRepo;
     private static final String USER_NOT_FOUND_MESSAGE = "User not found";
     private static final String REQUEST_NOT_FOUND_MESSAGE = "Request not found";
     private final AddingGameRequestRepo addingGameRequestRepo;
@@ -58,7 +62,8 @@ public class RequestService {
         GameRepo gameRepo,
         MediaRepo mediaRepo,
         PublisherRepo publisherRepo,
-        FeedbackRepo feedbackRepo
+        FeedbackRepo feedbackRepo,
+        RoleRepo roleRepo
     ) {
         this.addingGameRequestRepo = addingGameRequestRepo;
         this.publisherApplyRequestRepo = publisherApplyRequestRepo;
@@ -69,6 +74,7 @@ public class RequestService {
         this.mediaRepo = mediaRepo;
         this.publisherRepo = publisherRepo;
         this.feedbackRepo = feedbackRepo;
+        this.roleRepo = roleRepo;
     }
     @PersistenceContext
     private EntityManager entityManager;
@@ -122,6 +128,7 @@ public class RequestService {
         PublisherApplyRequest publisherApplyRequest = publisherApplyRequestRepo.findById(requestID).orElseThrow(()-> new RuntimeException("PublisherApplyRequest not found"));
         User user = userRepo.findById(request.getUser().getUserId()).orElseThrow(()-> new RuntimeException(USER_NOT_FOUND_MESSAGE));
         Publisher publisher = new Publisher();
+        Role role = roleRepo.findById(2L).orElseThrow(()-> new RuntimeException("Role not found"));
         publisher.setPublisherId(user.getUserId());
         publisher.setUser(user);
         publisher.setLegalName(publisherApplyRequest.getLegalName());
@@ -135,10 +142,14 @@ public class RequestService {
         entityManager.persist(publisher);
         entityManager.flush();
         requestRepo.save(request);
-
+        user.setRole(role);
+        userRepo.save(user);
     }
-    public void approveFeedback(Long requestId){
+    public void approveFeedback(Long requestId,String response){
         Request request = requestRepo.findById(requestId).orElseThrow(()-> new RuntimeException(REQUEST_NOT_FOUND_MESSAGE));
+        Feedback feedback = feedbackRepo.findById(requestId).orElseThrow(()-> new RuntimeException("Feedback not found"));
+        feedback.setResponse(response);
+        feedbackRepo.save(feedback);
         request.setRequestState(1);
         requestRepo.save(request);
     }
@@ -184,6 +195,19 @@ public class RequestService {
         });
     }
 
+    public Page<FeedbackDTO> getAllFeedbackFromUser(Long userId, Pageable pageable) {
+        Page<Feedback> feedbackPage = feedbackRepo.findAllByUserId(userId, pageable);
+        return feedbackPage.map(feedback -> {
+            modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+            FeedbackDTO feedbackDTO = modelMapper.map(feedback, FeedbackDTO.class);
+            feedbackDTO.setUserName(feedbackRepo.findUserNameByRequestId(feedback.getRequest().getRequestId()));
+            feedbackDTO.setUserId(Long.parseLong(feedbackRepo.findUserIdByRequestId(feedback.getRequest().getRequestId())));
+            feedbackDTO.setStatus(feedback.getRequest().getRequestState());
+            feedbackDTO.setCreatedDate(feedback.getRequest().getTimeCreated().toString());
+            return feedbackDTO;
+        });
+    }
+
     public AddingGameRequestDTO getGameDetails(Long requestId){
         AddingGameRequest addingGameRequest = addingGameRequestRepo.findById(requestId).orElseThrow(()-> new RuntimeException("AddingGameRequest not found"));
         int status = addingGameRequest.getRequest().getRequestState();
@@ -218,6 +242,26 @@ public class RequestService {
         return feedbackDTO;
     }
 
+    public FeedbackDTO getUserFeedbackDetails(Long requestId, Long userId) {
+        Feedback feedback = feedbackRepo.findById(requestId).orElseThrow(()-> new RuntimeException("Feedback not found"));
+        if(!feedback.getRequest().getUser().getUserId().equals(userId)){
+            return null;
+        }
+        modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+        FeedbackDTO feedbackDTO = modelMapper.map(feedback, FeedbackDTO.class);
+        return feedbackDTO;
+    }
+
+    public PublisherApplyRequestDTO getUserPublisherApplyDetails(Long userId) {
+        PublisherApplyRequest publisherApplyRequest = publisherApplyRequestRepo.findByUserIdAndRequestStateZero(userId);
+        if(!publisherApplyRequest.getRequest().getUser().getUserId().equals(userId)){
+            return null;
+        }
+        modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+        return modelMapper.map(publisherApplyRequest, PublisherApplyRequestDTO.class);
+    }
+
+
     public void addPublisher(PublisherApplyRequestDTO publisherApplyRequestDTO, Long userId){
         User user = userRepo.findById(userId).orElseThrow(()-> new RuntimeException(USER_NOT_FOUND_MESSAGE));
         Request request = new Request();
@@ -246,6 +290,15 @@ public class RequestService {
     }
     public boolean checkForGameExist(String gameName) {
         return gameRepo.existsByName(gameName) || addingGameRequestRepo.existsByGameName(gameName);
+    }
+
+    public void deleteFeedback(Long feedbackId, Long userId) {
+        Feedback feedback = feedbackRepo.findById(feedbackId).orElseThrow(()-> new RuntimeException("Feedback not found"));
+        if(!feedback.getRequest().getUser().getUserId().equals(userId)){
+            return;
+        }
+        feedbackRepo.delete(feedback);
+        requestRepo.delete(feedback.getRequest());
     }
 
 }

@@ -11,4 +11,6 @@ import com.se1933g01.steamclonebackend.entity.request.PublisherApplyRequest;
 public interface PublisherApplyRequestRepo extends JpaRepository<PublisherApplyRequest, Long> {
     @Query("SELECT agr FROM PublisherApplyRequest agr JOIN Request r ON agr.requestId = r.requestId WHERE r.requestState = 0")
     Page<PublisherApplyRequest> findAllByRequestStateZero(Pageable pageable);
+    @Query("SELECT agr FROM PublisherApplyRequest agr JOIN Request r ON agr.requestId = r.requestId WHERE r.user.userId = :userId AND r.requestState = 0")
+    PublisherApplyRequest findByUserIdAndRequestStateZero(long userId);
 }

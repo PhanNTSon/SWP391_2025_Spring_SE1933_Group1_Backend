@@ -24,7 +24,8 @@ public class Feedback {
     private String subject;
     @Column(name = "Message",columnDefinition = "NVARCHAR(2048)")
     private String message;
-
+    @Column(name = "Response",columnDefinition = "NVARCHAR(2048)")
+    private String response;
     @Column(name = "MediaUrls")
     @ElementCollection
     @CollectionTable(name = "Feedback_mediaUrls", joinColumns = @JoinColumn(name = "RequestID"))
