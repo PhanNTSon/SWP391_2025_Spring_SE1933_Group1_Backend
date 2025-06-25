@@ -2,14 +2,17 @@ package com.se1933g01.steamclonebackend.controller;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
+import java.util.Set;
 
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 
 import com.se1933g01.steamclonebackend.dto.ChatMessageDTO;
 import com.se1933g01.steamclonebackend.entity.user.CustomUserDetail;
+import com.se1933g01.steamclonebackend.realtime.OnlineUserTracker;
 import com.se1933g01.steamclonebackend.service.CommunityService;
 
 /**
@@ -21,10 +24,13 @@ public class ChatController {
 
     private final SimpMessagingTemplate messagingTemplate;
     private final CommunityService communityService;
+    private final OnlineUserTracker onlineUserTracker;
 
-    public ChatController(SimpMessagingTemplate messagingTemplate, CommunityService communityService) {
+    public ChatController(SimpMessagingTemplate messagingTemplate, CommunityService communityService,
+            OnlineUserTracker onlineUserTracker) {
         this.messagingTemplate = messagingTemplate;
         this.communityService = communityService;
+        this.onlineUserTracker = onlineUserTracker;
     }
 
     @MessageMapping("/chat.send")

@@ -12,7 +12,6 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import com.se1933g01.steamclonebackend.service.UserDetailsServiceImpl;
 import com.se1933g01.steamclonebackend.utils.JwtUtil;
@@ -35,7 +34,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        config.enableSimpleBroker("/queue");
+        config.enableSimpleBroker("/queue", "/topic");
         config.setApplicationDestinationPrefixes("/app");
         config.setUserDestinationPrefix("/user");
     }
@@ -43,35 +42,23 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws-chat")
-                .setAllowedOriginPatterns("*")
+                .addInterceptors(new AuthHandshakeInterceptor(jwtUtil, userDetailsService))
                 .setHandshakeHandler(new DefaultHandshakeHandler() {
                     @Override
-                    protected Principal determineUser(
-                            ServerHttpRequest request,
+                    protected Principal determineUser(ServerHttpRequest request,
                             WebSocketHandler wsHandler,
                             Map<String, Object> attributes) {
-                        // If you passed token as a query param:
-                        String uri = request.getURI().toString(); // e.g. /ws-chat?token=...
-                        String token = UriComponentsBuilder.fromUriString(uri)
-                                .build()
-                                .getQueryParams()
-                                .getFirst("token");
-
-                        // Or pull from headers if you sent it there:
-                        if (token != null && jwtUtil.validateToken(token)) {
-                            String username = jwtUtil.extractUsername(token);
-                            return () -> username; // Simple Principal that returns the name
-                        }
-                        // fallback to anonymous
-                        return super.determineUser(request, wsHandler, attributes);
+                        return (Principal) attributes.get("user");
                     }
                 })
+                .setAllowedOriginPatterns("*")
                 .withSockJS();
     }
 
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
-        registration.interceptors(new WebSocketAuthInterceptor(jwtUtil, userDetailsService));
+        registration.interceptors(
+                new WebSocketAuthInterceptor(jwtUtil, userDetailsService));
     }
 
 }

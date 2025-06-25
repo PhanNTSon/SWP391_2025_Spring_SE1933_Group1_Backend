@@ -1,7 +1,6 @@
 package com.se1933g01.steamclonebackend.controller;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -15,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.se1933g01.steamclonebackend.dto.CartDTO;
 import com.se1933g01.steamclonebackend.dto.GameBasicDTO;
 import com.se1933g01.steamclonebackend.dto.LibraryDTO;
 import com.se1933g01.steamclonebackend.dto.community.FriendshipDTO;
@@ -26,20 +24,16 @@ import com.se1933g01.steamclonebackend.dto.user.UserDetailDTO;
 import com.se1933g01.steamclonebackend.dto.user.UserUpdateDTO;
 import com.se1933g01.steamclonebackend.entity.transaction.Transaction;
 import com.se1933g01.steamclonebackend.entity.user.CustomUserDetail;
-import com.se1933g01.steamclonebackend.entity.user.User;
-import com.se1933g01.steamclonebackend.repository.UserRepo;
 import com.se1933g01.steamclonebackend.service.CartService;
 import com.se1933g01.steamclonebackend.service.CommunityService;
 import com.se1933g01.steamclonebackend.service.UserService;
 
 import java.io.IOException;
-import jakarta.persistence.EntityNotFoundException;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -316,6 +310,11 @@ public class UserController {
     @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
     public ResponseEntity<List<FriendDTO>> getListFriend(@AuthenticationPrincipal CustomUserDetail me) {
         return ResponseEntity.ok().body(userService.getFriends(me.getUser().getUserId()));
+    }
+
+    @GetMapping("/blocked")
+    public ResponseEntity<List<FriendDTO>> getListBlocked(@AuthenticationPrincipal CustomUserDetail me) {
+        return ResponseEntity.ok().body(userService.getBlocked(me.getUser().getUserId()));
     }
 
     /**
