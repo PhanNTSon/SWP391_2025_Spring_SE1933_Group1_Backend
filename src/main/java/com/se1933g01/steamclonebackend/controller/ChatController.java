@@ -7,11 +7,9 @@ import java.util.Set;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 
 import com.se1933g01.steamclonebackend.dto.ChatMessageDTO;
-import com.se1933g01.steamclonebackend.entity.user.CustomUserDetail;
 import com.se1933g01.steamclonebackend.realtime.OnlineUserTracker;
 import com.se1933g01.steamclonebackend.service.CommunityService;
 
@@ -34,11 +32,11 @@ public class ChatController {
     }
 
     @MessageMapping("/chat.send")
-    public void sendPrivateMessage(Principal principal, ChatMessageDTO msg,
-            @AuthenticationPrincipal CustomUserDetail me) {
+    public void sendPrivateMessage(Principal principal, ChatMessageDTO msg) {
+        System.out.println(msg.toString());
         msg.setSenderUsername(principal.getName());
         msg.setSentAt(LocalDateTime.now());
-        communityService.saveMessage(msg, me.getUser().getUserId());
+        communityService.saveMessage(msg, msg.getSenderUsername());
 
         messagingTemplate.convertAndSendToUser(msg.getReceiverUsername(), "/queue/messages", msg);
     }

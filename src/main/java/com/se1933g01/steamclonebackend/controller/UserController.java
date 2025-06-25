@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.se1933g01.steamclonebackend.dto.GameBasicDTO;
 import com.se1933g01.steamclonebackend.dto.LibraryDTO;
+import com.se1933g01.steamclonebackend.dto.community.ConversationDTO;
 import com.se1933g01.steamclonebackend.dto.community.FriendshipDTO;
 import com.se1933g01.steamclonebackend.dto.community.InviteDTO;
 import com.se1933g01.steamclonebackend.dto.community.SearchResult;
@@ -427,6 +428,13 @@ public class UserController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new SearchResult());
         }
+    }
+
+    @GetMapping("/conversation/{friendId}")
+    @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
+    public ResponseEntity<ConversationDTO> getConversationHistory(@PathVariable(name = "friendId") long fId,
+            @AuthenticationPrincipal CustomUserDetail me) {
+        return ResponseEntity.ok(communityService.getConversation(me.getUser().getUserId(), fId));
     }
 
 }

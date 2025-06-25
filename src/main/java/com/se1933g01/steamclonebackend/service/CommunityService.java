@@ -216,15 +216,16 @@ public class CommunityService {
 
         return new ConversationDTO(conversationId,
                 messages.stream().map(message -> new MessageDTO(
+                        message.getSender().getUserId(),
                         message.getMessageContent(),
                         message.getSentAt())).toList());
     }
 
     @Transactional
-    public void saveMessage(ChatMessageDTO msg, long senderId) {
+    public void saveMessage(ChatMessageDTO msg, String username) {
         Message nMessage = new Message();
         Conversation conver = entityManager.getReference(Conversation.class, msg.getConversationId());
-        User sender = entityManager.getReference(User.class, senderId);
+        User sender = userRepo.findByUsername(username).orElse(null);
 
         nMessage.setConversation(conver);
         nMessage.setSender(sender);
