@@ -232,7 +232,27 @@ public class UserService {
      * @return
      */
     public List<FriendDTO> getFriends(Long userId) {
-        List<Friendship> queryResultList = friendshipRepo.findAllByUserId(userId);
+        List<Friendship> queryResultList = friendshipRepo.findAllFriend(userId);
+        List<FriendDTO> mappingResult = queryResultList.stream()
+                .map(friendship -> new FriendDTO(
+                        friendship.getFriend().getUserId(),
+                        friendship.getFriend().getUsername(),
+                        friendship.getFriend().getAvatarUrl()))
+                .collect(Collectors.toList());
+        return mappingResult;
+    }
+
+    /**
+     * @author Phan NT Son
+     * @since 24-06-2025
+     * 
+     *        Get list of Blocked users
+     * 
+     * @param userId
+     * @return
+     */
+    public List<FriendDTO> getBlocked(Long userId) {
+        List<Friendship> queryResultList = friendshipRepo.findAllBlocked(userId);
         List<FriendDTO> mappingResult = queryResultList.stream()
                 .map(friendship -> new FriendDTO(
                         friendship.getFriend().getUserId(),

@@ -1,6 +1,5 @@
 package com.se1933g01.steamclonebackend.controller;
 
-import org.apache.tomcat.jni.Library;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,15 +16,16 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.se1933g01.steamclonebackend.dto.GameBasicDTO;
 import com.se1933g01.steamclonebackend.dto.LibraryDTO;
+import com.se1933g01.steamclonebackend.dto.community.ConversationDTO;
 import com.se1933g01.steamclonebackend.dto.community.FriendshipDTO;
 import com.se1933g01.steamclonebackend.dto.community.InviteDTO;
+import com.se1933g01.steamclonebackend.dto.community.SearchResult;
 import com.se1933g01.steamclonebackend.dto.user.FriendDTO;
 import com.se1933g01.steamclonebackend.dto.user.UserDetailDTO;
 import com.se1933g01.steamclonebackend.dto.user.UserUpdateDTO;
 import com.se1933g01.steamclonebackend.entity.transaction.Transaction;
 import com.se1933g01.steamclonebackend.entity.transaction.TransactionDetail;
 import com.se1933g01.steamclonebackend.entity.user.CustomUserDetail;
-import com.se1933g01.steamclonebackend.repository.UserRepo;
 import com.se1933g01.steamclonebackend.service.CartService;
 import com.se1933g01.steamclonebackend.service.CommunityService;
 import com.se1933g01.steamclonebackend.service.LibraryService;
@@ -36,7 +36,6 @@ import java.io.IOException;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -51,14 +50,12 @@ public class UserController {
     private final CartService cartService;
     private final TransactionService transactionService; // Added by Ba Thanh 25-06
     private final LibraryService libraryService; // Added by Ba Thanh 25-06
-    private final UserRepo userRepo;
     private final CommunityService communityService; // Added by Phan NT Son 23-06
 
-    public UserController(UserService userService, CartService cartService, UserRepo userRepo,
+    public UserController(UserService userService, CartService cartService,
             CommunityService communityService, TransactionService transactionService, LibraryService libraryService) {
         this.userService = userService;
         this.cartService = cartService;
-        this.userRepo = userRepo;
         this.communityService = communityService;
         this.transactionService = transactionService;
         this.libraryService = libraryService;
@@ -242,8 +239,6 @@ public class UserController {
         }
     }
 
-
-
     /* author: bathanh */
     // show library
     @GetMapping("/library")
@@ -362,6 +357,11 @@ public class UserController {
         return ResponseEntity.ok().body(userService.getFriends(me.getUser().getUserId()));
     }
 
+    @GetMapping("/blocked")
+    public ResponseEntity<List<FriendDTO>> getListBlocked(@AuthenticationPrincipal CustomUserDetail me) {
+        return ResponseEntity.ok().body(userService.getBlocked(me.getUser().getUserId()));
+    }
+
     /**
      * @author Phan NT Son
      * @since 23-06-2025
@@ -381,14 +381,29 @@ public class UserController {
     /**
      * @author Phan NT Son
      * @since 23-06-2025
-     *        Get a list of Pending Invite toward User
+     *        Get a list of Pending Invite from User
      * @param me
      * @return
      */
-    @GetMapping("/pendinginvite")
+    @GetMapping("/pendinginvite/init")
     @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
-    public ResponseEntity<List<InviteDTO>> getInvite(@AuthenticationPrincipal CustomUserDetail me) {
-        return ResponseEntity.ok(communityService.getInvite(me.getUser().getUserId()));
+    public ResponseEntity<List<InviteDTO>> getInviteFromUser(@AuthenticationPrincipal CustomUserDetail me) {
+        List<InviteDTO> res = communityService.getInviteFromUser(me.getUser().getUserId());
+        return ResponseEntity.ok(res);
+    }
+
+    /**
+     * @author Phan NT Son
+     * @since 24-06-2025
+     *        Get a list of Pending Invite from Friend
+     * @param me
+     * @return
+     */
+    @GetMapping("/pendinginvite/receive")
+    @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
+    public ResponseEntity<List<InviteDTO>> getInviteFromFriend(@AuthenticationPrincipal CustomUserDetail me) {
+        List<InviteDTO> res = communityService.getInviteFromFriend(me.getUser().getUserId());
+        return ResponseEntity.ok(res);
     }
 
     /**
@@ -447,6 +462,23 @@ public class UserController {
         return ResponseEntity.ok("Success");
     }
 
-    
+    @GetMapping("/find/{friendId}")
+    @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
+    public ResponseEntity<SearchResult> findFriend(@PathVariable(name = "friendId") long fId) {
+        try {
+            SearchResult res = communityService.findUser(fId);
+            return ResponseEntity.ok(res);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new SearchResult());
+        }
+    }
+
+    @GetMapping("/conversation/{friendId}")
+    @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
+    public ResponseEntity<ConversationDTO> getConversationHistory(@PathVariable(name = "friendId") long fId,
+            @AuthenticationPrincipal CustomUserDetail me) {
+        return ResponseEntity.ok(communityService.getConversation(me.getUser().getUserId(), fId));
+    }
 
 }
