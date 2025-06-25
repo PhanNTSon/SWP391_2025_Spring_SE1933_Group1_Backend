@@ -24,13 +24,13 @@ public class ChatController {
 
     private final SimpMessagingTemplate messagingTemplate;
     private final CommunityService communityService;
-    private final OnlineUserTracker onlineUserTracker;
+    private final OnlineUserTracker tracker;
 
     public ChatController(SimpMessagingTemplate messagingTemplate, CommunityService communityService,
             OnlineUserTracker onlineUserTracker) {
         this.messagingTemplate = messagingTemplate;
         this.communityService = communityService;
-        this.onlineUserTracker = onlineUserTracker;
+        this.tracker = onlineUserTracker;
     }
 
     @MessageMapping("/chat.send")
@@ -41,5 +41,10 @@ public class ChatController {
         communityService.saveMessage(msg, me.getUser().getUserId());
 
         messagingTemplate.convertAndSendToUser(msg.getReceiverUsername(), "/queue/messages", msg);
+    }
+
+    @SubscribeMapping("/online")
+    public Set<String> initialList() {
+        return tracker.getAllOnlineUsers();
     }
 }
