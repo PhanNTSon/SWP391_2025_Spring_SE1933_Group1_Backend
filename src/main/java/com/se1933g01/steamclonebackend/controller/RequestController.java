@@ -106,8 +106,8 @@ public class RequestController {
 
     @PatchMapping("/feedback/approve/{requestID}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, String>> approveFeedback(@PathVariable String requestID) {
-        return handleAction(() -> requestService.approveFeedback(Long.parseLong(requestID)),
+    public ResponseEntity<Map<String, String>> approveFeedback(@PathVariable String requestID,@RequestBody FeedbackDTO feedbackDTO) {
+        return handleAction(() -> requestService.approveFeedback(Long.parseLong(requestID),feedbackDTO.getResponse()),
                 "Feedback Approved", "Feedback Approve Failed");
     }
     @PatchMapping("/feedback/reject/{requestID}")
@@ -138,6 +138,14 @@ public class RequestController {
         return ResponseEntity.ok(requestService.getAllFeedback(pageable));
     }
 
+    @GetMapping("/feedback/user/{page}")
+    @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER')")
+    public ResponseEntity<Page<FeedbackDTO>> getFeedbackFromUser(@PathVariable int page, @AuthenticationPrincipal CustomUserDetail me) {
+        Pageable pageable = PageRequest.of(page, 10, Sort.by(REQUEST_ID).descending());
+        return ResponseEntity.ok(requestService.getAllFeedbackFromUser(me.getUser().getUserId(), pageable));
+    }
+    
+
     @GetMapping("/game/details/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AddingGameRequestDTO> getGameRequest(@PathVariable Long id) {
@@ -156,6 +164,16 @@ public class RequestController {
                 : ResponseEntity.ok(details);
     }
 
+    @GetMapping("/publisher/user/details/{id}")
+    @PreAuthorize("hasAnyRole('STANDARD')")
+    public ResponseEntity<PublisherApplyRequestDTO> getUserPublisherApplyDetails(@AuthenticationPrincipal CustomUserDetail me) {
+        PublisherApplyRequestDTO details = requestService.getUserPublisherApplyDetails(me.getUser().getUserId());
+        return details == null
+                ? ResponseEntity.status(HttpStatus.NOT_FOUND).body(null)
+                : ResponseEntity.ok(details);
+    }
+    
+
     @GetMapping("/feedback/details/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<FeedbackDTO> getFeedbackDetails(@PathVariable Long id) {
@@ -165,6 +183,21 @@ public class RequestController {
                 : ResponseEntity.ok(details);
     }
     
+    @GetMapping("/feedback/user/details/{id}")
+    @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER')")
+    public ResponseEntity<FeedbackDTO> getUserFeedbackDetails(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetail me) {
+        FeedbackDTO details = requestService.getUserFeedbackDetails(id, me.getUser().getUserId());
+        return details == null
+                ? ResponseEntity.status(HttpStatus.NOT_FOUND).body(null)
+                : ResponseEntity.ok(details);
+    }
+
+    @DeleteMapping("/feedback/user/{id}")
+    @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER')")
+    public ResponseEntity<Map<String, String>> deleteUserFeedback(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetail me) {
+        requestService.deleteFeedback(id, me.getUser().getUserId());
+        return ResponseEntity.ok(Map.of(RESPONSE_MESSAGE_KEY, "Feedback deleted successfully"));
+    }
 
     @GetMapping("/banned-users/{page}")
     @PreAuthorize("hasRole('ADMIN')")
@@ -212,6 +245,23 @@ public class RequestController {
                 "fileId", fileId.get(0),
                 "fileName", fileId.get(1)));
     }
+
+    @PostMapping("/file/upload/test")
+    @PreAuthorize("hasRole('PUBLISHER')")
+    public ResponseEntity<Map<String, String>> getUploadUrl(@RequestParam String fileName) throws IOException {
+        if (fileName == null || fileName.isBlank()) {
+    throw new IllegalArgumentException("fileName is missing");
+}
+
+    System.out.println(fileName);
+    String uploadUrl = googleDriveService.createResumableUploadSession(fileName,"application/zip");
+        System.out.println(uploadUrl);
+    Map<String, String> responseBody = new HashMap<>();
+    responseBody.put("uploadUrl", uploadUrl);
+
+    return ResponseEntity.ok(responseBody); // 200 OK with body
+    }
+
 
     @GetMapping("/file/download/{fileId}")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")

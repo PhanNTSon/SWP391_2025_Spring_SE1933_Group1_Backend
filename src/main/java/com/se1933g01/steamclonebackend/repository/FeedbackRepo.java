@@ -16,5 +16,7 @@ public interface FeedbackRepo extends JpaRepository<Feedback, Long> {
     String findUserNameByRequestId(@Param("requestId") Long requestId);
     @Query("SELECT u.userId FROM Feedback f JOIN f.request r JOIN r.user u WHERE r.requestId = :requestId")
     String findUserIdByRequestId(@Param("requestId") Long requestId);
+    @Query("SELECT f FROM Feedback f JOIN f.request r JOIN r.user u WHERE u.userId = :userId")
+    Page<Feedback> findAllByUserId(@Param("userId") Long userId, Pageable pageable);
 
 }
