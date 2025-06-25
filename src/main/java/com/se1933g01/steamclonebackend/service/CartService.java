@@ -2,8 +2,6 @@ package com.se1933g01.steamclonebackend.service;
 
 import jakarta.persistence.EntityNotFoundException;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.se1933g01.steamclonebackend.dto.CartDTO;
@@ -12,7 +10,6 @@ import com.se1933g01.steamclonebackend.entity.CompositedKey;
 import com.se1933g01.steamclonebackend.entity.game.Game;
 import com.se1933g01.steamclonebackend.entity.transaction.Transaction;
 import com.se1933g01.steamclonebackend.entity.transaction.TransactionDetail;
-import com.se1933g01.steamclonebackend.entity.user.CustomUserDetail;
 import com.se1933g01.steamclonebackend.entity.user.User;
 import com.se1933g01.steamclonebackend.repository.GameRepo;
 import com.se1933g01.steamclonebackend.repository.TransactionRepo;
@@ -29,13 +26,11 @@ public class CartService {
     private final UserRepo userRepo;
     private final GameRepo gameRepo;
     private final TransactionRepo transactionRepo;
-    private final UserService userService;
 
-    public CartService(UserRepo userRepo, GameRepo gameRepo, TransactionRepo transactionRepo, UserService userService) {
+    public CartService(UserRepo userRepo, GameRepo gameRepo, TransactionRepo transactionRepo) {
         this.userRepo = userRepo;
         this.gameRepo = gameRepo;
         this.transactionRepo = transactionRepo;
-        this.userService = userService;
     }
 
     // show cart- author: Ba Thanh
@@ -135,29 +130,36 @@ public class CartService {
         // Trừ tiền
         user.setWalletBalance(oldBalance.subtract(total));
         // Tạo transaction cho từng game chưa sở hữu
-        for (Game game : gamesToBuy) {
+
+        for (int i = 0; i < gamesToBuy.size(); i++) {
+            Game game = gamesToBuy.get(i);
+
             Transaction transaction = new Transaction();
             transaction.setUser(user);
             transaction.setTotalAmount(game.getPrice());
             transaction.setCreatedAt(LocalDate.now());
-            // Save transaction first to generate ID
+
+            // Save transaction first to get transactionId
             transaction = transactionRepo.save(transaction);
-            // Always create a new ArrayList for transactionDetails
-            List<TransactionDetail> transactionDetails = new java.util.ArrayList<>();
+
+            // Create detail
             TransactionDetail detail = new TransactionDetail();
             CompositedKey key = new CompositedKey();
-            key.setKey1(transaction.getTransactionId()); // Map to TransactionID
-            key.setKey2(game.getGameId()); // Map to GameID
+            key.setKey1(transaction.getTransactionId());
+            key.setKey2(game.getGameId());
             detail.setId(key);
             detail.setTransaction(transaction);
             detail.setGame(game);
             detail.setPrice(game.getPrice());
-            transactionDetails.add(detail);
-            transaction.setTransactionDetail(transactionDetails);
+
+            // Set detail and save again
+            List<TransactionDetail> details = new ArrayList<>();
+            details.add(detail);
+            transaction.setTransactionDetail(details);
             transactionRepo.save(transaction);
-            // count total purchased for the game bought by user
+
+            // Update game data
             game.setTotalPurchased(game.getTotalPurchased() + 1);
-            // Add game to user's library
             ownedGames.add(game);
         }
         // Remove only the games that were just bought from cart

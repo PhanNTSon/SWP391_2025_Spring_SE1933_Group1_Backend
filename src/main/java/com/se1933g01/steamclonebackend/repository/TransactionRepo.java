@@ -9,4 +9,5 @@ import java.util.List;
 
 public interface TransactionRepo extends JpaRepository<Transaction, Long> {
     List<Transaction> findByUser(User user);
+    int countByUser(User user);
 }

@@ -1,5 +1,6 @@
 package com.se1933g01.steamclonebackend.controller;
 
+import org.apache.tomcat.jni.Library;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.se1933g01.steamclonebackend.dto.CartDTO;
 import com.se1933g01.steamclonebackend.dto.GameBasicDTO;
 import com.se1933g01.steamclonebackend.dto.LibraryDTO;
 import com.se1933g01.steamclonebackend.dto.community.FriendshipDTO;
@@ -23,21 +23,22 @@ import com.se1933g01.steamclonebackend.dto.user.FriendDTO;
 import com.se1933g01.steamclonebackend.dto.user.UserDetailDTO;
 import com.se1933g01.steamclonebackend.dto.user.UserUpdateDTO;
 import com.se1933g01.steamclonebackend.entity.transaction.Transaction;
+import com.se1933g01.steamclonebackend.entity.transaction.TransactionDetail;
 import com.se1933g01.steamclonebackend.entity.user.CustomUserDetail;
-import com.se1933g01.steamclonebackend.entity.user.User;
 import com.se1933g01.steamclonebackend.repository.UserRepo;
 import com.se1933g01.steamclonebackend.service.CartService;
 import com.se1933g01.steamclonebackend.service.CommunityService;
+import com.se1933g01.steamclonebackend.service.LibraryService;
+import com.se1933g01.steamclonebackend.service.TransactionService;
 import com.se1933g01.steamclonebackend.service.UserService;
 
 import java.io.IOException;
-import jakarta.persistence.EntityNotFoundException;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -48,15 +49,19 @@ public class UserController {
 
     private final UserService userService;
     private final CartService cartService;
+    private final TransactionService transactionService; // Added by Ba Thanh 25-06
+    private final LibraryService libraryService; // Added by Ba Thanh 25-06
     private final UserRepo userRepo;
     private final CommunityService communityService; // Added by Phan NT Son 23-06
 
     public UserController(UserService userService, CartService cartService, UserRepo userRepo,
-            CommunityService communityService) {
+            CommunityService communityService, TransactionService transactionService, LibraryService libraryService) {
         this.userService = userService;
         this.cartService = cartService;
         this.userRepo = userRepo;
         this.communityService = communityService;
+        this.transactionService = transactionService;
+        this.libraryService = libraryService;
     }
 
     /**
@@ -171,7 +176,7 @@ public class UserController {
         Map<String, Object> response = new HashMap<>();
         try {
             Long userId = me.getUser().getUserId();
-            List<Transaction> transactions = userService.showTransactions(userId);
+            List<Transaction> transactions = transactionService.getTransactions(userId);
             List<Map<String, Object>> result = transactions.stream().map(tran -> {
                 Map<String, Object> map = new HashMap<>();
                 map.put("transactionId", tran.getTransactionId());
@@ -200,13 +205,52 @@ public class UserController {
         }
     }
 
+    /**
+     * Author: Ba Thanh
+     * Get transaction detail based on transactionId.
+     */
+    @GetMapping("/transaction/detail/{transactionId}")
+    @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
+    public ResponseEntity<Map<String, Object>> getTransactionDetailByTransactionId(
+            @AuthenticationPrincipal CustomUserDetail me,
+            @PathVariable Long transactionId) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Long userId = me.getUser().getUserId();
+            TransactionDetail detail = transactionService.getTransactionDetailByTransactionId(userId, transactionId);
+
+            if (detail != null) {
+                Map<String, Object> data = new HashMap<>();
+                data.put("Owner", detail.getTransaction().getUser().getUsername());
+                data.put("transactionId", detail.getTransaction().getTransactionId());
+                data.put("gameId", detail.getGame().getGameId());
+                data.put("gameName", detail.getGame().getName());
+                data.put("price", detail.getPrice());
+                data.put("dateCreated", detail.getTransaction().getCreatedAt());
+                response.put("success", true);
+                response.put("data", data);
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("success", false);
+                response.put("message", "Transaction detail not found for this transactionId.");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Failed to get transaction detail: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+
+
     /* author: bathanh */
     // show library
     @GetMapping("/library")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
     public ResponseEntity<LibraryDTO> showLibrary(@AuthenticationPrincipal CustomUserDetail me) {
         Long userId = me.getUser().getUserId();
-        LibraryDTO dto = userService.showLibrary(userId);
+        LibraryDTO dto = libraryService.showLibrary(userId);
         return ResponseEntity.ok(dto);
     }
 
