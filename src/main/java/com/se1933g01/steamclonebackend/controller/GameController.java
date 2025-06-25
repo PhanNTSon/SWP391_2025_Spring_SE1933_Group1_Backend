@@ -19,10 +19,12 @@ import com.se1933g01.steamclonebackend.service.GoogleDriveService;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.logging.Logger;
 
 @RestController
 @RequestMapping("/game")
 public class GameController {
+    Logger logger = Logger.getLogger(getClass().getName());
 
     @Autowired
     private GoogleDriveService googleDriveService;
@@ -82,6 +84,7 @@ public class GameController {
     @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
     public ResponseEntity<String> downloadFile(@PathVariable("fileId") String fileId) throws IOException {
         String downloadUrl = googleDriveService.generateDownloadUrl(fileId);
+        logger.info("downloadUrl" + downloadUrl);
         return ResponseEntity.ok(downloadUrl);
     }
 
