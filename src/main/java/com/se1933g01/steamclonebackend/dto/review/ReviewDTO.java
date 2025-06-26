@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ReviewDTO {
     private String userName;
+    private String userAvatarUrl;
     private long userId;
     private String reviewContent;
     private boolean recommended;

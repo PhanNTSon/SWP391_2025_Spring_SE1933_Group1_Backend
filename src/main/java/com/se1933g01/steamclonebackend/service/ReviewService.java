@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +15,7 @@ import com.se1933g01.steamclonebackend.dto.review.UpdateReviewDTO;
 import com.se1933g01.steamclonebackend.entity.game.Game;
 import com.se1933g01.steamclonebackend.entity.game.Review;
 import com.se1933g01.steamclonebackend.entity.game.ReviewKey;
+import com.se1933g01.steamclonebackend.entity.user.CustomUserDetail;
 import com.se1933g01.steamclonebackend.entity.user.User;
 import com.se1933g01.steamclonebackend.repository.GameRepo;
 import com.se1933g01.steamclonebackend.repository.ReviewRepo;
@@ -87,9 +88,9 @@ public class ReviewService {
             List<ReviewDTO> reviews = new ArrayList<>();
             reviewRepo.findByGame_GameId(gameId).forEach(review -> {
                 ReviewDTO reviewDTO = new ReviewDTO();
-
                 reviewDTO.setUserId(review.getUser().getUserId());
                 reviewDTO.setUserName(review.getUser().getUsername());
+                reviewDTO.setUserAvatarUrl(review.getUser().getAvatarUrl());
                 reviewDTO.setRecommended(review.isRecommended());
                 reviewDTO.setReviewContent(review.getReviewContent());
                 reviewDTO.setHelpful(reviewRepo.countLikedByUsers(gameId, review.getUser().getUserId()));
@@ -124,14 +125,14 @@ public class ReviewService {
     }
 
     @Transactional
-    public UpdateReviewDTO updateReview(long gameId, UpdateReviewDTO dto) {
-        ReviewKey key = new ReviewKey(gameId, dto.getAuthorId());
+    public UpdateReviewDTO updateReview(long gameId, UpdateReviewDTO dto,
+            @AuthenticationPrincipal CustomUserDetail me) {
+        ReviewKey key = new ReviewKey(gameId, me.getUser().getUserId());
         Review target = reviewRepo.findById(key).orElse(null);
         if (target != null) {
 
             target.setReviewContent(dto.getReviewContent());
             target.setRecommended(dto.isRecommended());
-
             reviewRepo.save(target);
 
             return dto;

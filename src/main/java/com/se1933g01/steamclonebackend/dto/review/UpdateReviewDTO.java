@@ -8,8 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdateReviewDTO {
-    private long authorId;
-    private long gameId;
     private String reviewContent;
     private boolean recommended;
 }
