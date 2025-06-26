@@ -11,4 +11,5 @@ public class PublisherApplyRequestDTO {
     String socialNumber;
     String country;
     String imageUrl;
+    String userId;
 }
