@@ -22,4 +22,17 @@ public class EmailService {
 
         mailSender.send(message);
     }
+
+    public void sendEmail(String to, String subject, String text) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(to);
+            message.setSubject(subject);
+            message.setText(text);
+            mailSender.send(message);
+        } catch (Exception e) {
+            // Trong thực tế, bạn nên log lỗi này
+            System.err.println("Error while sending email: " + e.getMessage());
+        }
+    }
 }

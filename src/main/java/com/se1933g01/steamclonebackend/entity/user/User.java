@@ -2,6 +2,7 @@ package com.se1933g01.steamclonebackend.entity.user;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -81,6 +82,18 @@ public class User {
 
         @Column(name = "CreatedAt")
         private LocalDate createdAt;
+
+        @Column(name = "ThemeName", length = 50)
+        private String themeName;
+
+        @Column(name = "NewEmailAddress", length = 100)
+        private String newEmailAddress;
+
+        @Column(name = "EmailChangeToken", length = 10)
+        private String emailChangeToken;
+
+        @Column(name = "EmailChangeTokenExpiry")
+        private LocalDateTime emailChangeTokenExpiry;
         // ================ Relationships =============
         @OneToMany(mappedBy = "user")
         private List<Request> requests;
@@ -130,10 +143,10 @@ public class User {
 
         @OneToMany(mappedBy = "user1")
         private List<Conversation> conversationInit;
-        
+
         @OneToMany(mappedBy = "user2")
         private List<Conversation> conversationReceive;
-        
+
         @OneToMany(mappedBy = "sender")
         @JsonIgnore
         private List<Message> messages;
