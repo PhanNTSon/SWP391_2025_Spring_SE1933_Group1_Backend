@@ -20,6 +20,6 @@ public interface ConversationRepo extends JpaRepository<Conversation, Long> {
      * @param user2Id
      * @return
      */
-    @Query("SELECT c FROM Conversation c WHERE c.user1.userId =: user1Id AND c.user2.userId =: user2Id")
+    @Query("SELECT c FROM Conversation c WHERE c.user1.userId = :user1Id AND c.user2.userId = :user2Id")
     Conversation findByUser1AndUser2(@Param("user1Id") long user1Id, @Param("user2Id") long user2Id);
 }

@@ -19,4 +19,10 @@ public interface AddingGameRequestRepo extends JpaRepository<AddingGameRequest,L
        "WHERE agr.requestId = :requestId")
     String findPublisherNameByRequestId(@Param("requestId") Long requestId);
     boolean existsByGameName(String gameName);
+    @Query("SELECT p.publisherId FROM AddingGameRequest agr " +
+       "JOIN agr.request r " +
+       "JOIN r.user u " +
+       "JOIN u.publisher p " +
+       "WHERE agr.requestId = :requestId")
+    String findPublisherIdByRequestId(@Param("requestId") Long requestId);
 }

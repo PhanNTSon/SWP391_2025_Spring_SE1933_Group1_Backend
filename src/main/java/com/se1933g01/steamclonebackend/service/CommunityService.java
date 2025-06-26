@@ -13,6 +13,7 @@ import com.se1933g01.steamclonebackend.dto.community.FriendDTO;
 import com.se1933g01.steamclonebackend.dto.community.FriendshipDTO;
 import com.se1933g01.steamclonebackend.dto.community.InviteDTO;
 import com.se1933g01.steamclonebackend.dto.community.MessageDTO;
+import com.se1933g01.steamclonebackend.dto.community.SearchResult;
 import com.se1933g01.steamclonebackend.entity.community.Conversation;
 import com.se1933g01.steamclonebackend.entity.community.Friendship;
 import com.se1933g01.steamclonebackend.entity.community.FriendshipId;
@@ -75,12 +76,26 @@ public class CommunityService {
      * @param userId
      * @return
      */
-    public List<InviteDTO> getInvite(long userId) {
-        List<Friendship> queryResult = friendshipRepo.findAllInvite(userId);
+    public List<InviteDTO> getInviteFromFriend(long userId) {
+        List<Friendship> queryResult = friendshipRepo.findAllInviteFromFriend(userId);
         return queryResult.stream().map(friendship -> new InviteDTO(
                 friendship.getFriendshipId().getUserId(),
                 friendship.getUser().getAvatarUrl(),
                 friendship.getUser().getUsername())).toList();
+    }
+
+    /**
+     * Get all Friendship in DB that have userId = userid with status "Pending"
+     * 
+     * @param userId
+     * @return
+     */
+    public List<InviteDTO> getInviteFromUser(long userId) {
+        List<Friendship> queryResult = friendshipRepo.findAllInviteFromUser(userId);
+        return queryResult.stream().map(friendship -> new InviteDTO(
+                friendship.getFriendshipId().getFriendId(),
+                friendship.getFriend().getAvatarUrl(),
+                friendship.getFriend().getUsername())).toList();
     }
 
     /**
@@ -201,15 +216,16 @@ public class CommunityService {
 
         return new ConversationDTO(conversationId,
                 messages.stream().map(message -> new MessageDTO(
+                        message.getSender().getUserId(),
                         message.getMessageContent(),
                         message.getSentAt())).toList());
     }
 
     @Transactional
-    public void saveMessage(ChatMessageDTO msg, long senderId) {
+    public void saveMessage(ChatMessageDTO msg, String username) {
         Message nMessage = new Message();
         Conversation conver = entityManager.getReference(Conversation.class, msg.getConversationId());
-        User sender = entityManager.getReference(User.class, senderId);
+        User sender = userRepo.findByUsername(username).orElse(null);
 
         nMessage.setConversation(conver);
         nMessage.setSender(sender);
@@ -217,5 +233,14 @@ public class CommunityService {
         nMessage.setSentAt(LocalDateTime.now());
 
         messageRepo.save(nMessage);
+    }
+
+    public SearchResult findUser(long friendId) throws Exception {
+        User target = userRepo.findById(friendId).orElse(null);
+        if (target == null) {
+            throw new Exception("No User found");
+        } else {
+            return new SearchResult(target.getUserId(), target.getUsername(), target.getAvatarUrl());
+        }
     }
 }

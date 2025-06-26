@@ -44,6 +44,7 @@ public class CartService {
             GameBasicDTO gameInCart = new GameBasicDTO();
             gameInCart.setId(game.getGameId());
             gameInCart.setTitle(game.getName());
+            gameInCart.setImageUrl(game.getMedia() != null && !game.getMedia().isEmpty() ? game.getMedia().get(0).getUrl() : null);
             gameInCart.setPrice(game.getPrice());
             gameInCart.setDiscountPrice(BigDecimal.ZERO); // Changed by Pha Son 21-06
             gameInCart.setOriginalPrice(gameInCart.getPrice().add(gameInCart.getDiscountPrice())); // Changed by Pha Son

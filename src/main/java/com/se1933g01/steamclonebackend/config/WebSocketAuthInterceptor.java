@@ -7,10 +7,12 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Component;
 
 import com.se1933g01.steamclonebackend.service.UserDetailsServiceImpl;
 import com.se1933g01.steamclonebackend.utils.JwtUtil;
 
+@Component
 public class WebSocketAuthInterceptor implements ChannelInterceptor {
     private final JwtUtil jwtTokenProvider;
     private final UserDetailsServiceImpl userDetailsService;
@@ -39,4 +41,6 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
         }
         return message;
     }
+
+
 }

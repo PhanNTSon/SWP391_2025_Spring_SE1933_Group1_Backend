@@ -22,7 +22,14 @@ public interface FriendshipRepo extends JpaRepository<Friendship, FriendshipId> 
 
     @Query("SELECT f FROM Friendship f WHERE f.id.userId = :userId AND f.status = 'Accepted'")
     List<Friendship> findAllFriend(@Param("userId") Long userId);
+    
+    @Query("SELECT f FROM Friendship f WHERE f.id.userId = :userId AND f.status = 'Blocked'")
+    List<Friendship> findAllBlocked(@Param("userId") Long userId);
+
 
     @Query("SELECT f FROM Friendship f WHERE f.id.friendId = :userId AND f.status = 'Pending'")
-    List<Friendship> findAllInvite(@Param("userId") long userId);
+    List<Friendship> findAllInviteFromFriend(@Param("userId") long userId);
+
+    @Query("SELECT f FROM Friendship f WHERE f.id.userId = :userId AND f.status = 'Pending'")
+    List<Friendship> findAllInviteFromUser(@Param("userId") long userId);
 }

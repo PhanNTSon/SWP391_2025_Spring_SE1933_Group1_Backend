@@ -15,4 +15,15 @@ public class ChatMessageDTO {
     private String receiverUsername;
     private String content;
     private LocalDateTime sentAt;
+
+    @Override
+    public String toString() {
+        return "ChatMessageDTO{" +
+                "conversationId=" + conversationId +
+                ", senderUsername='" + senderUsername + '\'' +
+                ", receiverUsername='" + receiverUsername + '\'' +
+                ", content='" + content + '\'' +
+                ", sentAt=" + sentAt +
+                '}';
+    }
 }

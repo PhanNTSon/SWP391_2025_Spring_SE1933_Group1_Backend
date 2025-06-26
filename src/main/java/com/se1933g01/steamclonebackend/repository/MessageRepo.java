@@ -16,6 +16,6 @@ import com.se1933g01.steamclonebackend.entity.community.Message;
 @Repository
 public interface MessageRepo extends JpaRepository<Message, Long> {
 
-    @Query("SELECT m FROM Message m WHERE m.conversation.conversationId =:converstaionId")
+    @Query("SELECT m FROM Message m WHERE m.conversation.conversationId = :conversationId")
     List<Message> findAllByConversationId(@Param("conversationId") long conversationId);
 }
