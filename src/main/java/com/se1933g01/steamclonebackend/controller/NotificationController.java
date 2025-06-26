@@ -3,6 +3,7 @@ package com.se1933g01.steamclonebackend.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -28,9 +29,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 public class NotificationController {
 
     private final NotificationService notifService;
+    private final SimpMessagingTemplate simpMessagingTemplate;
 
-    public NotificationController(NotificationService notifService) {
+    public NotificationController(NotificationService notifService, SimpMessagingTemplate simpMessagingTemplate) {
         this.notifService = notifService;
+        this.simpMessagingTemplate = simpMessagingTemplate;
     }
 
     /**
@@ -71,6 +74,8 @@ public class NotificationController {
     public ResponseEntity<CreateNotificationDTO> createNotificatioin(@RequestBody CreateNotificationDTO dto) {
         CreateNotificationDTO result = notifService.createNotif(dto.getReceiverId(), dto.getNotificationType(),
                 dto.getNotificationContent());
+                
+        simpMessagingTemplate.convertAndSendToUser(result.getReceiverName(), "/queue/notifications", result);
         return ResponseEntity.ok(result);
     }
 

@@ -1,14 +1,12 @@
 package com.se1933g01.steamclonebackend.realtime;
 
 import java.security.Principal;
-import java.util.Set;
 
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionConnectEvent;
-import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 
@@ -29,7 +27,6 @@ public class WebSocketEventListener {
     public void onConnect(SessionConnectEvent event) {
         StompHeaderAccessor h = StompHeaderAccessor.wrap(event.getMessage());
         Principal user = h.getUser();
-        System.out.println("[Event listner onConnect]: " + user.getName());
         String sessionId = h.getSessionId();
 
         if (user != null && sessionId != null) {
@@ -51,7 +48,6 @@ public class WebSocketEventListener {
             broadcastAll();
 
         }
-        System.out.println("After remove: " + tracker.getAllOnlineUsers());
 
     }
 
@@ -63,12 +59,6 @@ public class WebSocketEventListener {
         Principal user = h.getUser();
 
         if ("/user/queue/online".equals(dest) && user != null) {
-            // Set<String> list = tracker.getAllOnlineUsers();
-            // // gửi initial list ngay khi subscribe thành công
-            // messagingTemplate.convertAndSendToUser(
-            // user.getName(),
-            // "/queue/online",
-            // list);
             messagingTemplate.convertAndSend(
                     "/topic/online",
                     tracker.getAllOnlineUsers());
@@ -77,26 +67,9 @@ public class WebSocketEventListener {
 
     // Mỗi khi có thêm hoặc bớt user, broadcast tới từng user qua user-queue
     private void broadcastAll() {
-        // Set<String> list = tracker.getAllOnlineUsers();
-        // for (String username : list) {
-        // messagingTemplate.convertAndSendToUser(
-        // username,
-        // "/queue/online",
-        // list);
-        // }
-        System.out.println("Broadcast: " + tracker.getAllOnlineUsers());
         messagingTemplate.convertAndSend(
                 "/topic/online",
                 tracker.getAllOnlineUsers());
     }
 
-    // // Gọi broadcastAll() sau mỗi connect/disconnect
-    // @EventListener
-    // public void afterConnect(SessionConnectedEvent event) {
-    // }
-
-    // @EventListener
-    // public void afterDisconnect(SessionDisconnectEvent event) {
-    // broadcastAll();
-    // }
 }

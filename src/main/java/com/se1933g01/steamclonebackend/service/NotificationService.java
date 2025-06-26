@@ -80,7 +80,7 @@ public class NotificationService {
      * @param receiverId
      * @param notifType
      * @param notifContent
-     * @return
+     * @return CreateNotificationDTO with receiverName for real-time notification by Socket
      */
     @Transactional
     public CreateNotificationDTO createNotif(long receiverId, String notifType, String notifContent) {
@@ -98,11 +98,13 @@ public class NotificationService {
         returnNotif.setNotificationContent(notifContent);
         returnNotif.setNotificationType(notifType);
         returnNotif.setReceiverId(receiverId);
+        returnNotif.setReceiverName(user.getUsername());
         return returnNotif;
     }
 
     /**
      * Set a notification status from Not-read to have-Read.
+     * 
      * @param notifId
      */
     @Transactional
