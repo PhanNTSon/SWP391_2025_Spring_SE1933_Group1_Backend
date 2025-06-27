@@ -22,11 +22,14 @@ import jakarta.persistence.EntityNotFoundException;
 @Service
 public class NotificationService {
 
-    @Autowired
-    private EntityManager entityManager;
+    private final EntityManager entityManager;
 
-    @Autowired
-    private NotificationsRepo notificationsRepo;
+    private final NotificationsRepo notificationsRepo;
+
+    public NotificationService(EntityManager entityManager, NotificationsRepo notificationsRepo) {
+        this.entityManager = entityManager;
+        this.notificationsRepo = notificationsRepo;
+    }
 
     /**
      * Get list of Notifications
@@ -37,6 +40,7 @@ public class NotificationService {
     public List<NotificationDTO> getNotificationsList(Long userId) {
         List<Notification> resultFromDB = notificationsRepo.findByUser_userId(userId);
         List<NotificationDTO> resultListDtos = new ArrayList<>();
+        
         resultFromDB.stream().forEach(notif -> {
             NotificationDTO dto = new NotificationDTO();
             dto.setNotifId(notif.getNotificationId());
@@ -80,7 +84,8 @@ public class NotificationService {
      * @param receiverId
      * @param notifType
      * @param notifContent
-     * @return CreateNotificationDTO with receiverName for real-time notification by Socket
+     * @return CreateNotificationDTO with receiverName for real-time notification by
+     *         Socket
      */
     @Transactional
     public CreateNotificationDTO createNotif(long receiverId, String notifType, String notifContent) {
