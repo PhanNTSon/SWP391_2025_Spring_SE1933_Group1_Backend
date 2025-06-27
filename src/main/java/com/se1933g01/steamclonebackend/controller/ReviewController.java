@@ -10,10 +10,10 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.se1933g01.steamclonebackend.dto.review.CreateReviewDTO;
+import com.se1933g01.steamclonebackend.dto.review.PatchReviewDTO;
 import com.se1933g01.steamclonebackend.dto.review.ReviewDTO;
 import com.se1933g01.steamclonebackend.dto.review.UpdateReviewDTO;
 import com.se1933g01.steamclonebackend.entity.user.CustomUserDetail;
@@ -24,11 +24,13 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 /**
  * Author: Phan Son
  */
 @RestController
+@RequestMapping("/review")
 public class ReviewController {
 
     private final ReviewService reviewService;
@@ -70,11 +72,11 @@ public class ReviewController {
 
     @GetMapping("/{gameId}/{authorId}/check")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<String> getUserReaction(@RequestParam Long userId,
+    public ResponseEntity<String> getUserReaction(@AuthenticationPrincipal CustomUserDetail me,
             @PathVariable("gameId") long reviewGameId,
             @PathVariable("authorId") long reviewAuthorId) {
         try {
-            int result = reviewService.checkUserReaction(userId, reviewGameId, reviewAuthorId);
+            int result = reviewService.checkUserReaction(me.getUser().getUserId(), reviewGameId, reviewAuthorId);
             return ResponseEntity.ok(String.valueOf(result));
 
         } catch (EntityNotFoundException e) {
@@ -91,8 +93,9 @@ public class ReviewController {
     @PutMapping("/update/{gameId}")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
     public ResponseEntity<UpdateReviewDTO> updateReview(@RequestBody UpdateReviewDTO dto,
-            @PathVariable("gameId") Long gameId) {
-        UpdateReviewDTO result = reviewService.updateReview(gameId, dto);
+            @PathVariable("gameId") Long gameId,
+            @AuthenticationPrincipal CustomUserDetail me) {
+        UpdateReviewDTO result = reviewService.updateReview(gameId, dto, me.getUser().getUserId());
         return ResponseEntity.ok(result);
     }
 
@@ -106,7 +109,7 @@ public class ReviewController {
      */
     @PatchMapping("/vote/helpful")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<String> likeReview(@RequestBody UpdateReviewDTO dto,
+    public ResponseEntity<String> likeReview(@RequestBody PatchReviewDTO dto,
             @AuthenticationPrincipal CustomUserDetail me) {
         try {
             reviewService.patchLikeReview(me.getUser().getUserId(), dto.getGameId(), dto.getAuthorId());
@@ -124,7 +127,7 @@ public class ReviewController {
      */
     @PatchMapping("/vote/unhelpful")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<String> dislikeReview(@RequestBody UpdateReviewDTO dto,
+    public ResponseEntity<String> dislikeReview(@RequestBody PatchReviewDTO dto,
             @AuthenticationPrincipal CustomUserDetail me) {
         try {
             reviewService.patchUnLikeReview(me.getUser().getUserId(), dto.getGameId(), dto.getAuthorId());
@@ -141,7 +144,7 @@ public class ReviewController {
      */
     @PatchMapping("/vote/clean")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<String> reactionReview(@RequestBody UpdateReviewDTO dto,
+    public ResponseEntity<String> reactionReview(@RequestBody PatchReviewDTO dto,
             @AuthenticationPrincipal CustomUserDetail me) {
         try {
             reviewService.deleteReactionReview(me.getUser().getUserId(), dto.getGameId(), dto.getAuthorId());

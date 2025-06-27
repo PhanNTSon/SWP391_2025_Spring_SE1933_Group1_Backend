@@ -35,7 +35,7 @@ public class Message {
     @JoinColumn(name = "SenderID", nullable = false)
     private User sender;
 
-    @Column(name = "MessageContent")
+    @Column(name = "MessageContent", columnDefinition = "NVARCHAR(MAX)")
     private String messageContent;
 
     @Column(name = "SentAt")
