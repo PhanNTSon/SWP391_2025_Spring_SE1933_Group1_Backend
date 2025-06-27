@@ -6,6 +6,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,8 +31,11 @@ import com.se1933g01.steamclonebackend.repository.UserRepo;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -43,14 +47,17 @@ public class UserService {
     private TransactionRepo transactionRepo;
     private final FriendshipRepo friendshipRepo; // Added by Phan NT Son 21-06-2025
 
+    private EmailService emailService;
+
     private static final String USER_NOT_FOUND_MSG = "User not found";
 
     public UserService(UserRepo userRepo, TransactionRepo transactionRepo,
-            FriendshipRepo friendshipRepo, CloudinaryService cloudinaryService) {
+            FriendshipRepo friendshipRepo, CloudinaryService cloudinaryService, EmailService emailService) {
         this.userRepo = userRepo;
         this.transactionRepo = transactionRepo;
         this.friendshipRepo = friendshipRepo;
         this.CloudinaryService = cloudinaryService;
+        this.emailService = emailService;
     }
 
     public User getUser(Long userId) {
@@ -71,9 +78,7 @@ public class UserService {
      * Author: Ba Thanh
      * // Show all transactions of a user.
      */
-    
 
-    
     /*
      * author: bathanh
      * check if game is in cart
@@ -260,5 +265,61 @@ public class UserService {
                         friendship.getFriend().getAvatarUrl()))
                 .collect(Collectors.toList());
         return mappingResult;
+    }
+
+    @Transactional
+    public void requestEmailChange(Long userId, String newEmail) {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        // Kiểm tra xem email mới có đang được sử dụng bởi người khác không
+        if (userRepo.findByEmail(newEmail).isPresent()) {
+            throw new IllegalArgumentException("New email address is already in use.");
+        }
+
+        String token = String.format("%06d", new Random().nextInt(999999));
+
+        // Lưu thông tin yêu cầu vào user
+        user.setNewEmailAddress(newEmail);
+        user.setEmailChangeToken(token);
+        user.setEmailChangeTokenExpiry(LocalDateTime.now().plusMinutes(10)); // Hết hạn sau 10 phút
+
+        userRepo.save(user);
+
+        // Gửi email chứa mã đến địa chỉ email CŨ
+        String emailText = "Hello " + user.getUsername() + ",\n\n"
+                + "You have requested to change your email address.\n"
+                + "Your verification code is: " + token + "\n\n"
+                + "This code will expire in 10 minutes.\n\n"
+                + "If you did not request this change, please secure your account.";
+
+        emailService.sendEmail(user.getEmail(), "Email Change Verification Code", emailText);
+    }
+
+    @Transactional
+    public void confirmEmailChange(Long userId, String token, String newEmail) {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        // Kiểm tra token và email có khớp với yêu cầu đã lưu không
+        if (user.getEmailChangeToken() == null || !user.getEmailChangeToken().equals(token) ||
+                user.getNewEmailAddress() == null || !user.getNewEmailAddress().equals(newEmail)) {
+            throw new IllegalArgumentException("Invalid verification code or email address.");
+        }
+
+        // Kiểm tra token hết hạn
+        if (user.getEmailChangeTokenExpiry().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Verification code has expired.");
+        }
+
+        // Mọi thứ hợp lệ, cập nhật email mới
+        user.setEmail(user.getNewEmailAddress());
+
+        // Xóa thông tin yêu cầu thay đổi
+        user.setNewEmailAddress(null);
+        user.setEmailChangeToken(null);
+        user.setEmailChangeTokenExpiry(null);
+
+        userRepo.save(user);
     }
 }

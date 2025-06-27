@@ -10,18 +10,19 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.se1933g01.steamclonebackend.entity.user.User;
+
 @Repository
-public interface UserRepo extends JpaRepository<User,Long>{
+public interface UserRepo extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u LEFT JOIN FETCH u.cartGames WHERE u.userId = :userId")
     User findByIdWithCartGames(@Param("userId") Long userId);
 
     @Query("SELECT u FROM User u LEFT JOIN FETCH u.games WHERE u.userId = :userId")
     User findByIdWithLibraryGames(@Param("userId") Long userId);
-    
-    
 
     boolean existsByEmail(String email);
+
     Optional<User> findByEmail(String email);
+
     Optional<User> findByUsername(String username);
 
     /**

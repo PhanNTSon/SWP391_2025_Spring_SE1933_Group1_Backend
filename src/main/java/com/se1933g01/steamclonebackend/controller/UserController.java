@@ -19,6 +19,8 @@ import com.se1933g01.steamclonebackend.dto.LibraryDTO;
 import com.se1933g01.steamclonebackend.dto.community.ConversationDTO;
 import com.se1933g01.steamclonebackend.dto.community.FriendshipDTO;
 import com.se1933g01.steamclonebackend.dto.community.InviteDTO;
+import com.se1933g01.steamclonebackend.dto.user.EmailChangeConfirmDTO;
+import com.se1933g01.steamclonebackend.dto.user.EmailChangeRequestDTO;
 import com.se1933g01.steamclonebackend.dto.community.SearchResult;
 import com.se1933g01.steamclonebackend.dto.user.FriendDTO;
 import com.se1933g01.steamclonebackend.dto.user.UserDetailDTO;
@@ -460,6 +462,33 @@ public class UserController {
         communityService.deleteFriendship(me.getUser().getUserId(), tId);
 
         return ResponseEntity.ok("Success");
+    }
+
+    @PostMapping("/request-change")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> requestEmailChange(
+            @AuthenticationPrincipal CustomUserDetail principal,
+            @RequestBody EmailChangeRequestDTO request) {
+        try {
+            userService.requestEmailChange(principal.getUser().getUserId(), request.getNewEmail());
+            return ResponseEntity
+                    .ok(Map.of("message", "A verification code has been sent to your current email address."));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/confirm-change")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> confirmEmailChange(
+            @AuthenticationPrincipal CustomUserDetail principal,
+            @RequestBody EmailChangeConfirmDTO request) {
+        try {
+            userService.confirmEmailChange(principal.getUser().getUserId(), request.getToken(), request.getNewEmail());
+            return ResponseEntity.ok(Map.of("message", "Your email address has been updated successfully."));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
     @GetMapping("/find/{friendId}")
