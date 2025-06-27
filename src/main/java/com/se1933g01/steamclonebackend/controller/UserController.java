@@ -367,22 +367,6 @@ public class UserController {
     /**
      * @author Phan NT Son
      * @since 23-06-2025
-     *        Send an Invite to a friend
-     * @param receiverId
-     * @param me
-     * @return
-     */
-    @PostMapping("/sendinvite/{receiverId}")
-    @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
-    public ResponseEntity<FriendshipDTO> sendInvite(@PathVariable(name = "receiverId") long receiverId,
-            @AuthenticationPrincipal CustomUserDetail me) {
-        FriendshipDTO result = communityService.sendInvite(me.getUser().getUserId(), receiverId);
-        return ResponseEntity.ok(result);
-    }
-
-    /**
-     * @author Phan NT Son
-     * @since 23-06-2025
      *        Get a list of Pending Invite from User
      * @param me
      * @return
@@ -406,6 +390,22 @@ public class UserController {
     public ResponseEntity<List<InviteDTO>> getInviteFromFriend(@AuthenticationPrincipal CustomUserDetail me) {
         List<InviteDTO> res = communityService.getInviteFromFriend(me.getUser().getUserId());
         return ResponseEntity.ok(res);
+    }
+
+    /**
+     * @author Phan NT Son
+     * @since 23-06-2025
+     *        Send an Invite to a friend
+     * @param receiverId
+     * @param me
+     * @return
+     */
+    @PostMapping("/sendinvite/{receiverId}")
+    @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
+    public ResponseEntity<FriendshipDTO> sendInvite(@PathVariable(name = "receiverId") long receiverId,
+            @AuthenticationPrincipal CustomUserDetail me) {
+        FriendshipDTO result = communityService.sendInvite(me.getUser().getUserId(), receiverId);
+        return ResponseEntity.ok(result);
     }
 
     /**

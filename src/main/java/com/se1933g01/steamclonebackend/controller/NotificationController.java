@@ -29,11 +29,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 public class NotificationController {
 
     private final NotificationService notifService;
-    private final SimpMessagingTemplate simpMessagingTemplate;
 
-    public NotificationController(NotificationService notifService, SimpMessagingTemplate simpMessagingTemplate) {
+    public NotificationController(NotificationService notifService) {
         this.notifService = notifService;
-        this.simpMessagingTemplate = simpMessagingTemplate;
     }
 
     /**
@@ -74,8 +72,7 @@ public class NotificationController {
     public ResponseEntity<CreateNotificationDTO> createNotificatioin(@RequestBody CreateNotificationDTO dto) {
         CreateNotificationDTO result = notifService.createNotif(dto.getReceiverId(), dto.getNotificationType(),
                 dto.getNotificationContent());
-                
-        simpMessagingTemplate.convertAndSendToUser(result.getReceiverName(), "/queue/notifications", result);
+
         return ResponseEntity.ok(result);
     }
 

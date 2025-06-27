@@ -3,7 +3,7 @@ package com.se1933g01.steamclonebackend.service;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,11 +23,13 @@ import jakarta.persistence.EntityNotFoundException;
 public class NotificationService {
 
     private final EntityManager entityManager;
-
+    private final SimpMessagingTemplate simpMessagingTemplate;
     private final NotificationsRepo notificationsRepo;
 
-    public NotificationService(EntityManager entityManager, NotificationsRepo notificationsRepo) {
+    public NotificationService(EntityManager entityManager, SimpMessagingTemplate simpMessagingTemplate,
+            NotificationsRepo notificationsRepo) {
         this.entityManager = entityManager;
+        this.simpMessagingTemplate = simpMessagingTemplate;
         this.notificationsRepo = notificationsRepo;
     }
 
@@ -40,7 +42,7 @@ public class NotificationService {
     public List<NotificationDTO> getNotificationsList(Long userId) {
         List<Notification> resultFromDB = notificationsRepo.findByUser_userId(userId);
         List<NotificationDTO> resultListDtos = new ArrayList<>();
-        
+
         resultFromDB.stream().forEach(notif -> {
             NotificationDTO dto = new NotificationDTO();
             dto.setNotifId(notif.getNotificationId());
@@ -97,13 +99,18 @@ public class NotificationService {
         newNotif.setNotificationContent(notifContent);
         newNotif.setRead(false);
 
-        notificationsRepo.save(newNotif);
+        Notification saved = notificationsRepo.save(newNotif);
+        NotificationDTO dto = new NotificationDTO(
+                saved.getNotificationId(),
+                saved.getNotificationType(),
+                saved.getNotificationContent(),
+                saved.isRead());
+        simpMessagingTemplate.convertAndSendToUser(saved.getUser().getUsername(), "/queue/notifications", dto);
 
         CreateNotificationDTO returnNotif = new CreateNotificationDTO();
         returnNotif.setNotificationContent(notifContent);
         returnNotif.setNotificationType(notifType);
         returnNotif.setReceiverId(receiverId);
-        returnNotif.setReceiverName(user.getUsername());
         return returnNotif;
     }
 

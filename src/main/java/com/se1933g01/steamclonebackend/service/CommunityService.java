@@ -103,6 +103,9 @@ public class CommunityService {
      * Then, update Friendship with userId = friendId and friendId = userId status
      * from "Pending" to "Accepted"
      * 
+     * Reason is that 2 users are friends when there are 2 Records in DB:
+     * User → Friend & Friend → User with status: "Accepted"
+     * 
      * @param userId
      * @param friendId
      * @return
@@ -130,6 +133,12 @@ public class CommunityService {
         return new FriendshipDTO(userId, friendId, "Accepted", LocalDate.now());
     }
 
+    /**
+     * Same as accept invite but with status "blocked"
+     * @param userId
+     * @param friendId
+     * @return
+     */
     @Transactional
     public FriendshipDTO blockInvite(long userId, long friendId) {
         // Get references
