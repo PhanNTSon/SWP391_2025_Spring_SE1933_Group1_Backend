@@ -32,7 +32,7 @@ public class Review {
     @EmbeddedId
     private ReviewKey id;
 
-    @Column(name = "ReviewContent")
+    @Column(name = "ReviewContent", columnDefinition = "NVARCHAR(MAX)")
     private String reviewContent;
 
     @Column(name = "TimeCreated")
@@ -60,6 +60,4 @@ public class Review {
     @JsonIgnore
     private Set<User> unlikedByUsers;
 
-    
 }
-

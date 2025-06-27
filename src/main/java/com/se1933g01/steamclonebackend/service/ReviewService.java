@@ -125,9 +125,8 @@ public class ReviewService {
     }
 
     @Transactional
-    public UpdateReviewDTO updateReview(long gameId, UpdateReviewDTO dto,
-            @AuthenticationPrincipal CustomUserDetail me) {
-        ReviewKey key = new ReviewKey(gameId, me.getUser().getUserId());
+    public UpdateReviewDTO updateReview(long gameId, UpdateReviewDTO dto, long authorId) {
+        ReviewKey key = new ReviewKey(gameId, authorId);
         Review target = reviewRepo.findById(key).orElse(null);
         if (target != null) {
 
