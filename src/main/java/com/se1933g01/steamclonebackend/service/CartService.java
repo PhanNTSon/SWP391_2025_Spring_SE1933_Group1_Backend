@@ -2,6 +2,7 @@ package com.se1933g01.steamclonebackend.service;
 
 import jakarta.persistence.EntityNotFoundException;
 
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import com.se1933g01.steamclonebackend.dto.CartDTO;
@@ -26,11 +27,14 @@ public class CartService {
     private final UserRepo userRepo;
     private final GameRepo gameRepo;
     private final TransactionRepo transactionRepo;
+    private final SimpMessagingTemplate simp; // Added by Phan Son 28-06
 
-    public CartService(UserRepo userRepo, GameRepo gameRepo, TransactionRepo transactionRepo) {
+    public CartService(UserRepo userRepo, GameRepo gameRepo, TransactionRepo transactionRepo,
+            SimpMessagingTemplate simp) {
         this.userRepo = userRepo;
         this.gameRepo = gameRepo;
         this.transactionRepo = transactionRepo;
+        this.simp = simp;
     }
 
     // show cart- author: Ba Thanh
@@ -44,7 +48,8 @@ public class CartService {
             GameBasicDTO gameInCart = new GameBasicDTO();
             gameInCart.setId(game.getGameId());
             gameInCart.setTitle(game.getName());
-            gameInCart.setImageUrl(game.getMedia() != null && !game.getMedia().isEmpty() ? game.getMedia().get(0).getUrl() : null);
+            gameInCart.setImageUrl(
+                    game.getMedia() != null && !game.getMedia().isEmpty() ? game.getMedia().get(0).getUrl() : null);
             gameInCart.setPrice(game.getPrice());
             gameInCart.setDiscountPrice(BigDecimal.ZERO); // Changed by Pha Son 21-06
             gameInCart.setOriginalPrice(gameInCart.getPrice().add(gameInCart.getDiscountPrice())); // Changed by Pha Son
@@ -75,7 +80,13 @@ public class CartService {
                 .orElseThrow(() -> new EntityNotFoundException("Game not found"));
         user.getCartGames().add(game);
         userRepo.save(user);
-        return getCart(userId);
+
+        // Added by Phan Son 28-06
+        CartDTO result = getCart(userId);
+        simp.convertAndSendToUser(user.getUsername(), "/queue/notification.cart", result.getListCart().size());
+        // --!!
+
+        return result;
     }
 
     // remove games from cart- author: Ba Thanh
@@ -88,7 +99,13 @@ public class CartService {
         }
         user.getCartGames().removeIf(game -> gameId.equals(game.getGameId()));
         userRepo.save(user);
-        return getCart(userId);
+
+        // Added by Phan Son 28-06
+        CartDTO result = getCart(userId);
+        simp.convertAndSendToUser(user.getUsername(), "/queue/notification.cart", result.getListCart().size());
+        // --!!
+
+        return result;
     }
 
     // calculate total price of cart- author: Ba Thanh
@@ -107,18 +124,18 @@ public class CartService {
         // --!!
     }
 
-    
-    //checkout- author: Ba Thanh
+    // checkout- author: Ba Thanh
     public CartDTO checkout(Long userId) {
         User user = userRepo.findByIdWithCartGames(userId);
-        if (user == null) throw new EntityNotFoundException("User not found");
+        if (user == null)
+            throw new EntityNotFoundException("User not found");
         if (user.getCartGames().isEmpty())
             throw new EntityNotFoundException("Cart is empty");
         // Only checkout games not already owned
         java.util.Set<Game> ownedGames = user.getGames() != null ? user.getGames() : new java.util.HashSet<>();
         List<Game> gamesToBuy = user.getCartGames().stream()
-            .filter(game -> ownedGames.stream().noneMatch(owned -> owned.getGameId().equals(game.getGameId())))
-            .toList();
+                .filter(game -> ownedGames.stream().noneMatch(owned -> owned.getGameId().equals(game.getGameId())))
+                .toList();
         if (gamesToBuy.isEmpty()) {
             throw new RuntimeException("All games in cart are already owned");
         }

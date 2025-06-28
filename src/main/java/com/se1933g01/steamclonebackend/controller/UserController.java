@@ -102,6 +102,7 @@ public class UserController {
                 return ResponseEntity.badRequest().body(response);
             }
             cartService.addGameToCart(userId, gameId);
+
             response.put("success", true);
             response.put("message", "Adding game to cart successfully");
             return ResponseEntity.ok(response);

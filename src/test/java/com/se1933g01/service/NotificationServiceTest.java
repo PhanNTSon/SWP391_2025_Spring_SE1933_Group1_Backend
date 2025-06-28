@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import com.se1933g01.steamclonebackend.dto.notification.NotificationDTO;
 import com.se1933g01.steamclonebackend.entity.user.Notification;
@@ -22,6 +23,7 @@ import jakarta.persistence.EntityManager;
 public class NotificationServiceTest {
     private EntityManager entityManager;
     private NotificationsRepo notificationsRepo;
+    private SimpMessagingTemplate simpMessagingTemplate;
 
     private NotificationService service;
 
@@ -29,8 +31,9 @@ public class NotificationServiceTest {
     public void setup() {
         entityManager = mock(EntityManager.class);
         notificationsRepo = mock(NotificationsRepo.class);
+        simpMessagingTemplate = mock(SimpMessagingTemplate.class);
 
-        service = new NotificationService(entityManager, notificationsRepo);
+        service = new NotificationService(entityManager, simpMessagingTemplate, notificationsRepo);
     }
 
     @Test
