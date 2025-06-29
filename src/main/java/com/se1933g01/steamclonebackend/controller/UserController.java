@@ -253,12 +253,13 @@ public class UserController {
      */
     // show library
     @GetMapping("/library")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Page<LibraryGameDTO>> showMyLibrary(
             @AuthenticationPrincipal CustomUserDetail principal,
             Pageable pageable) { // Spring sẽ tự động tạo Pageable từ params (page, size, sort)
 
         // Service sẽ nhận Pageable và trả về một Page<LibraryGameDTO>
-        Page<LibraryGameDTO> libraryPage = libraryService.showLibrary((long)9, pageable);
+        Page<LibraryGameDTO> libraryPage = libraryService.showLibrary(principal.getUser().getUserId(), pageable);
         return ResponseEntity.ok(libraryPage);
     }
 
