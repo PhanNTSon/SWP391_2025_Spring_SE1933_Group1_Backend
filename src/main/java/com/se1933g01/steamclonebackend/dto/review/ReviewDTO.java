@@ -10,9 +10,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ReviewDTO {
-    private String userName;
-    private String userAvatarUrl;
-    private long userId;
+    private String authorName;
+    private String authorAvatarUrl;
+    private long authorId;
+    private long gameId;
     private String reviewContent;
     private boolean recommended;
     private long helpful;

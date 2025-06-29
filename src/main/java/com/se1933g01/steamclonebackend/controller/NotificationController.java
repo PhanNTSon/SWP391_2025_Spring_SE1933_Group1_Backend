@@ -3,7 +3,6 @@ package com.se1933g01.steamclonebackend.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -84,8 +83,22 @@ public class NotificationController {
      */
     @PatchMapping("/markread/{notifId}")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<Void> patchNotif(@PathVariable(name = "notifId") long notificationId) {
-        notifService.patchNotif(notificationId);
+    public ResponseEntity<Void> markReadANotif(@PathVariable(name = "notifId") long notificationId) {
+        notifService.patchANotif(notificationId);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Update all notification from unread to read
+     * of an User
+     * 
+     * @param notificationId
+     * @return
+     */
+    @PatchMapping("/markreadall")
+    @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
+    public ResponseEntity<Void> markReadAllNotif(@AuthenticationPrincipal CustomUserDetail me) {
+        notifService.patchAllNotifOfUser(me.getUser().getUserId());
         return ResponseEntity.noContent().build();
     }
 
@@ -99,6 +112,19 @@ public class NotificationController {
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
     public ResponseEntity<Void> deleteNotif(@PathVariable(name = "notifId") long notificationId) {
         notifService.deleteNotif(notificationId);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Delete all notifcation of User
+     * 
+     * @param notificationId
+     * @return
+     */
+    @DeleteMapping("/deleteall")
+    @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
+    public ResponseEntity<Void> deleteAllNotif(@AuthenticationPrincipal CustomUserDetail me) {
+        notifService.deleteAllByUserId(me.getUser().getUserId());
         return ResponseEntity.noContent().build();
     }
 }

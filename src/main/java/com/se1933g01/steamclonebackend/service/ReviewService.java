@@ -5,17 +5,17 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.se1933g01.steamclonebackend.dto.review.CreateReviewDTO;
 import com.se1933g01.steamclonebackend.dto.review.ReviewDTO;
+import com.se1933g01.steamclonebackend.dto.review.ReviewSocketDTO;
 import com.se1933g01.steamclonebackend.dto.review.UpdateReviewDTO;
 import com.se1933g01.steamclonebackend.entity.game.Game;
 import com.se1933g01.steamclonebackend.entity.game.Review;
 import com.se1933g01.steamclonebackend.entity.game.ReviewKey;
-import com.se1933g01.steamclonebackend.entity.user.CustomUserDetail;
 import com.se1933g01.steamclonebackend.entity.user.User;
 import com.se1933g01.steamclonebackend.repository.GameRepo;
 import com.se1933g01.steamclonebackend.repository.ReviewRepo;
@@ -30,6 +30,12 @@ import jakarta.persistence.PersistenceContext;
  */
 @Service
 public class ReviewService {
+
+    private final String TYPE_UPDATE_REACTIONS = "UPDATE_REACTION";
+    private final String TYPE_UPDATE_CONTENT = "UPDATE_CONTENT";
+    private final String TYPE_NEW_REVIEW = "NEW_REVIEW";
+    private final String TYPE_DELETE_REVIEW = "DELETE_REVIEW";
+
     @PersistenceContext
     private EntityManager entityManager;
 
@@ -39,10 +45,15 @@ public class ReviewService {
 
     private final ReviewRepo reviewRepo;
 
-    public ReviewService(GameRepo gameRepo, UserRepo userRepo, ReviewRepo reviewRepo) {
+    private final SimpMessagingTemplate simp;
+
+    public ReviewService(EntityManager entityManager, GameRepo gameRepo, UserRepo userRepo, ReviewRepo reviewRepo,
+            SimpMessagingTemplate simp) {
+        this.entityManager = entityManager;
         this.gameRepo = gameRepo;
         this.userRepo = userRepo;
         this.reviewRepo = reviewRepo;
+        this.simp = simp;
     }
 
     /**
@@ -73,6 +84,8 @@ public class ReviewService {
 
         reviewRepo.save(review);
 
+        broadcastToChannels(review, TYPE_NEW_REVIEW);
+
         return new CreateReviewDTO(gameId, isRecommended, reviewContent);
     }
 
@@ -88,9 +101,10 @@ public class ReviewService {
             List<ReviewDTO> reviews = new ArrayList<>();
             reviewRepo.findByGame_GameId(gameId).forEach(review -> {
                 ReviewDTO reviewDTO = new ReviewDTO();
-                reviewDTO.setUserId(review.getUser().getUserId());
-                reviewDTO.setUserName(review.getUser().getUsername());
-                reviewDTO.setUserAvatarUrl(review.getUser().getAvatarUrl());
+                reviewDTO.setAuthorId(review.getUser().getUserId());
+                reviewDTO.setGameId(review.getId().getGameId());
+                reviewDTO.setAuthorName(review.getUser().getUsername());
+                reviewDTO.setAuthorAvatarUrl(review.getUser().getAvatarUrl());
                 reviewDTO.setRecommended(review.isRecommended());
                 reviewDTO.setReviewContent(review.getReviewContent());
                 reviewDTO.setHelpful(reviewRepo.countLikedByUsers(gameId, review.getUser().getUserId()));
@@ -134,6 +148,7 @@ public class ReviewService {
             target.setRecommended(dto.isRecommended());
             reviewRepo.save(target);
 
+            broadcastToChannels(target, TYPE_UPDATE_CONTENT);
             return dto;
         } else {
             return null;
@@ -150,6 +165,8 @@ public class ReviewService {
         user.getLikedReviews().add(review);
 
         userRepo.save(user);
+
+        broadcastToChannels(review, TYPE_UPDATE_REACTIONS);
     }
 
     @Transactional
@@ -162,6 +179,8 @@ public class ReviewService {
         user.getUnlikedReviews().add(review);
 
         userRepo.save(user);
+        broadcastToChannels(review, TYPE_UPDATE_REACTIONS);
+
     }
 
     @Transactional
@@ -177,6 +196,8 @@ public class ReviewService {
         user.getUnlikedReviews().remove(review);
 
         userRepo.save(user);
+
+        broadcastToChannels(review, TYPE_UPDATE_REACTIONS);
     }
 
     @Transactional
@@ -187,6 +208,19 @@ public class ReviewService {
         reviewRepo.deleteAllLiked(gameId, userId);
         reviewRepo.deleteAllUnLiked(gameId, userId);
         reviewRepo.delete(review);
+
+        broadcastToChannels(review, TYPE_DELETE_REVIEW);
     }
 
+    private void broadcastToChannels(Review nReview, String type) {
+        ReviewSocketDTO dto = new ReviewSocketDTO();
+        dto.setAuthorId(nReview.getId().getUserId());
+        dto.setGameId(nReview.getId().getGameId());
+        dto.setNewContent(nReview.getReviewContent());
+        dto.setNewRecommended(nReview.isRecommended());
+        dto.setNewLikeCount(nReview.getLikedByUsers().size());
+        dto.setNewUnLikeCount(nReview.getUnlikedByUsers().size());
+        dto.setType(type);
+        simp.convertAndSend("/topic/review." + nReview.getId().getGameId(), dto);
+    }
 }

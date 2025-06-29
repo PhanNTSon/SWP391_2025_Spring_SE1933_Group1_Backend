@@ -67,6 +67,8 @@ public class AuthService {
         user.setCountry(request.getCountry());
         user.setWalletBalance(BigDecimal.ZERO); // Changed by Pha Son 21-06
         user.setBanStatus(false); // default status
+        user.setAvatarUrl("https://avatars.fastly.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg");
+        // ↑ Added by Phan Son 28-06
 
         Role userRole = new Role();
         userRole.setRoleId(1L);

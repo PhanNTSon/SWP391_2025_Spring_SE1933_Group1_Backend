@@ -120,10 +120,15 @@ public class NotificationService {
      * @param notifId
      */
     @Transactional
-    public void patchNotif(long notifId) {
+    public void patchANotif(long notifId) {
         Notification target = notificationsRepo.findById(notifId).orElseThrow();
         target.setRead(true);
         notificationsRepo.save(target);
+    }
+
+    @Transactional
+    public void patchAllNotifOfUser(long userId) {
+        notificationsRepo.markAllRead(userId);
     }
 
     @Transactional
@@ -131,5 +136,10 @@ public class NotificationService {
         Notification target = notificationsRepo.findById(notifId)
                 .orElseThrow(() -> new EntityNotFoundException("Notif not found"));
         notificationsRepo.delete(target);
+    }
+
+    @Transactional
+    public void deleteAllByUserId(long userId) {
+        notificationsRepo.deleteAllByUserId(userId);
     }
 }
