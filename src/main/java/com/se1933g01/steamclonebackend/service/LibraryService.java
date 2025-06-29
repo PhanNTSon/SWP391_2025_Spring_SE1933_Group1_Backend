@@ -1,73 +1,102 @@
 package com.se1933g01.steamclonebackend.service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Service;
-
 import com.se1933g01.steamclonebackend.dto.GameDetailDTO;
-import com.se1933g01.steamclonebackend.dto.LibraryDTO;
 import com.se1933g01.steamclonebackend.dto.MediaDTO;
 import com.se1933g01.steamclonebackend.dto.PublisherBasicDTO;
 import com.se1933g01.steamclonebackend.dto.TagDTO;
+import com.se1933g01.steamclonebackend.dto.user.LibraryGameDTO;
+import com.se1933g01.steamclonebackend.entity.user.Library;
 import com.se1933g01.steamclonebackend.entity.game.Game;
-import com.se1933g01.steamclonebackend.entity.user.User;
-import com.se1933g01.steamclonebackend.repository.UserRepo;
+import com.se1933g01.steamclonebackend.repository.LibraryRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.EntityNotFoundException;
+import java.util.stream.Collectors;
+
 @Service
 public class LibraryService {
 
-    private UserRepo userRepo;
-    private static final String USER_NOT_FOUND_MSG = "User not found";
+    private final LibraryRepository libraryRepository;
 
-    public LibraryService(UserRepo userRepo) {
-        this.userRepo = userRepo;
+    @Autowired
+    public LibraryService(LibraryRepository libraryRepository) {
+        this.libraryRepository = libraryRepository;
     }
+
     /**
-     * Show library of a user.
-     * 
-     * @author Ba Thanh
-     * @param userId
-     * @return LibraryDTO containing user's library
+     * Lấy thư viện game của một người dùng, có hỗ trợ phân trang và sắp xếp.
+     *
+     * @param userId   ID của người dùng.
+     * @param pageable Đối tượng phân trang và sắp xếp.
+     * @return một đối tượng Page chứa các LibraryGameDTO.
      */
-    public LibraryDTO showLibrary(Long userId) {
-        User user = userRepo.findByIdWithLibraryGames(userId);
-        if (user == null)
-            throw new EntityNotFoundException(USER_NOT_FOUND_MSG);
-        LibraryDTO libraryDTO = new LibraryDTO();
-        List<GameDetailDTO> gameDetailList = new ArrayList<>();
-        for (Game game : user.getGames()) {
-            GameDetailDTO gameInLibrary = new GameDetailDTO();
-            // add game detail
-            gameInLibrary.setGameId(game.getGameId());
-            gameInLibrary.setPublisher(new PublisherBasicDTO(game.getPublisher().getPublisherId(),
-                    game.getPublisher().getPublisherName()));
-            gameInLibrary.setName(game.getName());
-            gameInLibrary.setReleaseDate(game.getReleaseDate());
-            gameInLibrary.setState(game.getState());
-            gameInLibrary.setPrice(game.getPrice());
-            gameInLibrary.setShortDescription(game.getShortDescription());
-            gameInLibrary.setFullDescription(game.getFullDescription());
-            gameInLibrary.setTotalPurchased(game.getTotalPurchased());
-            gameInLibrary.setTags(game.getTags().stream()
+    @Transactional(readOnly = true)
+    public Page<LibraryGameDTO> showLibrary(Long userId, Pageable pageable) {
+        // 1. Gọi repository để lấy một trang các bản ghi Library
+        Page<Library> libraryPage = libraryRepository.findByIdUserId(userId, pageable);
+
+        // 2. Sử dụng hàm map của Page để chuyển đổi mỗi Library entity thành một
+        // LibraryGameDTO
+        return libraryPage.map(this::mapLibraryEntryToDto);
+    }
+
+    /**
+     * Hàm helper để chuyển đổi một entity Library thành một LibraryGameDTO.
+     * Phiên bản này sẽ tạo một GameDetailDTO hoàn chỉnh theo yêu cầu.
+     */
+    private LibraryGameDTO mapLibraryEntryToDto(Library libraryEntry) {
+        Game gameEntity = libraryEntry.getGame();
+
+        // Bước A: Tạo một đối tượng GameDetailDTO hoàn chỉnh từ Game Entity
+        GameDetailDTO gameDetail = new GameDetailDTO();
+        gameDetail.setGameId(gameEntity.getGameId());
+
+        if (gameEntity.getPublisher() != null) {
+            gameDetail.setPublisher(new PublisherBasicDTO(gameEntity.getPublisher().getPublisherId(),
+                    gameEntity.getPublisher().getPublisherName()));
+        }
+
+        gameDetail.setName(gameEntity.getName());
+        gameDetail.setReleaseDate(gameEntity.getReleaseDate());
+        gameDetail.setState(gameEntity.getState());
+        gameDetail.setPrice(gameEntity.getPrice());
+        gameDetail.setShortDescription(gameEntity.getShortDescription());
+        gameDetail.setFullDescription(gameEntity.getFullDescription());
+        gameDetail.setTotalPurchased(gameEntity.getTotalPurchased());
+
+        if (gameEntity.getTags() != null) {
+            gameDetail.setTags(gameEntity.getTags().stream()
                     .map(tag -> new TagDTO(tag.getTagId(), tag.getTagName()))
                     .collect(Collectors.toSet()));
-            gameInLibrary.setMedia(game.getMedia().stream()
+        }
+
+        if (gameEntity.getMedia() != null) {
+            gameDetail.setMedia(gameEntity.getMedia().stream()
                     .map(media -> new MediaDTO(media.getMediaId(), media.getUrl(), media.getType()))
                     .toList());
-            gameInLibrary.setOs(game.getOs());
-            gameInLibrary.setStorage(game.getStorage());
-            gameInLibrary.setProcessor(game.getProcessor());
-            gameInLibrary.setMemory(game.getMemory());
-            gameInLibrary.setAdditionalNotes(game.getAdditionalNotes());
-            gameInLibrary.setGraphics(game.getGraphics());
-            // add gamedetail into list
-            gameDetailList.add(gameInLibrary);
         }
-        libraryDTO.setUserId(userId);
-        libraryDTO.setLibrary(gameDetailList);
-        return libraryDTO;
+
+        gameDetail.setOs(gameEntity.getOs());
+        gameDetail.setStorage(gameEntity.getStorage());
+        gameDetail.setProcessor(gameEntity.getProcessor());
+        gameDetail.setMemory(gameEntity.getMemory());
+        gameDetail.setAdditionalNotes(gameEntity.getAdditionalNotes());
+        gameDetail.setGraphics(gameEntity.getGraphics());
+
+        // Bước B: Tạo DTO chính cho game trong thư viện
+        LibraryGameDTO libraryGameDTO = new LibraryGameDTO();
+        libraryGameDTO.setGameDetail(gameDetail); // Gán đối tượng GameDetailDTO vừa tạo
+
+        // Chuyển đổi LocalDate thành LocalDateTime (nếu cần)
+        if (libraryEntry.getDateAdded() != null) {
+            libraryGameDTO.setDateAdded(libraryEntry.getDateAdded());
+        }
+
+        libraryGameDTO.setPlaytimeInMillis(libraryEntry.getPlaytimeInMillis());
+
+        return libraryGameDTO;
     }
 }
