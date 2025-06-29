@@ -65,7 +65,7 @@ public class ReviewController {
      * @return
      */
     @GetMapping("/list/{gameId}")
-    @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
+    @PreAuthorize("permitAll")
     public ResponseEntity<List<ReviewDTO>> getReviewList(@PathVariable("gameId") Long gameId) {
         return ResponseEntity.ok(reviewService.getGameReviewList(gameId));
     }
@@ -160,10 +160,10 @@ public class ReviewController {
      * @param userId
      * @return
      */
-    @DeleteMapping("/delete")
+    @DeleteMapping("/delete/{gameId}")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
     public ResponseEntity<Void> deleteReview(@AuthenticationPrincipal CustomUserDetail me,
-            @RequestBody Long gameId) {
+            @PathVariable(name = "gameId") Long gameId) {
         reviewService.deleteReview(me.getUser().getUserId(), gameId);
         return ResponseEntity.noContent().build();
     }
