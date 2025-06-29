@@ -1,5 +1,7 @@
 package com.se1933g01.steamclonebackend.controller;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,7 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.se1933g01.steamclonebackend.dto.GameBasicDTO;
-import com.se1933g01.steamclonebackend.dto.LibraryDTO;
 import com.se1933g01.steamclonebackend.dto.community.ConversationDTO;
 import com.se1933g01.steamclonebackend.dto.community.FriendshipDTO;
 import com.se1933g01.steamclonebackend.dto.community.InviteDTO;
@@ -23,6 +24,8 @@ import com.se1933g01.steamclonebackend.dto.user.EmailChangeConfirmDTO;
 import com.se1933g01.steamclonebackend.dto.user.EmailChangeRequestDTO;
 import com.se1933g01.steamclonebackend.dto.community.SearchResult;
 import com.se1933g01.steamclonebackend.dto.user.FriendDTO;
+import com.se1933g01.steamclonebackend.dto.user.LibraryDTO;
+import com.se1933g01.steamclonebackend.dto.user.LibraryGameDTO;
 import com.se1933g01.steamclonebackend.dto.user.UserDetailDTO;
 import com.se1933g01.steamclonebackend.dto.user.UserUpdateDTO;
 import com.se1933g01.steamclonebackend.entity.transaction.Transaction;
@@ -243,13 +246,20 @@ public class UserController {
     }
 
     /* author: bathanh */
+    /**
+     * 
+     * @edited kerri
+     * @return
+     */
     // show library
     @GetMapping("/library")
-    @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<LibraryDTO> showLibrary(@AuthenticationPrincipal CustomUserDetail me) {
-        Long userId = me.getUser().getUserId();
-        LibraryDTO dto = libraryService.showLibrary(userId);
-        return ResponseEntity.ok(dto);
+    public ResponseEntity<Page<LibraryGameDTO>> showMyLibrary(
+            @AuthenticationPrincipal CustomUserDetail principal,
+            Pageable pageable) { // Spring sẽ tự động tạo Pageable từ params (page, size, sort)
+
+        // Service sẽ nhận Pageable và trả về một Page<LibraryGameDTO>
+        Page<LibraryGameDTO> libraryPage = libraryService.showLibrary((long)9, pageable);
+        return ResponseEntity.ok(libraryPage);
     }
 
     /* author: bathanh */

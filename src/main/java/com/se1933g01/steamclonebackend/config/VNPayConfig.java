@@ -4,7 +4,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.springframework.context.annotation.Configuration;
-
+import com.se1933g01.steamclonebackend.repository.AddingGameRequestRepo;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.io.UnsupportedEncodingException;
@@ -12,8 +12,11 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-@Configuration
 public class VNPayConfig {
+
+    private VNPayConfig() {
+        throw new IllegalStateException("Ultility class");
+    }
 
     public static String hmacSHA512(final String key, final String data) {
         try {
@@ -46,7 +49,7 @@ public class VNPayConfig {
         while (itr.hasNext()) {
             String fieldName = itr.next();
             String fieldValue = fields.get(fieldName);
-            if ((fieldValue != null) && (fieldValue.length() > 0)) {
+            if ((fieldValue != null) && (!fieldValue.isEmpty())) {
                 // Thêm vào chuỗi hash
                 hashData.append(fieldName);
                 hashData.append('=');

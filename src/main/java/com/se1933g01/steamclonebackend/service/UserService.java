@@ -12,11 +12,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.se1933g01.steamclonebackend.dto.BannedUserDTO;
 import com.se1933g01.steamclonebackend.dto.GameDetailDTO;
-import com.se1933g01.steamclonebackend.dto.LibraryDTO;
 import com.se1933g01.steamclonebackend.dto.MediaDTO;
 import com.se1933g01.steamclonebackend.dto.PublisherBasicDTO;
 import com.se1933g01.steamclonebackend.dto.TagDTO;
 import com.se1933g01.steamclonebackend.dto.user.FriendDTO;
+import com.se1933g01.steamclonebackend.dto.user.LibraryDTO;
 import com.se1933g01.steamclonebackend.dto.user.UserDetailDTO;
 import com.se1933g01.steamclonebackend.dto.user.UserUpdateDTO;
 import com.se1933g01.steamclonebackend.entity.community.Friendship;
