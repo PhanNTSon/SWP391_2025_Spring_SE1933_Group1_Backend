@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.se1933g01</groupId>
-	<artifactId>steam_clone_backend</artifactId>
+	<artifactId>steamclonebackend</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>steam_clone_backend</name>
+	<name>steamclonebackend</name>
 	<description>Demo project for Spring Boot</description>
 	<url/>
 	<licenses>
@@ -175,6 +175,14 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-websocket</artifactId>
 		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/junit/junit -->
+<dependency>
+    <groupId>junit</groupId>
+    <artifactId>junit</artifactId>
+    <version>4.13.2</version>
+    <scope>test</scope>
+</dependency>
 	</dependencies>
 
 	<build>
