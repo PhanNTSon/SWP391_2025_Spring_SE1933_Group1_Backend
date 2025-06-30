@@ -158,4 +158,15 @@ public class AuthService {
     public boolean emailExists(String email) {
         return userRepo.existsByEmail(email);
     }
+
+
+    /**
+     * @author Loc Phan
+     * @param username
+     * @return true if username exists, false otherwise
+     */
+    public boolean usernameExists(String username) {
+        return userRepo.existsByUsername(username);
+    }
+    
 }

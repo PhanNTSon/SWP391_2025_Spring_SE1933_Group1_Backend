@@ -14,6 +14,7 @@ import com.se1933g01.steam_clone_backend.dto.LoginDTO;
 import com.se1933g01.steam_clone_backend.dto.RegisterRequestDTO;
 import com.se1933g01.steam_clone_backend.service.AuthService;
 import com.se1933g01.steam_clone_backend.service.EmailService;
+import com.se1933g01.steam_clone_backend.service.EmailVerificationService;
 
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +32,7 @@ public class AuthController {
     @Autowired
     private AuthService authService;
     @Autowired
-    private EmailService emailService; 
+    private EmailVerificationService emailverificationService;
 
     @PostMapping("/register")
     @PreAuthorize("permitAll()")
@@ -52,4 +53,32 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody LoginDTO request) {
         return authService.login(request);
     }
+
+    @GetMapping("/check-username")
+    @PreAuthorize("permitAll()")
+    public ResponseEntity<Map<String, Boolean>> checkUsername(@RequestParam String username) {
+        boolean usernameExists = authService.usernameExists(username);
+        return ResponseEntity.ok().body(Map.of("available", !usernameExists));
+    }
+
+    @PostMapping("/send-verification-otp")
+    public ResponseEntity<?> sendOtp(@RequestBody Map<String, String> req) {
+        String email = req.get("email");
+        emailverificationService.sendOtpToEmail(email);
+        return ResponseEntity.ok("OTP sent to email.");
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<?> verifyOtp(@RequestBody Map<String, String> req) {
+        String email = req.get("email");
+        String otp = req.get("otp");
+
+        boolean valid = emailverificationService.verifyOtp(email, otp);
+        if (valid) {
+            return ResponseEntity.ok("OTP verified successfully.");
+        } else {
+            return ResponseEntity.status(400).body("Invalid or expired OTP.");
+        }
+    }
+
 }

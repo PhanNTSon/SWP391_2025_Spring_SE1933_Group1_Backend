@@ -58,6 +58,10 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             userRepo.save(user);
         }
 
+        System.out.println("Authenticated user: " + email);
+        System.out.println("User found/created: " + user.getUsername());
+        System.out.println("User role: " + user.getRole());
+        System.out.println("User avatar: " + user.getAvatarUrl());
         String jwt = jwtUtil.generateToken(user.getUsername(), user.getUserId(), user.getRole().getRoleName(),
                 user.getAvatarUrl()); // Added by Phan Son 21-06
 
