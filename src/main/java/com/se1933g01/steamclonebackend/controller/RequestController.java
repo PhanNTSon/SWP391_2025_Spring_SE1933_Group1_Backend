@@ -11,11 +11,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.se1933g01.steamclonebackend.dto.AddingGameRequestDTO;
 import com.se1933g01.steamclonebackend.dto.BannedUserDTO;
@@ -26,6 +28,7 @@ import com.se1933g01.steamclonebackend.service.CloudinaryService;
 import com.se1933g01.steamclonebackend.service.GoogleDriveService;
 import com.se1933g01.steamclonebackend.service.RequestService;
 import com.se1933g01.steamclonebackend.service.UserService;
+import com.se1933g01.steamclonebackend.utils.UploadProgressTracker;
 
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -49,19 +52,21 @@ public class RequestController {
     private final RequestService publisherService;
     private final CloudinaryService cloudinaryService;
     private final UserService userService;
+    private final UploadProgressTracker tracker;
 
     public RequestController(
     RequestService requestService,
     GoogleDriveService googleDriveService,
     RequestService publisherService,
     CloudinaryService cloudinaryService,
-    UserService userService
+    UserService userService, UploadProgressTracker tracker
 ) {
     this.requestService = requestService;
     this.googleDriveService = googleDriveService;
     this.publisherService = publisherService;
     this.cloudinaryService = cloudinaryService;
     this.userService = userService;
+    this.tracker = tracker;
 }
     private ResponseEntity<Map<String, String>> handleAction(Runnable action, String successMsg, String failMsg) {
         Map<String, String> response = new HashMap<>();
@@ -246,21 +251,27 @@ public class RequestController {
                 "fileName", fileId.get(1)));
     }
 
-    @PostMapping("/file/upload/test")
+    @GetMapping("/file/upload/test")
     @PreAuthorize("hasRole('PUBLISHER')")
-    public ResponseEntity<Map<String, String>> getUploadUrl(@RequestParam String fileName) throws IOException {
-        if (fileName == null || fileName.isBlank()) {
-    throw new IllegalArgumentException("fileName is missing");
-}
-
-    System.out.println(fileName);
-    String uploadUrl = googleDriveService.createResumableUploadSession(fileName,"application/zip");
-        System.out.println(uploadUrl);
-    Map<String, String> responseBody = new HashMap<>();
-    responseBody.put("uploadUrl", uploadUrl);
-
-    return ResponseEntity.ok(responseBody); // 200 OK with body
+    public ResponseEntity<String> getUploadUrl(@RequestParam String fileName, @RequestParam String mimeType) {
+        try {
+            String uploadUrl = googleDriveService.createResumableUploadSession(fileName, mimeType);
+            return ResponseEntity.ok(uploadUrl);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to create resumable upload session");
+        }
     }
+
+    @GetMapping(value = "/progress", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter streamProgress() {
+        SseEmitter emitter = new SseEmitter();
+        tracker.register(emitter);
+        return emitter;
+    }
+
+
+
 
 
     @GetMapping("/file/download/{fileId}")
@@ -270,7 +281,7 @@ public class RequestController {
     }
 
     @DeleteMapping("/file/delete/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','PUBLISHER')")
     public ResponseEntity<Map<String, String>> deleteGame(@PathVariable("id") String fileId) throws IOException {
         googleDriveService.deleteFile(fileId);
         return ResponseEntity.ok(Map.of(RESPONSE_MESSAGE_KEY, "File deleted successfully"));
