@@ -23,4 +23,5 @@ public class AddingGameRequestDTO {
     private List<String> mediaUrls;
     private String publisherName;
     private String publisherId;
+    private String sendDate;
 }

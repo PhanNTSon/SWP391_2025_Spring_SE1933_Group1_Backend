@@ -174,14 +174,20 @@ public class RequestService {
         
         return addingGameRequestPage.map(addingGameRequest -> {
             modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
-            return modelMapper.map(addingGameRequest, AddingGameRequestDTO.class);
+            AddingGameRequestDTO addingGameRequestDTO = modelMapper.map(addingGameRequest, AddingGameRequestDTO.class);
+            addingGameRequestDTO.setPublisherName(addingGameRequest.getRequest().getUser().getPublisher().getPublisherName());
+            addingGameRequestDTO.setSendDate(addingGameRequest.getRequest().getTimeCreated().toString());
+            return addingGameRequestDTO;
         });
     }
     public Page<PublisherApplyRequestDTO> getAllPublisherApplyRequest(Pageable pageable) {
         Page<PublisherApplyRequest> publisherApplyRequestPage = publisherApplyRequestRepo.findAllByRequestStateZero(pageable);
         return publisherApplyRequestPage.map(publisherApplyRequest -> {
             modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
-            return modelMapper.map(publisherApplyRequest, PublisherApplyRequestDTO.class);
+            PublisherApplyRequestDTO publisherApplyRequestDTO = modelMapper.map(publisherApplyRequest, PublisherApplyRequestDTO.class);
+            publisherApplyRequestDTO.setUsername(publisherApplyRequest.getRequest().getUser().getUsername());
+            publisherApplyRequestDTO.setCreatedDate(publisherApplyRequest.getRequest().getTimeCreated().toString());
+            return publisherApplyRequestDTO;
         });
     }
     public Page<FeedbackDTO> getAllFeedback(Pageable pageable) {
@@ -191,6 +197,7 @@ public class RequestService {
             FeedbackDTO feedbackDTO = modelMapper.map(feedback, FeedbackDTO.class);
             feedbackDTO.setUserName(feedbackRepo.findUserNameByRequestId(feedback.getRequest().getRequestId()));
             feedbackDTO.setUserId(Long.parseLong(feedbackRepo.findUserIdByRequestId(feedback.getRequest().getRequestId())));
+            feedbackDTO.setCreatedDate(feedback.getRequest().getTimeCreated().toString());
             return feedbackDTO;
         });
     }

@@ -12,4 +12,6 @@ public class PublisherApplyRequestDTO {
     String country;
     String imageUrl;
     String userId;
+    String username;
+    String createdDate;
 }
