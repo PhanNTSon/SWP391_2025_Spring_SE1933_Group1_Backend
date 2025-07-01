@@ -32,7 +32,7 @@ public class Review {
     @EmbeddedId
     private ReviewKey id;
 
-    @Column(name = "ReviewContent", columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "ReviewContent")
     private String reviewContent;
 
     @Column(name = "TimeCreated")

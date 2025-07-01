@@ -14,15 +14,22 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(name = "PasswordResetToken")
 public class PasswordResetToken {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "TokenID")
     private Long tokenID;
 
+    @Column(name = "UserID")
     private Long userID;
+    
+    @Column(name = "OTP")
     private String otp;
+
+    @Column(name = "ExpiryTime")
     private LocalDateTime expiryTime;
+
+    @Column(name = "CreateAt")
     private LocalDateTime createdAt;
 }
-
-

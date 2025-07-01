@@ -51,16 +51,16 @@ public class Game {
     @Column(name = "Price")
     private BigDecimal price;
 
-    @Column(name = "ShortDescription", columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "ShortDescription")
     private String shortDescription;
 
-    @Column(name = "FullDescription", columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "FullDescription")
     private String fullDescription;
 
     @Column(name = "TotalPurchased")
     private int totalPurchased;
 
-    @Column(name = "Os")
+    @Column(name = "OS")
     private String os;
     @Column(name = "Storage")
     private String storage;

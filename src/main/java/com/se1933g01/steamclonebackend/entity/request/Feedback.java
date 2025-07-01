@@ -12,6 +12,7 @@ import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
+
 @Data
 @Entity
 @Table(name = "Feedback")
@@ -20,11 +21,11 @@ public class Feedback {
     @Column(name = "RequestID")
     private long requestId;
 
-    @Column(name = "Subject",columnDefinition = "NVARCHAR(256)")
+    @Column(name = "Subject")
     private String subject;
-    @Column(name = "Message",columnDefinition = "NVARCHAR(2048)")
+    @Column(name = "Message")
     private String message;
-    @Column(name = "Response",columnDefinition = "NVARCHAR(2048)")
+    @Column(name = "Response")
     private String response;
     @Column(name = "MediaUrls")
     @ElementCollection

@@ -30,12 +30,15 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * @Author: Phan Son
  */
-@Data
+@Setter
+@Getter
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
@@ -59,7 +62,7 @@ public class User {
         @Column(name = "WalletBalance")
         private BigDecimal walletBalance;
 
-        @Column(name = "AvatarUrl")
+        @Column(name = "AvatarURL")
         private String avatarUrl;
 
         @Column(name = "Country")
