@@ -1,15 +1,12 @@
-# Use OpenJDK 21 base image
-FROM eclipse-temurin:21-jdk-jammy
-
-# Set working directory
+# ======== First stage: Build JAR =========
+FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /app
+COPY . .
+RUN mvn clean package -DskipTests
 
-# Copy built JAR file
-ARG JAR_FILE=target/*.jar
-COPY ${JAR_FILE} app.jar
-
-# Expose port (not strictly needed on Render, but good practice)
+# ======== Second stage: Run app ==========
+FROM eclipse-temurin:21-jdk-jammy
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
-
-# Run the JAR
 ENTRYPOINT ["java", "-jar", "app.jar"]
