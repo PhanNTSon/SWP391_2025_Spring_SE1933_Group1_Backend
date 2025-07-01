@@ -29,6 +29,8 @@ public class CartService {
     private final TransactionRepo transactionRepo;
     private final SimpMessagingTemplate simp; // Added by Phan Son 28-06
 
+    private final String SOCKET_CART_COUNT_CHANNEL = "/queue/cart.count";
+
     public CartService(UserRepo userRepo, GameRepo gameRepo, TransactionRepo transactionRepo,
             SimpMessagingTemplate simp) {
         this.userRepo = userRepo;
@@ -83,7 +85,7 @@ public class CartService {
 
         // Added by Phan Son 28-06
         CartDTO result = getCart(userId);
-        simp.convertAndSendToUser(user.getUsername(), "/queue/notification.cart", result.getListCart().size());
+        simp.convertAndSendToUser(user.getUsername(), SOCKET_CART_COUNT_CHANNEL, result.getListCart().size());
         // --!!
 
         return result;
@@ -102,7 +104,7 @@ public class CartService {
 
         // Added by Phan Son 28-06
         CartDTO result = getCart(userId);
-        simp.convertAndSendToUser(user.getUsername(), "/queue/notification.cart", result.getListCart().size());
+        simp.convertAndSendToUser(user.getUsername(), SOCKET_CART_COUNT_CHANNEL, result.getListCart().size());
         // --!!
 
         return result;
@@ -184,6 +186,12 @@ public class CartService {
         user.getCartGames().removeAll(gamesToBuy);
         user.setGames(ownedGames);
         userRepo.save(user);
-        return getCart(userId);
+
+        // Added by Phan Son 30-06
+        CartDTO result = getCart(userId);
+        simp.convertAndSendToUser(user.getUsername(), SOCKET_CART_COUNT_CHANNEL, result.getListCart().size());
+        // --!!
+
+        return result;
     }
 }

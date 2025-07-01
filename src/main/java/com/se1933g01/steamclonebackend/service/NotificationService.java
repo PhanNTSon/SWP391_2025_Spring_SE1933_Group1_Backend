@@ -25,12 +25,17 @@ public class NotificationService {
     private final EntityManager entityManager;
     private final SimpMessagingTemplate simpMessagingTemplate;
     private final NotificationsRepo notificationsRepo;
+    private final String SOCKET_NOTIFICATION_ALL = "/queue/notification.all";
 
     public NotificationService(EntityManager entityManager, SimpMessagingTemplate simpMessagingTemplate,
             NotificationsRepo notificationsRepo) {
         this.entityManager = entityManager;
         this.simpMessagingTemplate = simpMessagingTemplate;
         this.notificationsRepo = notificationsRepo;
+    }
+
+    private void sendMessageListAllNotif(String username, long userId) {
+        simpMessagingTemplate.convertAndSendToUser(username, SOCKET_NOTIFICATION_ALL, getNotificationsList(userId));
     }
 
     /**
@@ -105,7 +110,8 @@ public class NotificationService {
                 saved.getNotificationType(),
                 saved.getNotificationContent(),
                 saved.isRead());
-        simpMessagingTemplate.convertAndSendToUser(saved.getUser().getUsername(), "/queue/notifications", dto);
+
+        sendMessageListAllNotif(saved.getUser().getUsername(), saved.getUser().getUserId());
 
         CreateNotificationDTO returnNotif = new CreateNotificationDTO();
         returnNotif.setNotificationContent(notifContent);
@@ -124,11 +130,17 @@ public class NotificationService {
         Notification target = notificationsRepo.findById(notifId).orElseThrow();
         target.setRead(true);
         notificationsRepo.save(target);
+
+        // Send full list of notification to /user/queue/notification.all
+        sendMessageListAllNotif(target.getUser().getUsername(), target.getUser().getUserId());
     }
 
     @Transactional
     public void patchAllNotifOfUser(long userId) {
         notificationsRepo.markAllRead(userId);
+
+        User user = entityManager.getReference(User.class, userId);
+        sendMessageListAllNotif(user.getUsername(), userId);
     }
 
     @Transactional
@@ -136,10 +148,16 @@ public class NotificationService {
         Notification target = notificationsRepo.findById(notifId)
                 .orElseThrow(() -> new EntityNotFoundException("Notif not found"));
         notificationsRepo.delete(target);
+
+        sendMessageListAllNotif(target.getUser().getUsername(), target.getUser().getUserId());
+
     }
 
     @Transactional
     public void deleteAllByUserId(long userId) {
         notificationsRepo.deleteAllByUserId(userId);
+
+        User user = entityManager.getReference(User.class, userId);
+        sendMessageListAllNotif(user.getUsername(), userId);
     }
 }
