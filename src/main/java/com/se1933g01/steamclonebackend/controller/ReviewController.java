@@ -18,6 +18,7 @@ import com.se1933g01.steamclonebackend.dto.review.ReviewDTO;
 import com.se1933g01.steamclonebackend.dto.review.UpdateReviewDTO;
 import com.se1933g01.steamclonebackend.entity.user.CustomUserDetail;
 import com.se1933g01.steamclonebackend.service.ReviewService;
+import com.se1933g01.steamclonebackend.utils.GeminiContentModerator;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -50,8 +51,16 @@ public class ReviewController {
      */
     @PostMapping("/post")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<CreateReviewDTO> createReview(@RequestBody CreateReviewDTO dto,
+    public ResponseEntity<?> createReview(@RequestBody CreateReviewDTO dto,
             @AuthenticationPrincipal CustomUserDetail me) {
+        try {
+            if (GeminiContentModerator.isViolating(dto.getReviewContent())) {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                        .body("Your review contains inappropriate content.");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
         CreateReviewDTO result = reviewService.createReview(me.getUser().getUserId(), dto.getGameId(),
                 dto.getReviewContent(),
                 dto.isRecommended());
@@ -92,9 +101,18 @@ public class ReviewController {
      */
     @PutMapping("/update/{gameId}")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<UpdateReviewDTO> updateReview(@RequestBody UpdateReviewDTO dto,
+    public ResponseEntity<?> updateReview(@RequestBody UpdateReviewDTO dto,
             @PathVariable("gameId") Long gameId,
             @AuthenticationPrincipal CustomUserDetail me) {
+
+        try {
+            if (GeminiContentModerator.isViolating(dto.getReviewContent())) {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                        .body("Your review contains inappropriate content.");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
         UpdateReviewDTO result = reviewService.updateReview(gameId, dto, me.getUser().getUserId());
         return ResponseEntity.ok(result);
     }
