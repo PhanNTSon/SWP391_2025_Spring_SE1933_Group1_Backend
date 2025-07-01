@@ -265,7 +265,7 @@ public class RequestController {
 
     @GetMapping(value = "/progress", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter streamProgress() {
-        SseEmitter emitter = new SseEmitter();
+        SseEmitter emitter = new SseEmitter(0L);
         tracker.register(emitter);
         return emitter;
     }
