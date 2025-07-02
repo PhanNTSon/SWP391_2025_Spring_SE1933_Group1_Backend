@@ -76,6 +76,11 @@ public class AddingGameRequest {
     @CollectionTable(name = "AddingGameRequest_mediaUrls", joinColumns = @JoinColumn(name = "RequestID"))
     private List<String> mediaUrls;
 
+    @Column(name = "Tags")
+    @ElementCollection
+    @CollectionTable(name = "AddingGameRequest_tags", joinColumns = @JoinColumn(name = "RequestID"))
+    private List<Integer> tags;
+
     // ================ Relationships =============
 
     @OneToOne

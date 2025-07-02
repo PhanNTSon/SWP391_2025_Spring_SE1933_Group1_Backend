@@ -2,7 +2,9 @@
 package com.se1933g01.steamclonebackend.service;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
@@ -16,6 +18,7 @@ import com.se1933g01.steamclonebackend.dto.FeedbackDTO;
 import com.se1933g01.steamclonebackend.dto.PublisherApplyRequestDTO;
 import com.se1933g01.steamclonebackend.entity.game.Game;
 import com.se1933g01.steamclonebackend.entity.game.Media;
+import com.se1933g01.steamclonebackend.entity.game.Tag;
 import com.se1933g01.steamclonebackend.entity.request.AddingGameRequest;
 import com.se1933g01.steamclonebackend.entity.request.Feedback;
 import com.se1933g01.steamclonebackend.entity.request.PublisherApplyRequest;
@@ -31,6 +34,7 @@ import com.se1933g01.steamclonebackend.repository.PublisherApplyRequestRepo;
 import com.se1933g01.steamclonebackend.repository.PublisherRepo;
 import com.se1933g01.steamclonebackend.repository.RequestRepo;
 import com.se1933g01.steamclonebackend.repository.RoleRepo;
+import com.se1933g01.steamclonebackend.repository.TagRepository;
 import com.se1933g01.steamclonebackend.repository.UserRepo;
 
 import jakarta.persistence.EntityManager;
@@ -52,7 +56,7 @@ public class RequestService {
     private final MediaRepo mediaRepo;
     private final PublisherRepo publisherRepo;
     private final FeedbackRepo feedbackRepo;
-
+    private final TagRepository tagRepository;
     public RequestService(
         AddingGameRequestRepo addingGameRequestRepo,
         PublisherApplyRequestRepo publisherApplyRequestRepo,
@@ -63,7 +67,8 @@ public class RequestService {
         MediaRepo mediaRepo,
         PublisherRepo publisherRepo,
         FeedbackRepo feedbackRepo,
-        RoleRepo roleRepo
+        RoleRepo roleRepo,
+        TagRepository tagRepository
     ) {
         this.addingGameRequestRepo = addingGameRequestRepo;
         this.publisherApplyRequestRepo = publisherApplyRequestRepo;
@@ -75,6 +80,7 @@ public class RequestService {
         this.publisherRepo = publisherRepo;
         this.feedbackRepo = feedbackRepo;
         this.roleRepo = roleRepo;
+        this.tagRepository = tagRepository;
     }
     @PersistenceContext
     private EntityManager entityManager;
@@ -118,6 +124,12 @@ public class RequestService {
         List<String> mediaUrls = addingGameRequest.getMediaUrls();
         List<Media> mediaList = mediaUrls.stream().map(url -> Media.builder().game(game).url(url).type("Image").build()).collect(Collectors.toList());
         mediaRepo.saveAll(mediaList);
+
+        List<Integer> tagIds = addingGameRequest.getTags();
+        List<Tag> tags = tagRepository.findAllById(tagIds);
+        Set<Tag> tagSet = new HashSet<>(tags); 
+        game.setTags(tagSet);
+        gameRepo.save(game);
 
         request.setRequestState(1);
         requestRepo.save(request);
@@ -177,6 +189,7 @@ public class RequestService {
             AddingGameRequestDTO addingGameRequestDTO = modelMapper.map(addingGameRequest, AddingGameRequestDTO.class);
             addingGameRequestDTO.setPublisherName(addingGameRequest.getRequest().getUser().getPublisher().getPublisherName());
             addingGameRequestDTO.setSendDate(addingGameRequest.getRequest().getTimeCreated().toString());
+            addingGameRequestDTO.setPublisherId(addingGameRequest.getRequest().getUser().getPublisher().getPublisherId().toString());
             return addingGameRequestDTO;
         });
     }
@@ -187,6 +200,7 @@ public class RequestService {
             PublisherApplyRequestDTO publisherApplyRequestDTO = modelMapper.map(publisherApplyRequest, PublisherApplyRequestDTO.class);
             publisherApplyRequestDTO.setUsername(publisherApplyRequest.getRequest().getUser().getUsername());
             publisherApplyRequestDTO.setCreatedDate(publisherApplyRequest.getRequest().getTimeCreated().toString());
+            publisherApplyRequestDTO.setUserId(publisherApplyRequest.getRequest().getUser().getUserId().toString());
             return publisherApplyRequestDTO;
         });
     }
@@ -263,7 +277,7 @@ public class RequestService {
     }
 
     public PublisherApplyRequestDTO getUserPublisherApplyDetails(Long userId) {
-        PublisherApplyRequest publisherApplyRequest = publisherApplyRequestRepo.findByUserIdAndRequestStateZero(userId);
+        PublisherApplyRequest publisherApplyRequest = publisherApplyRequestRepo.findByUserIdAndRequestStateZeroAndTwo(userId);
         if(!publisherApplyRequest.getRequest().getUser().getUserId().equals(userId)){
             return null;
         }
