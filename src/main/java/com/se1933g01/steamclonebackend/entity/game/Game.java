@@ -55,7 +55,7 @@ public class Game {
     @Column(name = "ShortDescription")
     private String shortDescription;
 
-    @Column(name = "FullDescription")
+    @Column(name = "FullDescription", columnDefinition = "TEXT")
     private String fullDescription;
 
     @Column(name = "TotalPurchased")
@@ -73,12 +73,12 @@ public class Game {
     @Column(name = "Memory", length = 50)
     private String memory;
 
-    @Column(name = "AdditionalNotes")
+    @Column(name = "AdditionalNotes", columnDefinition = "TEXT")
     private String additionalNotes;
 
     @Column(name = "Graphics", length = 50)
     private String graphics;
-    
+
     // ================ Relationships =============
     @ManyToOne
     @JoinColumn(name = "PublisherID")
@@ -110,8 +110,10 @@ public class Game {
     // ================ Getter & Setter =============
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         Game game = (Game) o;
         return gameId != null && gameId.equals(game.gameId);
     }
