@@ -17,7 +17,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "TransactionDetail")
+@Table(name = "TransactionDetail", schema = "public")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -26,7 +26,7 @@ public class TransactionDetail {
     @EmbeddedId
     private CompositedKey id;
 
-    @Column(name = "Price")
+    @Column(name = "Price", precision = 10, scale = 2)
     private BigDecimal price;
 
     //================ Relationships =============

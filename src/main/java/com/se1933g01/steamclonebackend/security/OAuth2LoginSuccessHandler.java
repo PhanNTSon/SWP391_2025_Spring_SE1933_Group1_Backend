@@ -26,6 +26,7 @@ import java.math.BigDecimal;
 @Component
 public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
+    // Value get from Application.Propertise
     @Value("${frontend.url}")
     private String frontendUrl;
 

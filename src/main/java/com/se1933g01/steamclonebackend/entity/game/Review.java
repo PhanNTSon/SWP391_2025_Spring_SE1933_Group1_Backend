@@ -27,7 +27,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "Review")
+@Table(name = "Review", schema = "public")
 public class Review {
     @EmbeddedId
     private ReviewKey id;

@@ -41,7 +41,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "User")
+@Table(name = "User", schema = "public")
 public class User {
 
         @Id
@@ -49,22 +49,22 @@ public class User {
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         private Long userId;
 
-        @Column(name = "Email")
+        @Column(name = "Email", length = 100, unique = true, nullable = false)
         private String email;
 
-        @Column(name = "Username")
+        @Column(name = "Username", length = 50, unique = true, nullable = false)
         private String username;
 
-        @Column(name = "Password")
+        @Column(name = "Password", length = 255, nullable = false)
         private String password;
 
         @Column(name = "WalletBalance")
-        private BigDecimal walletBalance;
+        private BigDecimal walletBalance = BigDecimal.ZERO;
 
         @Column(name = "AvatarURL")
         private String avatarUrl;
 
-        @Column(name = "Country")
+        @Column(name = "Country", length = 50)
         private String country;
 
         @Column(name = "DoB")
@@ -73,14 +73,14 @@ public class User {
         @Column(name = "Gender")
         private Character gender;
 
-        @Column(name = "ProfileName")
+        @Column(name = "ProfileName", length = 50)
         private String profileName;
 
         @Column(name = "Summary")
         private String summary;
 
         @Column(name = "BanStatus")
-        private boolean banStatus;
+        private boolean banStatus = false;
 
         @Column(name = "CreatedAt")
         private LocalDate createdAt;
@@ -107,17 +107,13 @@ public class User {
         private Publisher publisher;
 
         @ManyToOne
-        @JoinColumn(name = "RoleID")
+        @JoinColumn(name = "RoleID", nullable = false)
         private Role role;
 
         @ManyToMany
         @JoinTable(name = "Cart", joinColumns = @JoinColumn(name = "UserID"), inverseJoinColumns = @JoinColumn(name = "GameID"))
         private Set<Game> cartGames = new HashSet<>();
-
-        @ManyToMany
-        @JoinTable(name = "Library", joinColumns = @JoinColumn(name = "UserID"), inverseJoinColumns = @JoinColumn(name = "GameID"))
-        private Set<Game> games;
-
+        
         @ManyToMany
         @JoinTable(name = "ReviewHelpful", joinColumns = @JoinColumn(name = "HelpfulUserID"), inverseJoinColumns = {
                         @JoinColumn(name = "ReviewGameID", referencedColumnName = "GameID"),

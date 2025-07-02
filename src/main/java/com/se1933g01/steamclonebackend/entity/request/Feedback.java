@@ -15,18 +15,21 @@ import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "Feedback")
+@Table(name = "Feedback", schema = "public")
 public class Feedback {
     @Id
     @Column(name = "RequestID")
     private long requestId;
 
-    @Column(name = "Subject")
+    @Column(name = "Subject", length = 256)
     private String subject;
+
     @Column(name = "Message")
     private String message;
+    
     @Column(name = "Response")
     private String response;
+    
     @Column(name = "MediaUrls")
     @ElementCollection
     @CollectionTable(name = "Feedback_mediaUrls", joinColumns = @JoinColumn(name = "RequestID"))

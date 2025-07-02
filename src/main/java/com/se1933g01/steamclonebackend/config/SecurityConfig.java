@@ -33,6 +33,7 @@ import com.se1933g01.steamclonebackend.service.UserDetailsServiceImpl;
 @EnableMethodSecurity
 public class SecurityConfig {
 
+    // Value get from Application.Propertise
     @Value("${frontend.url}")
     private String frontendUrl;
 

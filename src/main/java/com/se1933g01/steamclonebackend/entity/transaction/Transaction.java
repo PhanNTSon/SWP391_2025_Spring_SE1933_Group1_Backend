@@ -28,14 +28,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "Transaction")
+@Table(name = "Transaction", schema = "public")
 public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "TransactionID")
     private Long transactionId;
 
-    @Column(name = "TotalAmount")
+    @Column(name = "TotalAmount", precision = 10, scale = 2)
     private BigDecimal totalAmount;
 
     @Column(name = "CreatedAt")

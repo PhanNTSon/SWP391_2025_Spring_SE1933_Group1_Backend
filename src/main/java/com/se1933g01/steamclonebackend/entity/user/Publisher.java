@@ -17,32 +17,35 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "Publisher")
+@Table(name = "Publisher", schema = "public")
 public class Publisher {
     @Id
     @Column(name = "PublisherID")
     private Long publisherId;
 
-    @Column(name = "PublisherName")
+    @Column(name = "PublisherName", length = 100, nullable = false)
     private String publisherName;
 
-    @Column(name = "CardNumber")
+    @Column(name = "CardNumber", length = 20)
     private String cardNumber;
 
-    @Column(name = "LegalName")
+    @Column(name = "LegalName", length = 255)
     private String legalName;
 
-    @Column(name = "Address")
+    @Column(name = "Address", length = 255)
     private String address;
 
-    @Column(name = "SocialNumber")
+    @Column(name = "SocialNumber", length = 12)
     private String socialNumber;
 
-    @Column(name = "Country")
+    @Column(name = "Country", length = 255)
     private String country;
 
-    @Column(name = "ImageUrl")
+    @Column(name = "ImageUrl", length = 255)
     private String imageUrl;
+    
+    @Column(name = "Suspend")
+    private Integer suspend;
     // ================ Relationships =============
     @OneToOne
     @MapsId

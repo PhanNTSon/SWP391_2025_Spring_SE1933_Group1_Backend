@@ -32,14 +32,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "Game")
+@Table(name = "Game", schema = "public")
 public class Game {
     @Id
     @Column(name = "GameID")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long gameId;
 
-    @Column(name = "Name")
+    @Column(name = "Name", length = 100, nullable = false)
     private String name;
 
     @Column(name = "ReleaseDate")
@@ -48,7 +48,7 @@ public class Game {
     @Column(name = "State")
     private Boolean state;
 
-    @Column(name = "Price")
+    @Column(name = "Price", precision = 10, scale = 2)
     private BigDecimal price;
 
     @Column(name = "ShortDescription")
@@ -58,20 +58,26 @@ public class Game {
     private String fullDescription;
 
     @Column(name = "TotalPurchased")
-    private int totalPurchased;
+    private Integer totalPurchased;
 
-    @Column(name = "OS")
+    @Column(name = "OS", length = 50)
     private String os;
-    @Column(name = "Storage")
+
+    @Column(name = "Storage", length = 50)
     private String storage;
-    @Column(name = "Processor")
+
+    @Column(name = "Processor", length = 50)
     private String processor;
-    @Column(name = "Memory")
+
+    @Column(name = "Memory", length = 50)
     private String memory;
+
     @Column(name = "AdditionalNotes")
     private String additionalNotes;
-    @Column(name = "Graphics")
+
+    @Column(name = "Graphics", length = 50)
     private String graphics;
+    
     // ================ Relationships =============
     @ManyToOne
     @JoinColumn(name = "PublisherID")

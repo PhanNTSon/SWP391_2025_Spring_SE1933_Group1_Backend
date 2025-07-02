@@ -21,9 +21,9 @@ import java.io.Serializable;
 @EqualsAndHashCode
 public class LibraryId implements Serializable {
 
-    @Column(name = "UserID")
+    @Column(name = "UserID", nullable = false)
     private Long userId;
 
-    @Column(name = "GameID")
+    @Column(name = "GameID", nullable = false)
     private Long gameId;
 }
