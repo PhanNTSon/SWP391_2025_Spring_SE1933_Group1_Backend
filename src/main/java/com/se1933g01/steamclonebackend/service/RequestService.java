@@ -189,6 +189,7 @@ public class RequestService {
             AddingGameRequestDTO addingGameRequestDTO = modelMapper.map(addingGameRequest, AddingGameRequestDTO.class);
             addingGameRequestDTO.setPublisherName(addingGameRequest.getRequest().getUser().getPublisher().getPublisherName());
             addingGameRequestDTO.setSendDate(addingGameRequest.getRequest().getTimeCreated().toString());
+            addingGameRequestDTO.setPublisherId(addingGameRequest.getRequest().getUser().getPublisher().getPublisherId().toString());
             return addingGameRequestDTO;
         });
     }
@@ -199,6 +200,7 @@ public class RequestService {
             PublisherApplyRequestDTO publisherApplyRequestDTO = modelMapper.map(publisherApplyRequest, PublisherApplyRequestDTO.class);
             publisherApplyRequestDTO.setUsername(publisherApplyRequest.getRequest().getUser().getUsername());
             publisherApplyRequestDTO.setCreatedDate(publisherApplyRequest.getRequest().getTimeCreated().toString());
+            publisherApplyRequestDTO.setUserId(publisherApplyRequest.getRequest().getUser().getUserId().toString());
             return publisherApplyRequestDTO;
         });
     }
@@ -275,7 +277,7 @@ public class RequestService {
     }
 
     public PublisherApplyRequestDTO getUserPublisherApplyDetails(Long userId) {
-        PublisherApplyRequest publisherApplyRequest = publisherApplyRequestRepo.findByUserIdAndRequestStateZero(userId);
+        PublisherApplyRequest publisherApplyRequest = publisherApplyRequestRepo.findByUserIdAndRequestStateZeroAndTwo(userId);
         if(!publisherApplyRequest.getRequest().getUser().getUserId().equals(userId)){
             return null;
         }
