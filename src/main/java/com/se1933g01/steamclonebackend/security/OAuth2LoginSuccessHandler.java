@@ -2,6 +2,7 @@ package com.se1933g01.steamclonebackend.security;
 
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -24,6 +25,9 @@ import java.math.BigDecimal;
 
 @Component
 public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
+
+    @Value("${frontend.url}")
+    private String frontendUrl;
 
     private final UserRepo userRepo;
     private final JwtUtil jwtUtil;
@@ -66,7 +70,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
                 user.getAvatarUrl()); // Added by Phan Son 21-06
 
         // Redirect to frontend
-        String redirectUrl = "http://localhost:5173/oauth2/callback?token=" + jwt;
+        String redirectUrl = frontendUrl + "/oauth2/callback?token=" + jwt;
         response.sendRedirect(redirectUrl);
     }
 }
