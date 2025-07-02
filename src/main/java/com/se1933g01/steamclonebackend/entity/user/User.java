@@ -96,6 +96,7 @@ public class User {
 
         @Column(name = "EmailChangeTokenExpiry")
         private LocalDateTime emailChangeTokenExpiry;
+
         // ================ Relationships =============
         @OneToMany(mappedBy = "user")
         private List<Request> requests;
@@ -114,6 +115,9 @@ public class User {
         @JoinTable(name = "Cart", joinColumns = @JoinColumn(name = "UserID"), inverseJoinColumns = @JoinColumn(name = "GameID"))
         private Set<Game> cartGames = new HashSet<>();
         
+        @OneToMany(mappedBy = "user")
+        private Set<Library> libraryGames = new HashSet<>();
+
         @ManyToMany
         @JoinTable(name = "ReviewHelpful", joinColumns = @JoinColumn(name = "HelpfulUserID"), inverseJoinColumns = {
                         @JoinColumn(name = "ReviewGameID", referencedColumnName = "GameID"),

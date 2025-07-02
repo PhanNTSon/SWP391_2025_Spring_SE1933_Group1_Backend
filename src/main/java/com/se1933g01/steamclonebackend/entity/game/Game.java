@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.se1933g01.steamclonebackend.entity.user.Library;
 import com.se1933g01.steamclonebackend.entity.user.Publisher;
 import com.se1933g01.steamclonebackend.entity.user.User;
 
@@ -90,12 +91,15 @@ public class Game {
     // @OneToMany(mappedBy = "game")
     // private List<TransactionDetail> transactionDetails;
 
+    @OneToMany(mappedBy = "game")
+    private Set<Library> libraryGames = new HashSet<>();
+
     @ManyToMany(mappedBy = "cartGames")
     @JsonIgnore
     private Set<User> usersInCart = new HashSet<>();
 
-    @ManyToMany(mappedBy = "games")
-    private Set<User> users;
+    // @ManyToMany(mappedBy = "games")
+    // private Set<User> users;
 
     // @OneToMany(mappedBy = "game")
     // private List<Review> reviews;
