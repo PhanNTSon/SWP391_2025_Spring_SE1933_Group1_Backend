@@ -4,6 +4,7 @@ import jakarta.persistence.EntityNotFoundException;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.se1933g01.steamclonebackend.dto.CartDTO;
 import com.se1933g01.steamclonebackend.dto.GameBasicDTO;
@@ -15,6 +16,7 @@ import com.se1933g01.steamclonebackend.entity.user.Library;
 import com.se1933g01.steamclonebackend.entity.user.LibraryId;
 import com.se1933g01.steamclonebackend.entity.user.User;
 import com.se1933g01.steamclonebackend.repository.GameRepo;
+import com.se1933g01.steamclonebackend.repository.LibraryRepository;
 import com.se1933g01.steamclonebackend.repository.TransactionRepo;
 import com.se1933g01.steamclonebackend.repository.UserRepo;
 
@@ -32,13 +34,15 @@ public class CartService {
     private final TransactionRepo transactionRepo;
     private final SimpMessagingTemplate simp; // Added by Phan Son 28-06
     private final String SOCKET_CART_COUNT_CHANNEL = "/queue/cart.count";
+    private final LibraryRepository libraryRepo;
 
     public CartService(UserRepo userRepo, GameRepo gameRepo, TransactionRepo transactionRepo,
-            SimpMessagingTemplate simp) {
+            SimpMessagingTemplate simp, LibraryRepository libraryRepo) {
         this.userRepo = userRepo;
         this.gameRepo = gameRepo;
         this.transactionRepo = transactionRepo;
         this.simp = simp;
+        this.libraryRepo = libraryRepo;
     }
 
     // show cart- author: Ba Thanh
@@ -65,6 +69,7 @@ public class CartService {
         return cartDTO;
     }
 
+    @Transactional
     // add games to cart- author: Ba Thanh
     public CartDTO addGameToCart(Long userId, Long gameId) {
         User user = userRepo.findByIdWithCartGames(userId);
@@ -100,6 +105,7 @@ public class CartService {
         return result;
     }
 
+    @Transactional
     // remove games from cart- author: Ba Thanh
     public CartDTO removeGameFromCart(Long userId, Long gameId) {
         User user = userRepo.findByIdWithCartGames(userId);
@@ -135,6 +141,7 @@ public class CartService {
         // --!!
     }
 
+    @Transactional
     // checkout- author: Ba Thanh
     public CartDTO checkout(Long userId) {
         User user = userRepo.findByIdWithCartGames(userId);
@@ -208,6 +215,7 @@ public class CartService {
             library.setDateAdded(LocalDateTime.now());
 
             user.getLibraryGames().add(library);
+            libraryRepo.save(library);
             // --!!
         }
         // Remove only the games that were just bought from cart

@@ -59,7 +59,7 @@ public class User {
         private String password;
 
         @Column(name = "WalletBalance")
-        private BigDecimal walletBalance = BigDecimal.ZERO;
+        private BigDecimal walletBalance;
 
         @Column(name = "AvatarURL")
         private String avatarUrl;
