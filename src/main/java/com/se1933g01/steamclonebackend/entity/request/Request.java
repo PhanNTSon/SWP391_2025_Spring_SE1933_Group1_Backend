@@ -24,14 +24,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "Request")
+@Table(name = "Request", schema = "public")
 public class Request {
     @Id
     @Column(name = "RequestID")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long requestId;
 
-    @Column(name = "RequestType")
+    @Column(name = "RequestType", length = 50)
     private String requestType;
 
     @Column(name = "TimeCreated")
@@ -41,7 +41,7 @@ public class Request {
     private LocalDate updatedTime;
 
     @Column(name = "Status")
-    private int requestState;
+    private Integer requestState;
     
     // ================ Relationships =============
     @ManyToOne
