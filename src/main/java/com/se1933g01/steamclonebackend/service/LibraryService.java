@@ -56,7 +56,7 @@ public class LibraryService {
 
         if (gameEntity.getPublisher() != null) {
             gameDetail.setPublisher(new PublisherBasicDTO(gameEntity.getPublisher().getPublisherId(),
-                    gameEntity.getPublisher().getPublisherName()));
+                    gameEntity.getPublisher().getPublisherName(), gameEntity.getPublisher().getImageUrl()));
         }
 
         gameDetail.setName(gameEntity.getName());
