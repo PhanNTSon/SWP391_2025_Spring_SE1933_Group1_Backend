@@ -34,7 +34,7 @@ public class EntityMapper {
     public static PublisherBasicDTO toPublisherBasicDTO(Publisher publisher) {
         if (publisher == null)
             return null;
-        return new PublisherBasicDTO(publisher.getPublisherId(), publisher.getPublisherName());
+        return new PublisherBasicDTO(publisher.getPublisherId(), publisher.getPublisherName(),publisher.getImageUrl());
     }
 
     // --- Media Mapper ---
