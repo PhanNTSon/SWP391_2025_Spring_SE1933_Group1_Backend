@@ -20,7 +20,7 @@ import lombok.NoArgsConstructor;
  * @since 21-06-2025
  */
 @Entity
-@Table(name = "Friendships")
+@Table(name = "Friendships", schema = "public")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -38,7 +38,7 @@ public class Friendship {
     @JoinColumn(name = "FriendID")
     private User friend;
 
-    @Column(name = "Status")
+    @Column(name = "Status", length = 20, nullable = false)
     private String status;
 
     @Column(name = "CreatedAt")

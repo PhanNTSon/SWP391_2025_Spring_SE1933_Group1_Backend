@@ -15,10 +15,6 @@ import com.se1933g01.steamclonebackend.entity.user.User;
 public interface UserRepo extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u LEFT JOIN FETCH u.cartGames WHERE u.userId = :userId")
     User findByIdWithCartGames(@Param("userId") Long userId);
-
-    @Query("SELECT u FROM User u LEFT JOIN FETCH u.games WHERE u.userId = :userId")
-    User findByIdWithLibraryGames(@Param("userId") Long userId);
-    
     
     boolean existsByUsername(String username); //added by Loc Phan
     boolean existsByEmail(String email);
