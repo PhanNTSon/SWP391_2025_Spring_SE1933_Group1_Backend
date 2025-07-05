@@ -12,21 +12,23 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "Media")
+@Table(name = "Media", schema = "public")
 public class Media {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "MediaID")
     private long mediaId;
 
     @Column(name = "Url")
     private String url;
 
-    @Column(name = "Type")
+    @Column(name = "Type", length = 20)
     private String type;
 
     // ================ Relationships =============

@@ -86,12 +86,12 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
+		<!-- <dependency>
 			<groupId>com.microsoft.sqlserver</groupId>
 			<artifactId>mssql-jdbc</artifactId>
 			<version>12.10.0.jre11</version>
 			<scope>runtime</scope>
-		</dependency>
+		</dependency> -->
 		<!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
@@ -179,6 +179,21 @@
 			<version>4.13.2</version>
 			<scope>test</scope>
 		</dependency>
+
+		<!-- POTSGRE DB -->
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
+		<!-- DOT ENV -->
+		<dependency>
+			<groupId>io.github.cdimascio</groupId>
+			<artifactId>dotenv-java</artifactId>
+			<version>3.0.0</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>
@@ -191,6 +206,14 @@
 				<useModulePath>false</useModulePath>
 			</configuration>
 		</plugin>
+			<plugin>
+            	<groupId>org.apache.maven.plugins</groupId>
+            	<artifactId>maven-surefire-plugin</artifactId>
+            	<version>3.2.5</version> 
+            	<configuration>
+                	<argLine>@{argLine} --add-opens java.base/java.lang=ALL-UNNAMED</argLine>
+            	</configuration>
+        	</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -218,5 +241,5 @@
 		</plugins>
 	</build>
 
-	
+
 </project>

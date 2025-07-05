@@ -2,7 +2,7 @@ package com.se1933g01.steamclonebackend.entity.game;
 
 import java.io.Serializable;
 
-
+import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -18,7 +18,10 @@ import lombok.Setter;
 @AllArgsConstructor
 @Embeddable
 public class ReviewKey implements Serializable{
+    @Column(name = "GameID", nullable = false)
     private long gameId;
+
+    @Column(name = "UserID", nullable = false)
     private long userId;
 
     @Override
