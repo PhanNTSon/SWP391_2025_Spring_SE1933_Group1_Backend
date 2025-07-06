@@ -13,6 +13,9 @@ import java.util.List;
 public interface NotificationsRepo extends JpaRepository<Notification, Long> {
     List<Notification> findByUser_userId(Long userId);
 
+    @Query("SELECT n FROM Notification n WHERE n.user.userId = :userId AND n.read = false")
+    List<Notification> getUnreadList (@Param("userId") long userId);
+
     @Modifying
     @Transactional
     @Query("UPDATE Notification n SET n.read = true WHERE n.user.userId = :userId")

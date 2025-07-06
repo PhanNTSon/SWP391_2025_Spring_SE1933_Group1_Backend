@@ -34,6 +34,7 @@ public class CartService {
     private final TransactionRepo transactionRepo;
     private final SimpMessagingTemplate simp; // Added by Phan Son 28-06
     private final String SOCKET_CART_COUNT_CHANNEL = "/queue/cart.count";
+    private final String SOCKET_WALLET_BALANCE_CHANNEL = "/queue/wallet.balance";
     private final LibraryRepository libraryRepo;
 
     public CartService(UserRepo userRepo, GameRepo gameRepo, TransactionRepo transactionRepo,
@@ -43,6 +44,16 @@ public class CartService {
         this.transactionRepo = transactionRepo;
         this.simp = simp;
         this.libraryRepo = libraryRepo;
+    }
+
+    /**
+     * @author phan nt son
+     * @param userId
+     * @return numbers of games in cart of user
+     * @since 05-7-2025
+     */
+    public long getTotalGamesInCart(long userId) {
+        return this.getCart(userId).getListCart().size();
     }
 
     // show cart- author: Ba Thanh
@@ -225,6 +236,7 @@ public class CartService {
         // Added by Phan Son 30-06
         CartDTO result = getCart(userId);
         simp.convertAndSendToUser(user.getUsername(), SOCKET_CART_COUNT_CHANNEL, result.getListCart().size());
+        simp.convertAndSendToUser(user.getUsername(), SOCKET_WALLET_BALANCE_CHANNEL, user.getWalletBalance());
         // --!!
 
         return result;
