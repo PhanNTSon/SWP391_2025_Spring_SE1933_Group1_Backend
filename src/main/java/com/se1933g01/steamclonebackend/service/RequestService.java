@@ -287,19 +287,38 @@ public class RequestService {
     }
 
 
-    public void addPublisher(PublisherApplyRequestDTO publisherApplyRequestDTO, Long userId){
-        User user = userRepo.findById(userId).orElseThrow(()-> new RuntimeException(USER_NOT_FOUND_MESSAGE));
-        Request request = new Request();
-        request.setUser(user);
-        request.setRequestType("Publisher Submission");
-        request.setTimeCreated(LocalDate.now());
-        request.setRequestState(0);
-        Request savedRequest = requestRepo.save(request); 
-        modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
-        PublisherApplyRequest publisherApplyRequest = modelMapper.map(publisherApplyRequestDTO, PublisherApplyRequest.class);
-        publisherApplyRequest.setRequest(savedRequest);
-        publisherApplyRequestRepo.save(publisherApplyRequest);
+    public void addPublisher(PublisherApplyRequestDTO dto, Long userId) {
+        User user = userRepo.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        PublisherApplyRequest existingPAR = publisherApplyRequestRepo.findByRequestUserId(userId);
+        Request request;
+
+        if (existingPAR != null && existingPAR.getRequest() != null) {
+            request = existingPAR.getRequest();
+            request.setRequestState(0); // Reset or change as needed
+            request.setTimeCreated(LocalDate.now());
+            requestRepo.save(request);
+
+            modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+            PublisherApplyRequest updatedPAR = modelMapper.map(dto, PublisherApplyRequest.class);
+            updatedPAR.setRequest(request); // Important: link updated Request
+            publisherApplyRequestRepo.save(updatedPAR);
+        } else {
+            request = new Request();
+            request.setUser(user);
+            request.setRequestType("Publisher Submission");
+            request.setTimeCreated(LocalDate.now());
+            request.setRequestState(0);
+            Request savedRequest = requestRepo.save(request);
+
+            modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+            PublisherApplyRequest newPAR = modelMapper.map(dto, PublisherApplyRequest.class);
+            newPAR.setRequest(savedRequest);
+            publisherApplyRequestRepo.save(newPAR);
+        }
     }
+
+
     public void addFeedback(FeedbackDTO feedbackDTO, Long userId){
         if (feedbackDTO.getSubject().trim() == null || feedbackDTO.getSubject().trim().isBlank() ||
         feedbackDTO.getMessage().trim() == null || feedbackDTO.getMessage().trim().isBlank()) {
