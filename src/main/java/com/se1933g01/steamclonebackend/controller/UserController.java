@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.se1933g01.steamclonebackend.dto.ApiRespDTO;
 import com.se1933g01.steamclonebackend.dto.GameBasicDTO;
 import com.se1933g01.steamclonebackend.dto.community.ConversationDTO;
 import com.se1933g01.steamclonebackend.dto.community.FriendshipDTO;
@@ -167,6 +168,18 @@ public class UserController {
             response.put("message", "Checkout failed: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
+    }
+
+    /**
+     * @author phan nt son
+     * @param me
+     * @return total number of games in cart
+     * @since 05-7-2025
+     */
+    @GetMapping("/cart/total")
+    public ResponseEntity<ApiRespDTO<?>> getTotalGamesInCart(@AuthenticationPrincipal CustomUserDetail me) {
+        return ResponseEntity.ok(new ApiRespDTO<Long>(true, "SUCCESS", "TOTAL NUMBER OF GAMES IN CART",
+                cartService.getTotalGamesInCart(me.getUser().getUserId())));
     }
 
     /**
