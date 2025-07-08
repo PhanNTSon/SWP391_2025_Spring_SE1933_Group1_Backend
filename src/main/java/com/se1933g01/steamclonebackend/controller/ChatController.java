@@ -37,7 +37,8 @@ public class ChatController {
         msg.setSentAt(LocalDateTime.now());
         communityService.saveMessage(msg, msg.getSenderUsername());
 
-        messagingTemplate.convertAndSendToUser(msg.getReceiverUsername(), "/queue/messages", msg);
+        messagingTemplate.convertAndSendToUser(msg.getReceiverUsername(), "/queue/messages/" + msg.getSenderUsername(),
+                msg);
     }
 
     @SubscribeMapping("/online")
