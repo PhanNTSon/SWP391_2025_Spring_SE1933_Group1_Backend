@@ -6,36 +6,25 @@ import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.se1933g01.steamclonebackend.dto.BannedUserDTO;
-import com.se1933g01.steamclonebackend.dto.GameDetailDTO;
-import com.se1933g01.steamclonebackend.dto.MediaDTO;
-import com.se1933g01.steamclonebackend.dto.PublisherBasicDTO;
-import com.se1933g01.steamclonebackend.dto.TagDTO;
 import com.se1933g01.steamclonebackend.dto.user.FriendDTO;
-import com.se1933g01.steamclonebackend.dto.user.LibraryDTO;
 import com.se1933g01.steamclonebackend.dto.user.UserDetailDTO;
 import com.se1933g01.steamclonebackend.dto.user.UserUpdateDTO;
 import com.se1933g01.steamclonebackend.entity.community.Friendship;
-import com.se1933g01.steamclonebackend.entity.game.Game;
-import com.se1933g01.steamclonebackend.entity.transaction.Transaction;
 import com.se1933g01.steamclonebackend.entity.user.User;
 import com.se1933g01.steamclonebackend.mapper.EntityMapper;
 import com.se1933g01.steamclonebackend.repository.FriendshipRepo;
-import com.se1933g01.steamclonebackend.repository.GameRepo;
 import com.se1933g01.steamclonebackend.repository.TransactionRepo;
 import com.se1933g01.steamclonebackend.repository.UserRepo;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -60,11 +49,7 @@ public class UserService {
         this.emailService = emailService;
     }
 
-    public User getUser(Long userId) {
-        return userRepo.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_MSG));
-    }
-
+    
     // String constant for user not found message
 
     // author: Ba Thanh
@@ -97,10 +82,14 @@ public class UserService {
      * return true if game is in library, false otherwise.
      */
     public boolean isGameOwned(Long userId, Long gameId) {
-        User user = userRepo.findByIdWithLibraryGames(userId);
+        User user = userRepo.findById(userId).orElse(null);
         if (user == null)
             return false;
-        return user.getGames().stream().anyMatch(game -> game.getGameId().equals(gameId));
+
+        // fixed by Phan Son 2-7
+        return user.getLibraryGames().stream()
+                .anyMatch(lib -> lib.getGame().getGameId().equals(gameId));
+        // --!!
     }
 
     /* author: bathanh */

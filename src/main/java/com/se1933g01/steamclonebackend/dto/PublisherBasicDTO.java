@@ -12,4 +12,5 @@ import lombok.AllArgsConstructor;
 public class PublisherBasicDTO {
     private Long publisherId;
     private String publisherName;
+    private String imageUrl;
 }

@@ -2,6 +2,8 @@ package com.se1933g01.steamclonebackend.controller;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -12,12 +14,14 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.se1933g01.steamclonebackend.dto.ApiRespDTO;
 import com.se1933g01.steamclonebackend.dto.review.CreateReviewDTO;
 import com.se1933g01.steamclonebackend.dto.review.PatchReviewDTO;
 import com.se1933g01.steamclonebackend.dto.review.ReviewDTO;
 import com.se1933g01.steamclonebackend.dto.review.UpdateReviewDTO;
 import com.se1933g01.steamclonebackend.entity.user.CustomUserDetail;
 import com.se1933g01.steamclonebackend.service.ReviewService;
+import com.se1933g01.steamclonebackend.utils.GeminiContentModerator;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -32,6 +36,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RestController
 @RequestMapping("/review")
 public class ReviewController {
+
+    private static final Logger logger = LoggerFactory.getLogger(ReviewController.class);
 
     private final ReviewService reviewService;
     private static final String RESPONSE_STRING_OK = "SUCCESS";
@@ -50,12 +56,20 @@ public class ReviewController {
      */
     @PostMapping("/post")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<CreateReviewDTO> createReview(@RequestBody CreateReviewDTO dto,
+    public ResponseEntity<ApiRespDTO<?>> createReview(@RequestBody CreateReviewDTO dto,
             @AuthenticationPrincipal CustomUserDetail me) {
+        ApiRespDTO resp ;
+
+        if (GeminiContentModerator.isViolating(dto.getReviewContent())) {
+            resp = new ApiRespDTO<>(false, "INAPPROPRIATE_CONTENT", "Content is appropriate", null);
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                    .body(resp);
+        }
         CreateReviewDTO result = reviewService.createReview(me.getUser().getUserId(), dto.getGameId(),
                 dto.getReviewContent(),
                 dto.isRecommended());
-        return ResponseEntity.ok(result);
+                resp = new ApiRespDTO<>(true, "CREATE_SUCCESS", "Creating success", result);
+        return ResponseEntity.ok(resp);
     }
 
     /**
@@ -92,9 +106,18 @@ public class ReviewController {
      */
     @PutMapping("/update/{gameId}")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<UpdateReviewDTO> updateReview(@RequestBody UpdateReviewDTO dto,
+    public ResponseEntity<?> updateReview(@RequestBody UpdateReviewDTO dto,
             @PathVariable("gameId") Long gameId,
             @AuthenticationPrincipal CustomUserDetail me) {
+
+        try {
+            if (GeminiContentModerator.isViolating(dto.getReviewContent())) {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                        .body("Your review contains inappropriate content.");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
         UpdateReviewDTO result = reviewService.updateReview(gameId, dto, me.getUser().getUserId());
         return ResponseEntity.ok(result);
     }

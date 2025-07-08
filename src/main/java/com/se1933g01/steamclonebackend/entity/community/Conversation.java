@@ -21,7 +21,7 @@ import lombok.NoArgsConstructor;
  * @since 21-06-2025
  */
 @Entity
-@Table(name = "Conversations")
+@Table(name = "Conversations", schema = "public")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

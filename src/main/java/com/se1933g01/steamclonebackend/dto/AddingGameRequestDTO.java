@@ -24,4 +24,5 @@ public class AddingGameRequestDTO {
     private String publisherName;
     private String publisherId;
     private String sendDate;
+    private List<Integer> tags;
 }
