@@ -135,6 +135,7 @@ public class CommunityService {
 
     /**
      * Same as accept invite but with status "blocked"
+     * 
      * @param userId
      * @param friendId
      * @return
@@ -239,7 +240,7 @@ public class CommunityService {
         nMessage.setConversation(conver);
         nMessage.setSender(sender);
         nMessage.setMessageContent(msg.getContent());
-        nMessage.setSentAt(LocalDateTime.now());
+        nMessage.setSentAt(msg.getSentAt());
 
         messageRepo.save(nMessage);
     }

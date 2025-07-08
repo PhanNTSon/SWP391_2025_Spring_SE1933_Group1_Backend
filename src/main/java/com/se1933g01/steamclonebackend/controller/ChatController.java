@@ -39,6 +39,8 @@ public class ChatController {
 
         messagingTemplate.convertAndSendToUser(msg.getReceiverUsername(), "/queue/messages/" + msg.getSenderUsername(),
                 msg);
+        messagingTemplate.convertAndSendToUser(msg.getSenderUsername(), "/queue/messages/" + msg.getReceiverUsername(),
+                msg);
     }
 
     @SubscribeMapping("/online")
