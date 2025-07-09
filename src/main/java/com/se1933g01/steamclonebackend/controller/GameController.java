@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import com.se1933g01.steamclonebackend.dto.GameBasicDTO;
 import com.se1933g01.steamclonebackend.dto.GameDetailDTO;
 import com.se1933g01.steamclonebackend.service.GameService;
-import com.se1933g01.steamclonebackend.service.GoogleDriveService;
+
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -27,7 +27,6 @@ public class GameController {
     Logger logger = Logger.getLogger(getClass().getName());
 
     @Autowired
-    private GoogleDriveService googleDriveService;
     private final GameService gameService;
 
     @Autowired
@@ -83,7 +82,7 @@ public class GameController {
     @GetMapping("/download/{fileId}")
     @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
     public ResponseEntity<String> downloadFile(@PathVariable("fileId") String fileId) throws IOException {
-        String downloadUrl = googleDriveService.generateDownloadUrl(fileId);
+        String downloadUrl = "";
         logger.info("downloadUrl" + downloadUrl);
         return ResponseEntity.ok(downloadUrl);
     }

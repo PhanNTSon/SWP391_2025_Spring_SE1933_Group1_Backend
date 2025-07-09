@@ -87,6 +87,7 @@ public class RequestService {
     private EntityManager entityManager;
     @Transactional
     public void addGame(AddingGameRequestDTO addingGameRequestDTO, Long userId) {
+        System.out.println(addingGameRequestDTO);
         User user = userRepo.findById(userId).orElseThrow(()-> new RuntimeException(USER_NOT_FOUND_MESSAGE));
         Request request = new Request();
         request.setUser(user);
