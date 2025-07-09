@@ -49,11 +49,7 @@ public class UserService {
         this.emailService = emailService;
     }
 
-    public User getUser(Long userId) {
-        return userRepo.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_MSG));
-    }
-
+    
     // String constant for user not found message
 
     // author: Ba Thanh
