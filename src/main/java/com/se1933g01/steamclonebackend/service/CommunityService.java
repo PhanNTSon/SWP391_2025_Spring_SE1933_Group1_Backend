@@ -62,6 +62,7 @@ public class CommunityService {
     public FriendshipDTO sendInvite(long userId, long friendId) {
         User curUser = entityManager.getReference(User.class, userId);
         User friend = entityManager.getReference(User.class, friendId);
+        
 
         FriendshipId id = new FriendshipId(curUser.getUserId(), friend.getUserId());
 

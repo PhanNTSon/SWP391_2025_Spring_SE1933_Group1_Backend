@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.se1933g01.steamclonebackend.dto.CartDTO;
 import com.se1933g01.steamclonebackend.dto.GameBasicDTO;
+import com.se1933g01.steamclonebackend.dto.user.LibraryGameDTO;
 import com.se1933g01.steamclonebackend.entity.CompositedKey;
 import com.se1933g01.steamclonebackend.entity.game.Game;
 import com.se1933g01.steamclonebackend.entity.transaction.Transaction;
@@ -33,17 +34,21 @@ public class CartService {
     private final GameRepo gameRepo;
     private final TransactionRepo transactionRepo;
     private final SimpMessagingTemplate simp; // Added by Phan Son 28-06
+    private final LibraryRepository libraryRepo;
+    private final LibraryService libraryService;
+
     private final String SOCKET_CART_COUNT_CHANNEL = "/queue/cart.count";
     private final String SOCKET_WALLET_BALANCE_CHANNEL = "/queue/wallet.balance";
-    private final LibraryRepository libraryRepo;
+    private final String SOCKET_LIBRARY_CHANNEL = "/queue/libraryItem.added";
 
     public CartService(UserRepo userRepo, GameRepo gameRepo, TransactionRepo transactionRepo,
-            SimpMessagingTemplate simp, LibraryRepository libraryRepo) {
+            SimpMessagingTemplate simp, LibraryRepository libraryRepo, LibraryService libraryService) {
         this.userRepo = userRepo;
         this.gameRepo = gameRepo;
         this.transactionRepo = transactionRepo;
         this.simp = simp;
         this.libraryRepo = libraryRepo;
+        this.libraryService = libraryService;
     }
 
     /**
@@ -215,18 +220,22 @@ public class CartService {
             game.setTotalPurchased(game.getTotalPurchased() + 1);
 
             // Fixed by Phan Son 2-7
-            Library library = new Library();
+            Library libraryItem = new Library();
             LibraryId libraryId = new LibraryId();
             libraryId.setGameId(game.getGameId());
             libraryId.setUserId(user.getUserId());
 
-            library.setId(libraryId);
-            library.setGame(game);
-            library.setUser(user);
-            library.setDateAdded(LocalDateTime.now());
+            libraryItem.setId(libraryId);
+            libraryItem.setGame(game);
+            libraryItem.setUser(user);
+            libraryItem.setDateAdded(LocalDateTime.now());
 
-            user.getLibraryGames().add(library);
-            libraryRepo.save(library);
+            user.getLibraryGames().add(libraryItem);
+            libraryRepo.save(libraryItem);
+
+            // Added by Phan son 11-07
+            LibraryGameDTO newGame = libraryService.mapLibraryEntryToDto(libraryItem);
+            simp.convertAndSendToUser(user.getUsername(), SOCKET_LIBRARY_CHANNEL, newGame);
             // --!!
         }
         // Remove only the games that were just bought from cart

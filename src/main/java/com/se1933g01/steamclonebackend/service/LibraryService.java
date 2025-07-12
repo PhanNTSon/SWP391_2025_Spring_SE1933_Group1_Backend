@@ -47,7 +47,7 @@ public class LibraryService {
      * Hàm helper để chuyển đổi một entity Library thành một LibraryGameDTO.
      * Phiên bản này sẽ tạo một GameDetailDTO hoàn chỉnh theo yêu cầu.
      */
-    private LibraryGameDTO mapLibraryEntryToDto(Library libraryEntry) {
+    public LibraryGameDTO mapLibraryEntryToDto(Library libraryEntry) {
         Game gameEntity = libraryEntry.getGame();
 
         // Bước A: Tạo một đối tượng GameDetailDTO hoàn chỉnh từ Game Entity

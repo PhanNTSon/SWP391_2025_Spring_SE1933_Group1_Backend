@@ -21,6 +21,7 @@ import com.se1933g01.steamclonebackend.repository.LibraryRepository;
 import com.se1933g01.steamclonebackend.repository.TransactionRepo;
 import com.se1933g01.steamclonebackend.repository.UserRepo;
 import com.se1933g01.steamclonebackend.service.CartService;
+import com.se1933g01.steamclonebackend.service.LibraryService;
 
 public class CartServiceTest {
 
@@ -29,6 +30,7 @@ public class CartServiceTest {
     private TransactionRepo transactionRepo;
     private LibraryRepository libraryRepo;
     private SimpMessagingTemplate simp;
+    private LibraryService libraryService;
 
     private CartService cartService;
 
@@ -39,8 +41,9 @@ public class CartServiceTest {
         transactionRepo = mock(TransactionRepo.class);
         libraryRepo = mock(LibraryRepository.class);
         simp = mock(SimpMessagingTemplate.class);
+        libraryService = mock(LibraryService.class);
 
-        cartService = new CartService(userRepo, gameRepo, transactionRepo, simp, libraryRepo);
+        cartService = new CartService(userRepo, gameRepo, transactionRepo, simp, libraryRepo, libraryService);
     }
 
     @Test
@@ -95,6 +98,7 @@ public class CartServiceTest {
 
         // Assert is handled by expected exception
     }
+
     @Test
     public void getCart_validUserWithEmptyCart_returnsEmptyList() {
         // Arrange
@@ -112,6 +116,6 @@ public class CartServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals(userId, result.getUserId());
-        assertEquals(0, result.getListCart().size());  // empty cart
+        assertEquals(0, result.getListCart().size()); // empty cart
     }
 }
