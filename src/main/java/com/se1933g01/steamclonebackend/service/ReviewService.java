@@ -66,7 +66,23 @@ public class ReviewService {
      * @return
      */
     @Transactional
-    public CreateReviewDTO createReview(Long userId, Long gameId, String reviewContent, boolean isRecommended) {
+    public CreateReviewDTO createReview(Long userId, Long gameId, String reviewContent, Boolean isRecommended) {
+
+        if (userId == null) {
+            throw new IllegalArgumentException("UserID must not be null");
+        }
+        if (gameId == null) {
+            throw new IllegalArgumentException("GameID must not be null");
+        }
+
+        if (reviewContent == null || reviewContent.isBlank()) {
+            throw new IllegalArgumentException("Review Content must not be null or blank");
+        }
+
+        if (isRecommended == null) {
+            throw new IllegalArgumentException("isRecommend must not be null");
+        }
+
         User user = entityManager.getReference(User.class, userId);
         Game game = entityManager.getReference(Game.class, gameId);
 

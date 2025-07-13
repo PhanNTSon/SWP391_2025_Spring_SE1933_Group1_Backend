@@ -46,4 +46,10 @@ public class GlobalExceptionHandler {
                 null);
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response);
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiRespDTO<?>> handleArgumentError(IllegalArgumentException ex) {
+        ApiRespDTO<?> resp = new ApiRespDTO<>(false, "ILLEGAL_ARGUMENT", ex.getMessage(), null);
+        return ResponseEntity.status(500).body(resp);
+    }
 }

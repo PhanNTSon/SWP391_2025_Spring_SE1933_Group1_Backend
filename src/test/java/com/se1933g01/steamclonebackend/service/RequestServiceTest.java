@@ -1,4 +1,4 @@
-package com.se1933g01.service;
+package com.se1933g01.steamclonebackend.service;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;

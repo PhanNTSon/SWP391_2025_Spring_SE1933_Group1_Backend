@@ -1,4 +1,4 @@
-package com.se1933g01.service;
+package com.se1933g01.steamclonebackend.service;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;

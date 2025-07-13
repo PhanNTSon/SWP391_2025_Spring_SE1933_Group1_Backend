@@ -6,10 +6,14 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import com.se1933g01.steamclonebackend.exception.ContentModerationException;
 
 public class GeminiContentModerator {
-  private static final String API_KEY = "AIzaSyD07wZZhMtctNCgkioE8nhRqFLaJy6XMeI";
+
+  @Value("${geminiKey}")
+  private static String API_KEY;
 
   public static boolean isViolating(String inputText) {
     try {
