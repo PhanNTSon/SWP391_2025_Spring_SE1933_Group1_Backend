@@ -42,9 +42,11 @@ public class ReviewController {
     private final ReviewService reviewService;
     private static final String RESPONSE_STRING_OK = "SUCCESS";
     private static final String RESPONSE_STRING_ERROR = "SERVER ERROR";
+    private final GeminiContentModerator moderator;
 
-    ReviewController(ReviewService reviewService) {
+    public ReviewController(ReviewService reviewService, GeminiContentModerator moderator) {
         this.reviewService = reviewService;
+        this.moderator = moderator;
     }
 
     /**
@@ -58,9 +60,9 @@ public class ReviewController {
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
     public ResponseEntity<ApiRespDTO<?>> createReview(@RequestBody CreateReviewDTO dto,
             @AuthenticationPrincipal CustomUserDetail me) {
-        ApiRespDTO resp ;
+        ApiRespDTO resp;
 
-        if (GeminiContentModerator.isViolating(dto.getReviewContent())) {
+        if (moderator.isViolating(dto.getReviewContent())) {
             resp = new ApiRespDTO<>(false, "INAPPROPRIATE_CONTENT", "Content is appropriate", null);
             return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
                     .body(resp);
@@ -68,7 +70,7 @@ public class ReviewController {
         CreateReviewDTO result = reviewService.createReview(me.getUser().getUserId(), dto.getGameId(),
                 dto.getReviewContent(),
                 dto.isRecommended());
-                resp = new ApiRespDTO<>(true, "CREATE_SUCCESS", "Creating success", result);
+        resp = new ApiRespDTO<>(true, "CREATE_SUCCESS", "Creating success", result);
         return ResponseEntity.ok(resp);
     }
 
@@ -111,7 +113,7 @@ public class ReviewController {
             @AuthenticationPrincipal CustomUserDetail me) {
 
         try {
-            if (GeminiContentModerator.isViolating(dto.getReviewContent())) {
+            if (moderator.isViolating(dto.getReviewContent())) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
                         .body("Your review contains inappropriate content.");
             }

@@ -7,20 +7,22 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import com.se1933g01.steamclonebackend.exception.ContentModerationException;
 
+@Component
 public class GeminiContentModerator {
 
-  @Value("${geminiKey}")
-  private static String API_KEY;
+  @Value("${gemini.key}")
+  private String API_KEY;
 
-  public static boolean isViolating(String inputText) {
+  public boolean isViolating(String inputText) {
     try {
       if (inputText == null || inputText.isBlank())
         return false;
       String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key="
-          + API_KEY;
+          + this.API_KEY;
 
       String json = """
           {
