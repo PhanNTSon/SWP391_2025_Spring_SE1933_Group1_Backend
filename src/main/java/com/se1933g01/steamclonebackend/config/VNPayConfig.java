@@ -3,8 +3,6 @@ package com.se1933g01.steamclonebackend.config;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.springframework.context.annotation.Configuration;
-import com.se1933g01.steamclonebackend.repository.AddingGameRequestRepo;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.io.UnsupportedEncodingException;

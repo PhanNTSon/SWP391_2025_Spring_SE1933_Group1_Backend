@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.se1933g01.steamclonebackend.service.PasswordResetService;
 
-import lombok.RequiredArgsConstructor;
 
 /**
  * @author Loc Phan

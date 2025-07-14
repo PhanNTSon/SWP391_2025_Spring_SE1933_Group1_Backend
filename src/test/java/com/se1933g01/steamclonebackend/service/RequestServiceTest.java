@@ -8,9 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -18,16 +16,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 
 import com.se1933g01.steamclonebackend.dto.FeedbackDTO;
-import com.se1933g01.steamclonebackend.entity.request.AddingGameRequest;
 import com.se1933g01.steamclonebackend.entity.request.Feedback;
-import com.se1933g01.steamclonebackend.entity.request.PublisherApplyRequest;
 import com.se1933g01.steamclonebackend.entity.request.Request;
 import com.se1933g01.steamclonebackend.entity.user.User;
 import com.se1933g01.steamclonebackend.repository.AddingGameRequestRepo;
@@ -40,7 +35,6 @@ import com.se1933g01.steamclonebackend.repository.RequestRepo;
 import com.se1933g01.steamclonebackend.repository.RoleRepo;
 import com.se1933g01.steamclonebackend.repository.TagRepository;
 import com.se1933g01.steamclonebackend.repository.UserRepo;
-import com.se1933g01.steamclonebackend.service.RequestService;
 
 import jakarta.persistence.EntityNotFoundException;
 @ExtendWith(MockitoExtension.class)

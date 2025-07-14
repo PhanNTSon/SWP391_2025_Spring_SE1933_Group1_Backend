@@ -7,8 +7,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.se1933g01.steamclonebackend.entity.request.PublisherApplyRequest;
-import com.se1933g01.steamclonebackend.entity.request.Request;
-import com.se1933g01.steamclonebackend.entity.user.User;
 
 @Repository
 public interface PublisherApplyRequestRepo extends JpaRepository<PublisherApplyRequest, Long> {

@@ -25,7 +25,6 @@ import com.se1933g01.steamclonebackend.dto.user.EmailChangeConfirmDTO;
 import com.se1933g01.steamclonebackend.dto.user.EmailChangeRequestDTO;
 import com.se1933g01.steamclonebackend.dto.community.SearchResult;
 import com.se1933g01.steamclonebackend.dto.user.FriendDTO;
-import com.se1933g01.steamclonebackend.dto.user.LibraryDTO;
 import com.se1933g01.steamclonebackend.dto.user.LibraryGameDTO;
 import com.se1933g01.steamclonebackend.dto.user.UserDetailDTO;
 import com.se1933g01.steamclonebackend.dto.user.UserUpdateDTO;

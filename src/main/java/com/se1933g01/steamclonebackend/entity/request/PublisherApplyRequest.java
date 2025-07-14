@@ -1,6 +1,5 @@
 package com.se1933g01.steamclonebackend.entity.request;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;

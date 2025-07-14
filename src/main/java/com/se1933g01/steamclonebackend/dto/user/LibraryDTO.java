@@ -1,10 +1,7 @@
 package com.se1933g01.steamclonebackend.dto.user;
 
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 
-import java.time.LocalDate;
 import java.util.List;
 
 /**

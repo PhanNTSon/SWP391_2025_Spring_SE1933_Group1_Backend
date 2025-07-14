@@ -20,8 +20,6 @@ import com.se1933g01.steamclonebackend.repository.GameRepo;
 import com.se1933g01.steamclonebackend.repository.LibraryRepository;
 import com.se1933g01.steamclonebackend.repository.TransactionRepo;
 import com.se1933g01.steamclonebackend.repository.UserRepo;
-import com.se1933g01.steamclonebackend.service.CartService;
-import com.se1933g01.steamclonebackend.service.LibraryService;
 
 public class CartServiceTest {
 

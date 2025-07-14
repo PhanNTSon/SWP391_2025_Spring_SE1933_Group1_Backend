@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.*;
 import com.se1933g01.steamclonebackend.dto.LoginDTO;
 import com.se1933g01.steamclonebackend.dto.RegisterRequestDTO;
 import com.se1933g01.steamclonebackend.service.AuthService;
-import com.se1933g01.steamclonebackend.service.EmailService;
 import com.se1933g01.steamclonebackend.service.EmailVerificationService;
 
 /**

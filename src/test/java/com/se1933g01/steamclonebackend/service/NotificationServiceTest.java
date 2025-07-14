@@ -16,7 +16,6 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import com.se1933g01.steamclonebackend.dto.notification.NotificationDTO;
 import com.se1933g01.steamclonebackend.entity.user.Notification;
 import com.se1933g01.steamclonebackend.repository.NotificationsRepo;
-import com.se1933g01.steamclonebackend.service.NotificationService;
 
 import jakarta.persistence.EntityManager;
 

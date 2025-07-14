@@ -11,7 +11,6 @@ import com.se1933g01.steamclonebackend.entity.user.User;
 import com.se1933g01.steamclonebackend.repository.PasswordResetTokenRepository;
 import com.se1933g01.steamclonebackend.repository.UserRepo;
 
-import lombok.RequiredArgsConstructor;
 
 /**
  * @author Loc Phan

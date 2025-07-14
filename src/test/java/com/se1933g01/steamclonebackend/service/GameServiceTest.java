@@ -3,11 +3,9 @@ package com.se1933g01.steamclonebackend.service;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,10 +25,7 @@ import org.springframework.data.jpa.domain.Specification;
 import com.se1933g01.steamclonebackend.dto.GameBasicDTO;
 import com.se1933g01.steamclonebackend.dto.GameDetailDTO;
 import com.se1933g01.steamclonebackend.entity.game.Game;
-import com.se1933g01.steamclonebackend.mapper.EntityMapper;
 import com.se1933g01.steamclonebackend.repository.GameRepository;
-import com.se1933g01.steamclonebackend.specification.GameSpecification;
-import com.se1933g01.steamclonebackend.service.GameService;
 
 import jakarta.persistence.EntityNotFoundException;
 

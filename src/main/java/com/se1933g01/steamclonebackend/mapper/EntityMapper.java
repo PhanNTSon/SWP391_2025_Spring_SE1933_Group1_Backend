@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.springframework.stereotype.Component;
 
 import com.se1933g01.steamclonebackend.dto.*;
 import com.se1933g01.steamclonebackend.dto.user.UserDetailDTO;

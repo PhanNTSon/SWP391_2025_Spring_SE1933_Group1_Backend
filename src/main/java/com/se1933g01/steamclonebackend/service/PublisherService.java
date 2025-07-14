@@ -5,8 +5,6 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import jakarta.persistence.EntityNotFoundException; // Hoặc exception tùy chỉnh
-import org.hibernate.Hibernate; // Để khởi tạo các collection lazy
 import org.springframework.transaction.annotation.Transactional;
 
 import com.se1933g01.steamclonebackend.dto.PublisherBasicDTO;
