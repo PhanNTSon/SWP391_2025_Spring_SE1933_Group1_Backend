@@ -3,6 +3,7 @@ package com.se1933g01.steamclonebackend.service;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,14 +40,18 @@ public class CommunityService {
     private final ConversationRepo conversationRepo;
     private final MessageRepo messageRepo;
     private final UserRepo userRepo;
+    private final SimpMessagingTemplate simp;
+
+    private final static String FRIEND_INIVATIONS_CHANNEL = "/queue/friend.invitations";
 
     public CommunityService(EntityManager entityManager, FriendshipRepo friendshipRepo,
-            ConversationRepo conversationRepo, MessageRepo messageRepo, UserRepo userRepo) {
+            ConversationRepo conversationRepo, MessageRepo messageRepo, UserRepo userRepo, SimpMessagingTemplate simp) {
         this.entityManager = entityManager;
         this.friendshipRepo = friendshipRepo;
         this.conversationRepo = conversationRepo;
         this.messageRepo = messageRepo;
         this.userRepo = userRepo;
+        this.simp = simp;
     }
 
     /**
@@ -61,12 +66,15 @@ public class CommunityService {
     public FriendshipDTO sendInvite(long userId, long friendId) {
         User curUser = entityManager.getReference(User.class, userId);
         User friend = entityManager.getReference(User.class, friendId);
-        
 
         FriendshipId id = new FriendshipId(curUser.getUserId(), friend.getUserId());
 
         Friendship newFriendship = new Friendship(id, curUser, friend, "Pending", LocalDate.now());
         friendshipRepo.save(newFriendship);
+
+        InviteDTO invitation = new InviteDTO(userId, curUser.getAvatarUrl(), curUser.getUsername());
+        simp.convertAndSendToUser(friend.getUsername(), FRIEND_INIVATIONS_CHANNEL, invitation);
+
         return new FriendshipDTO(userId, friendId, "Pending", newFriendship.getCreatedAt());
     }
 
@@ -118,7 +126,14 @@ public class CommunityService {
 
         // Create new Friendship
         FriendshipId newId = new FriendshipId(userId, friendId);
-        Friendship newT = new Friendship(newId, curUser, friend, "Accepted", LocalDate.now());
+        Friendship newT = friendshipRepo.findById(newId).orElse(null);
+
+        if (newT == null) {
+            newT = new Friendship(newId, curUser, friend, "Accepted", LocalDate.now());
+        } else {
+            newT.setCreatedAt(LocalDate.now());
+            newT.setStatus("Accepted");
+        }
 
         // Update already Friendship
         FriendshipId inviteId = new FriendshipId(friendId, userId);
@@ -129,6 +144,12 @@ public class CommunityService {
         // Save to DB
         friendshipRepo.save(newT);
         friendshipRepo.save(inviteObj);
+
+        Conversation con = (userId < friendId) ? conversationRepo.findByUser1AndUser2(userId, friendId)
+                : conversationRepo.findByUser1AndUser2(friendId, userId);
+        if (con == null) {
+            this.createConversation(userId, friendId);
+        }
 
         return new FriendshipDTO(userId, friendId, "Accepted", LocalDate.now());
     }
