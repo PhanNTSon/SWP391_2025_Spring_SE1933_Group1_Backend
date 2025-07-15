@@ -446,9 +446,6 @@ public class UserController {
             @PathVariable(name = "friendId") long friendId) {
         // Accept invite
         FriendshipDTO resDto = communityService.acceptInvite(me.getUser().getUserId(), friendId);
-        // Create Converstaion in DB
-        communityService.createConversation(me.getUser().getUserId(), friendId);
-
         return ResponseEntity.ok(resDto);
     }
 
@@ -473,7 +470,7 @@ public class UserController {
     /**
      * @author Phan NT Son
      * @since 23-06-2025
-     *        Decline an Invite
+     *        Decline an Invite/ Friendship
      * @param friendId
      * @param me
      * @return
