@@ -96,6 +96,23 @@ class GameServiceTest {
     }
 
     @Test
+    @DisplayName("searchGamesByName - Should return empty list for blank term")
+    void searchGamesByName_whenTermIsBlank_shouldReturnEmptyList() {
+        List<GameBasicDTO> result = gameService.searchGamesByName("   ");
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @DisplayName("searchGamesByName - Should return empty list when no games match")
+    void searchGamesByName_whenNoGamesMatch_shouldReturnEmptyList() {
+        String searchTerm = "Haha";
+        Pageable pageable = PageRequest.of(0, 5);
+        when(gameRepository.findByNameContainingIgnoreCase(searchTerm, pageable)).thenReturn(Page.empty(pageable));
+        List<GameBasicDTO> result = gameService.searchGamesByName(searchTerm);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
     @DisplayName("findGamesByCriteria - Should return games matching all criteria")
     @SuppressWarnings("unchecked")
     void findGamesByCriteria_whenAllCriteriaProvided_shouldReturnMatchingGames() {
