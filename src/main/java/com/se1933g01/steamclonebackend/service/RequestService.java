@@ -38,6 +38,7 @@ import com.se1933g01.steamclonebackend.repository.TagRepository;
 import com.se1933g01.steamclonebackend.repository.UserRepo;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 
@@ -86,6 +87,7 @@ public class RequestService {
     private EntityManager entityManager;
     @Transactional
     public void addGame(AddingGameRequestDTO addingGameRequestDTO, Long userId) {
+        System.out.println(addingGameRequestDTO);
         User user = userRepo.findById(userId).orElseThrow(()-> new RuntimeException(USER_NOT_FOUND_MESSAGE));
         Request request = new Request();
         request.setUser(user);
@@ -319,7 +321,11 @@ public class RequestService {
 
 
     public void addFeedback(FeedbackDTO feedbackDTO, Long userId){
-        User user = userRepo.findById(userId).orElseThrow(()-> new RuntimeException(USER_NOT_FOUND_MESSAGE));
+        if (feedbackDTO.getSubject().trim() == null || feedbackDTO.getSubject().trim().isBlank() ||
+        feedbackDTO.getMessage().trim() == null || feedbackDTO.getMessage().trim().isBlank()) {
+        throw new IllegalArgumentException("Subject and message cannot be empty");
+        }
+        User user = userRepo.findById(userId).orElseThrow(()-> new EntityNotFoundException(USER_NOT_FOUND_MESSAGE));
         Request request = new Request();
         request.setUser(user);
         request.setRequestType("Feedback");
