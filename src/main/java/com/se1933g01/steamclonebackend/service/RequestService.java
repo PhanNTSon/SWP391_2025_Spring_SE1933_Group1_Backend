@@ -351,8 +351,7 @@ public class RequestService {
     }
 
     public void addFeedback(FeedbackDTO feedbackDTO, Long userId) {
-        if (feedbackDTO.getSubject().trim() == null || feedbackDTO.getSubject().trim().isBlank() ||
-                feedbackDTO.getMessage().trim() == null || feedbackDTO.getMessage().trim().isBlank()) {
+        if ( feedbackDTO.getSubject().trim().isBlank() || feedbackDTO.getMessage().trim().isBlank()) {
             throw new IllegalArgumentException("Subject and message cannot be empty");
         }
         User user = userRepo.findById(userId).orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_MESSAGE));
