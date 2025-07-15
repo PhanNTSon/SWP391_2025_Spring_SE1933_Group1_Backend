@@ -44,7 +44,7 @@ public class AuthService {
 
     private final UserRepo userRepo;
 
-    AuthService(UserRepo userRepo) {
+    public AuthService(UserRepo userRepo) {
         this.userRepo = userRepo;
     }
 
