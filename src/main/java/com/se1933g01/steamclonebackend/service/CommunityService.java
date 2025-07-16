@@ -337,6 +337,10 @@ public class CommunityService {
         messageRepo.save(nMessage);
     }
 
+    public void saveGroupMessage(ChatMessageDTO msg, String username){
+
+    }
+
     public SearchResult findUser(long friendId) throws Exception {
         User target = userRepo.findById(friendId).orElse(null);
         if (target == null) {

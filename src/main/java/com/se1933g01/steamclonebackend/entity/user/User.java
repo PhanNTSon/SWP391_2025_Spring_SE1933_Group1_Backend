@@ -12,6 +12,8 @@ import com.se1933g01.steamclonebackend.entity.community.Block;
 import com.se1933g01.steamclonebackend.entity.community.Conversation;
 import com.se1933g01.steamclonebackend.entity.community.FriendRequest;
 import com.se1933g01.steamclonebackend.entity.community.Friendship;
+import com.se1933g01.steamclonebackend.entity.community.GroupChat;
+import com.se1933g01.steamclonebackend.entity.community.GroupChatMember;
 import com.se1933g01.steamclonebackend.entity.community.Message;
 import com.se1933g01.steamclonebackend.entity.game.Game;
 import com.se1933g01.steamclonebackend.entity.game.Review;
@@ -169,5 +171,11 @@ public class User {
         @OneToMany(mappedBy = "user2")
         @JsonIgnore
         private List<Friendship> isFriendList;
+
+        @OneToMany(mappedBy = "user")
+        private List<GroupChatMember> groupMemberships;
+
+        @OneToMany(mappedBy = "owner")
+        private List<GroupChat> groupChatList;
 
 }
