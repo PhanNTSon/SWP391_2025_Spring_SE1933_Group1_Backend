@@ -19,8 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.se1933g01.steamclonebackend.dto.ApiRespDTO;
 import com.se1933g01.steamclonebackend.dto.GameBasicDTO;
 import com.se1933g01.steamclonebackend.dto.community.ConversationDTO;
-import com.se1933g01.steamclonebackend.dto.community.FriendshipDTO;
-import com.se1933g01.steamclonebackend.dto.community.InviteDTO;
+import com.se1933g01.steamclonebackend.dto.community.FriendRequestDTO;
 import com.se1933g01.steamclonebackend.dto.user.EmailChangeConfirmDTO;
 import com.se1933g01.steamclonebackend.dto.user.EmailChangeRequestDTO;
 import com.se1933g01.steamclonebackend.dto.community.SearchResult;
@@ -31,11 +30,14 @@ import com.se1933g01.steamclonebackend.dto.user.UserUpdateDTO;
 import com.se1933g01.steamclonebackend.entity.transaction.Transaction;
 import com.se1933g01.steamclonebackend.entity.transaction.TransactionDetail;
 import com.se1933g01.steamclonebackend.entity.user.CustomUserDetail;
+import com.se1933g01.steamclonebackend.entity.user.User;
 import com.se1933g01.steamclonebackend.service.CartService;
 import com.se1933g01.steamclonebackend.service.CommunityService;
 import com.se1933g01.steamclonebackend.service.LibraryService;
 import com.se1933g01.steamclonebackend.service.TransactionService;
 import com.se1933g01.steamclonebackend.service.UserService;
+
+import jakarta.persistence.EntityManager;
 
 import java.io.IOException;
 
@@ -53,17 +55,19 @@ public class UserController {
 
     private final UserService userService;
     private final CartService cartService;
-    private final TransactionService transactionService; // Added by Ba Thanh 25-06
-    private final LibraryService libraryService; // Added by Ba Thanh 25-06
-    private final CommunityService communityService; // Added by Phan NT Son 23-06
+    private final TransactionService transactionService;
+    private final LibraryService libraryService;
+    private final CommunityService communityService;
+    private final EntityManager entityManager;
 
-    public UserController(UserService userService, CartService cartService,
-            CommunityService communityService, TransactionService transactionService, LibraryService libraryService) {
+    public UserController(UserService userService, CartService cartService, TransactionService transactionService,
+            LibraryService libraryService, CommunityService communityService, EntityManager entityManager) {
         this.userService = userService;
         this.cartService = cartService;
-        this.communityService = communityService;
         this.transactionService = transactionService;
         this.libraryService = libraryService;
+        this.communityService = communityService;
+        this.entityManager = entityManager;
     }
 
     /**
@@ -397,9 +401,12 @@ public class UserController {
      */
     @GetMapping("/pendinginvite/init")
     @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
-    public ResponseEntity<List<InviteDTO>> getInviteFromUser(@AuthenticationPrincipal CustomUserDetail me) {
-        List<InviteDTO> res = communityService.getInviteFromUser(me.getUser().getUserId());
-        return ResponseEntity.ok(res);
+    public ResponseEntity<ApiRespDTO<?>> getInviteFromUser(@AuthenticationPrincipal CustomUserDetail me) {
+
+        List<FriendRequestDTO> res = communityService.getInviteFromUser(me.getUser().getUserId());
+
+        return ResponseEntity.ok()
+                .body(new ApiRespDTO<List<FriendRequestDTO>>(true, "GET_LIST_SUCCESSFULLY", "Get list success", res));
     }
 
     /**
@@ -411,9 +418,12 @@ public class UserController {
      */
     @GetMapping("/pendinginvite/receive")
     @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
-    public ResponseEntity<List<InviteDTO>> getInviteFromFriend(@AuthenticationPrincipal CustomUserDetail me) {
-        List<InviteDTO> res = communityService.getInviteFromFriend(me.getUser().getUserId());
-        return ResponseEntity.ok(res);
+    public ResponseEntity<ApiRespDTO<?>> getInviteFromFriend(@AuthenticationPrincipal CustomUserDetail me) {
+
+        List<FriendRequestDTO> res = communityService.getInviteFromFriend(me.getUser().getUserId());
+
+        return ResponseEntity.ok()
+                .body(new ApiRespDTO<List<FriendRequestDTO>>(true, "GET_LIST_SUCCESSFULLY", "Get list success", res));
     }
 
     /**
@@ -426,10 +436,14 @@ public class UserController {
      */
     @PostMapping("/sendinvite/{receiverId}")
     @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
-    public ResponseEntity<FriendshipDTO> sendInvite(@PathVariable(name = "receiverId") long receiverId,
+    public ResponseEntity<ApiRespDTO<?>> sendInvite(@PathVariable(name = "receiverId") long receiverId,
             @AuthenticationPrincipal CustomUserDetail me) {
-        FriendshipDTO result = communityService.sendInvite(me.getUser().getUserId(), receiverId);
-        return ResponseEntity.ok(result);
+
+        FriendRequestDTO result = communityService.sendInvite(me.getUser().getUserId(), receiverId);
+
+        return ResponseEntity.ok()
+                .body(new ApiRespDTO<FriendRequestDTO>(true, "REQUEST_SEND_SUCCESSFULLY", "Send request success",
+                        result));
     }
 
     /**
@@ -442,11 +456,49 @@ public class UserController {
      */
     @PatchMapping("/acceptinvite/{friendId}")
     @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
-    public ResponseEntity<FriendshipDTO> acceptInvite(@AuthenticationPrincipal CustomUserDetail me,
+    public ResponseEntity<ApiRespDTO<?>> acceptInvite(@AuthenticationPrincipal CustomUserDetail me,
             @PathVariable(name = "friendId") long friendId) {
         // Accept invite
-        FriendshipDTO resDto = communityService.acceptInvite(me.getUser().getUserId(), friendId);
-        return ResponseEntity.ok(resDto);
+        FriendDTO resDto = communityService.acceptInvite(me.getUser().getUserId(), friendId);
+
+        return ResponseEntity.ok()
+                .body(new ApiRespDTO<FriendDTO>(true, "ACCEPT_SUCCESSFULLY", "Accept request success", resDto));
+    }
+
+    /**
+     * @author Phan NT Son
+     * @since 16-07
+     *        Decline an Invite
+     * @param friendId
+     * @param me
+     * @return
+     */
+    @DeleteMapping({ "/declineinvite/{friendId}" })
+    @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
+    public ResponseEntity<ApiRespDTO<?>> declineInvite(@AuthenticationPrincipal CustomUserDetail me,
+            @PathVariable(name = "friendId") long friendId) {
+        // Decline invite
+        communityService.deleteInvite(friendId, me.getUser().getUserId());
+
+        User receiver = entityManager.getReference(User.class, friendId);
+        communityService.sendToChannelAcceptOrDecline(receiver.getUsername(), me.getUser().getUserId());
+
+        return ResponseEntity.ok()
+                .body(new ApiRespDTO<FriendDTO>(true, "DECLINE_SUCCESSFULLY", "Decline request success", null));
+    }
+
+    @DeleteMapping("/cancelinvite/{friendId}")
+    @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
+    public ResponseEntity<ApiRespDTO<?>> cancelInvite(@AuthenticationPrincipal CustomUserDetail me,
+            @PathVariable(name = "friendId") long friendId) {
+        // Cancel invite
+        communityService.deleteInvite(me.getUser().getUserId(), friendId);
+
+        User receiver = entityManager.getReference(User.class, friendId);
+        communityService.sendToChannelCancel(receiver.getUsername(), me.getUser().getUserId());
+
+        return ResponseEntity.ok()
+                .body(new ApiRespDTO<FriendDTO>(true, "CANCEL_SUCCESSFULLY", "Cancel request success", null));
     }
 
     /**
@@ -457,14 +509,15 @@ public class UserController {
      * @param me
      * @return
      */
-    @PatchMapping("/blockinvite/{targetId}")
+    @PatchMapping("/block/{targetId}")
     @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
-    public ResponseEntity<FriendshipDTO> blockInvite(@AuthenticationPrincipal CustomUserDetail me,
+    public ResponseEntity<ApiRespDTO<?>> blockUser(@AuthenticationPrincipal CustomUserDetail me,
             @PathVariable(name = "targetId") long tId) {
-        // Block invite
-        FriendshipDTO resDto = communityService.blockInvite(me.getUser().getUserId(), tId);
+        // Block
+        FriendDTO resDto = communityService.blockUser(me.getUser().getUserId(), tId);
 
-        return ResponseEntity.ok(resDto);
+        return ResponseEntity.ok()
+                .body(new ApiRespDTO<FriendDTO>(true, "BLOCK_USER_SUCCESSFULLY", "Block user success", resDto));
     }
 
     /**
@@ -475,12 +528,12 @@ public class UserController {
      * @param me
      * @return
      */
-    @DeleteMapping({ "/declineinvite/{targetId}", "/unfriend/{targetId}" })
+    @DeleteMapping("/unfriend/{targetId}")
     @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
-    public ResponseEntity<String> declineInvite(@AuthenticationPrincipal CustomUserDetail me,
+    public ResponseEntity<String> unFriend(@AuthenticationPrincipal CustomUserDetail me,
             @PathVariable(name = "targetId") long tId) {
         // Delete invite
-        communityService.deleteFriendship(me.getUser().getUserId(), tId);
+        communityService.unfriend(me.getUser().getUserId(), tId);
 
         return ResponseEntity.ok("Success");
     }

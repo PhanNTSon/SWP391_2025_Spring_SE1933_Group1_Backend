@@ -9,22 +9,26 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.se1933g01.steamclonebackend.dto.ChatMessageDTO;
 import com.se1933g01.steamclonebackend.dto.community.ConversationDTO;
-import com.se1933g01.steamclonebackend.dto.community.FriendDTO;
-import com.se1933g01.steamclonebackend.dto.community.FriendshipDTO;
-import com.se1933g01.steamclonebackend.dto.community.InviteDTO;
+import com.se1933g01.steamclonebackend.dto.community.FriendRequestDTO;
 import com.se1933g01.steamclonebackend.dto.community.MessageDTO;
 import com.se1933g01.steamclonebackend.dto.community.SearchResult;
+import com.se1933g01.steamclonebackend.dto.user.FriendDTO;
+import com.se1933g01.steamclonebackend.entity.community.Block;
 import com.se1933g01.steamclonebackend.entity.community.Conversation;
+import com.se1933g01.steamclonebackend.entity.community.FriendRequest;
 import com.se1933g01.steamclonebackend.entity.community.Friendship;
 import com.se1933g01.steamclonebackend.entity.community.FriendshipId;
 import com.se1933g01.steamclonebackend.entity.community.Message;
 import com.se1933g01.steamclonebackend.entity.user.User;
+import com.se1933g01.steamclonebackend.repository.BlockRepo;
 import com.se1933g01.steamclonebackend.repository.ConversationRepo;
+import com.se1933g01.steamclonebackend.repository.FriendRequestRepo;
 import com.se1933g01.steamclonebackend.repository.FriendshipRepo;
 import com.se1933g01.steamclonebackend.repository.MessageRepo;
 import com.se1933g01.steamclonebackend.repository.UserRepo;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceContext;
 
 /**
@@ -37,21 +41,35 @@ public class CommunityService {
     private final EntityManager entityManager;
 
     private final FriendshipRepo friendshipRepo;
+    private final FriendRequestRepo friendRequestRepo;
+    private final BlockRepo blockRepo;
     private final ConversationRepo conversationRepo;
     private final MessageRepo messageRepo;
     private final UserRepo userRepo;
     private final SimpMessagingTemplate simp;
 
     private final static String FRIEND_INIVATIONS_CHANNEL = "/queue/friend.invitations";
+    private final static String FRIEND_REQUEST_ACTION_CHANNEL = "/queue/friend.request";
 
     public CommunityService(EntityManager entityManager, FriendshipRepo friendshipRepo,
-            ConversationRepo conversationRepo, MessageRepo messageRepo, UserRepo userRepo, SimpMessagingTemplate simp) {
+            FriendRequestRepo friendRequestRepo, BlockRepo blockRepo, ConversationRepo conversationRepo,
+            MessageRepo messageRepo, UserRepo userRepo, SimpMessagingTemplate simp) {
         this.entityManager = entityManager;
         this.friendshipRepo = friendshipRepo;
+        this.friendRequestRepo = friendRequestRepo;
+        this.blockRepo = blockRepo;
         this.conversationRepo = conversationRepo;
         this.messageRepo = messageRepo;
         this.userRepo = userRepo;
         this.simp = simp;
+    }
+
+    public void sendToChannelAcceptOrDecline(String username, Long receiverId) {
+        simp.convertAndSendToUser(username, FRIEND_REQUEST_ACTION_CHANNEL + ".b1", receiverId);
+    }
+
+    public void sendToChannelCancel(String username, Long senderId) {
+        simp.convertAndSendToUser(username, FRIEND_REQUEST_ACTION_CHANNEL + ".b2", senderId);
     }
 
     /**
@@ -63,19 +81,45 @@ public class CommunityService {
      * @return
      */
     @Transactional
-    public FriendshipDTO sendInvite(long userId, long friendId) {
-        User curUser = entityManager.getReference(User.class, userId);
-        User friend = entityManager.getReference(User.class, friendId);
+    public FriendRequestDTO sendInvite(long senderId, long receiverId) {
 
-        FriendshipId id = new FriendshipId(curUser.getUserId(), friend.getUserId());
+        Block checkBlock = blockRepo.findByBlockedId(senderId).orElse(null);
 
-        Friendship newFriendship = new Friendship(id, curUser, friend, "Pending", LocalDate.now());
-        friendshipRepo.save(newFriendship);
+        // If sender is being blocked by receiver
+        if (checkBlock != null) {
+            throw new IllegalStateException("Sender is being blocked by receiver");
+        }
 
-        InviteDTO invitation = new InviteDTO(userId, curUser.getAvatarUrl(), curUser.getUsername());
-        simp.convertAndSendToUser(friend.getUsername(), FRIEND_INIVATIONS_CHANNEL, invitation);
+        FriendRequest check = friendRequestRepo.findBySenderIdAndReceiverId(receiverId, senderId).orElse(null);
 
-        return new FriendshipDTO(userId, friendId, "Pending", newFriendship.getCreatedAt());
+        // If receiver already send an invite to sender
+        if (check != null) {
+            this.acceptInvite(senderId, receiverId);
+            return new FriendRequestDTO();
+        }
+
+        User sender = entityManager.getReference(User.class, senderId);
+        User receiver = entityManager.getReference(User.class, receiverId);
+
+        FriendRequest request = new FriendRequest();
+        request.setSender(sender);
+        request.setReceiver(receiver);
+        request.setCreatedAt(LocalDate.now());
+
+        friendRequestRepo.save(request);
+
+        FriendRequestDTO dto = new FriendRequestDTO(
+                senderId,
+                receiverId,
+                sender.getUsername(),
+                receiver.getUsername(),
+                sender.getAvatarUrl(),
+                receiver.getAvatarUrl());
+
+        simp.convertAndSendToUser(receiver.getUsername(), FRIEND_INIVATIONS_CHANNEL, dto);
+
+        return dto;
+
     }
 
     /**
@@ -84,12 +128,17 @@ public class CommunityService {
      * @param userId
      * @return
      */
-    public List<InviteDTO> getInviteFromFriend(long userId) {
-        List<Friendship> queryResult = friendshipRepo.findAllInviteFromFriend(userId);
-        return queryResult.stream().map(friendship -> new InviteDTO(
-                friendship.getFriendshipId().getUserId(),
-                friendship.getUser().getAvatarUrl(),
-                friendship.getUser().getUsername())).toList();
+    public List<FriendRequestDTO> getInviteFromFriend(Long userId) {
+        List<FriendRequest> queryResult = friendRequestRepo.findAllByReceiverId(userId).orElse(null);
+        return queryResult.stream()
+                .map(request -> new FriendRequestDTO(
+                        request.getSender().getUserId(),
+                        request.getReceiver().getUserId(),
+                        request.getSender().getUsername(),
+                        request.getReceiver().getUsername(),
+                        request.getSender().getAvatarUrl(),
+                        request.getReceiver().getAvatarUrl()))
+                .toList();
     }
 
     /**
@@ -98,60 +147,103 @@ public class CommunityService {
      * @param userId
      * @return
      */
-    public List<InviteDTO> getInviteFromUser(long userId) {
-        List<Friendship> queryResult = friendshipRepo.findAllInviteFromUser(userId);
-        return queryResult.stream().map(friendship -> new InviteDTO(
-                friendship.getFriendshipId().getFriendId(),
-                friendship.getFriend().getAvatarUrl(),
-                friendship.getFriend().getUsername())).toList();
+    public List<FriendRequestDTO> getInviteFromUser(Long userId) {
+        List<FriendRequest> queryResult = friendRequestRepo.findAllBySenderId(userId).orElse(null);
+        return queryResult.stream()
+                .map(request -> new FriendRequestDTO(
+                        request.getSender().getUserId(),
+                        request.getReceiver().getUserId(),
+                        request.getSender().getUsername(),
+                        request.getReceiver().getUsername(),
+                        request.getSender().getAvatarUrl(),
+                        request.getReceiver().getAvatarUrl()))
+                .toList();
     }
 
     /**
-     * First, create new Friendship with userId = userId and friendId = friendId
-     * Then, update Friendship with userId = friendId and friendId = userId status
-     * from "Pending" to "Accepted"
+     * First, delete request in FriendRequest in DB, then create a
+     * new record
      * 
-     * Reason is that 2 users are friends when there are 2 Records in DB:
-     * User → Friend & Friend → User with status: "Accepted"
+     * Constrains: userId1 < userId2
+     * 
+     * Assume: On Frontend, when current User accept Invite, the invite will
+     * automatically
+     * disappear.
      * 
      * @param userId
      * @param friendId
      * @return
      */
     @Transactional
-    public FriendshipDTO acceptInvite(long userId, long friendId) {
-        // Get references
-        User curUser = entityManager.getReference(User.class, userId);
-        User friend = entityManager.getReference(User.class, friendId);
-
-        // Create new Friendship
-        FriendshipId newId = new FriendshipId(userId, friendId);
-        Friendship newT = friendshipRepo.findById(newId).orElse(null);
-
-        if (newT == null) {
-            newT = new Friendship(newId, curUser, friend, "Accepted", LocalDate.now());
-        } else {
-            newT.setCreatedAt(LocalDate.now());
-            newT.setStatus("Accepted");
+    public FriendDTO acceptInvite(Long curUserId, Long senderId) {
+        // Find Request
+        FriendRequest request = friendRequestRepo.findBySenderIdAndReceiverId(senderId, curUserId).orElse(null);
+        if (request == null) {
+            throw new EntityNotFoundException("REQUEST_NOT_FOUND");
         }
 
-        // Update already Friendship
-        FriendshipId inviteId = new FriendshipId(friendId, userId);
-        Friendship inviteObj = friendshipRepo.findById(inviteId).orElse(null);
-        inviteObj.setStatus("Accepted");
-        inviteObj.setCreatedAt(LocalDate.now());
+        // Delete Request
+        friendRequestRepo.delete(request);
 
-        // Save to DB
-        friendshipRepo.save(newT);
-        friendshipRepo.save(inviteObj);
+        // Create new Friend
+        User user1 = entityManager.getReference(User.class, (curUserId < senderId) ? curUserId : senderId);
+        User user2 = entityManager.getReference(User.class, (curUserId < senderId) ? senderId : curUserId);
+        FriendshipId newKey = new FriendshipId(user1.getUserId(), user2.getUserId());
+        Friendship newF = new Friendship();
+        newF.setFriendshipId(newKey);
+        newF.setUser1(user1);
+        newF.setUser2(user2);
+        newF.setCreatedAt(LocalDate.now());
 
-        Conversation con = (userId < friendId) ? conversationRepo.findByUser1AndUser2(userId, friendId)
-                : conversationRepo.findByUser1AndUser2(friendId, userId);
-        if (con == null) {
-            this.createConversation(userId, friendId);
+        // Save Friend
+        friendshipRepo.save(newF);
+
+        if (conversationRepo.findByUser1AndUser2(user1.getUserId(), user2.getUserId()) == null) {
+            Conversation newConversation = new Conversation();
+            newConversation.setUser1(user1);
+            newConversation.setUser2(user2);
+            newConversation.setCreatedAt(LocalDate.now());
+            conversationRepo.save(newConversation);
         }
 
-        return new FriendshipDTO(userId, friendId, "Accepted", LocalDate.now());
+        User sender = entityManager.getReference(User.class, senderId);
+        this.sendToChannelAcceptOrDecline(sender.getUsername(), curUserId);
+
+        boolean isUser1 = newF.getFriendshipId().getUser1Id().equals(curUserId);
+        User friendUser = isUser1 ? newF.getUser2() : newF.getUser1();
+
+        return new FriendDTO(
+                friendUser.getUserId(),
+                friendUser.getUsername(),
+                friendUser.getAvatarUrl());
+    }
+
+    /**
+     * Delete an invite, use by Decline on User Interfrace, therefore, delete the
+     * invitation
+     * made by sender
+     * 
+     * @param curUserId
+     * @param senderId
+     * @return
+     */
+    @Transactional
+    public void deleteInvite(Long senderId, Long receiverId) {
+
+        if (receiverId == null) {
+            throw new IllegalArgumentException("ReceiverID must not null");
+        }
+        if (senderId == null) {
+            throw new IllegalArgumentException("SenderID must not null");
+        }
+
+        FriendRequest request = friendRequestRepo.findBySenderIdAndReceiverId(senderId, receiverId).orElse(null);
+
+        if (request == null) {
+            throw new EntityNotFoundException("No Friend Request found");
+        }
+
+        friendRequestRepo.delete(request);
     }
 
     /**
@@ -162,26 +254,25 @@ public class CommunityService {
      * @return
      */
     @Transactional
-    public FriendshipDTO blockInvite(long userId, long friendId) {
-        // Get references
-        User curUser = entityManager.getReference(User.class, userId);
-        User friend = entityManager.getReference(User.class, friendId);
+    public FriendDTO blockUser(Long curUserId, Long blockedId) {
+        if (curUserId == null) {
+            throw new IllegalArgumentException("CurUserID must not null");
+        }
+        if (blockedId == null) {
+            throw new IllegalArgumentException("CurUserID must not null");
+        }
 
-        // Create new Friendship
-        FriendshipId newId = new FriendshipId(userId, friendId);
-        Friendship newT = new Friendship(newId, curUser, friend, "Blocked", LocalDate.now());
+        User blocker = entityManager.getReference(User.class, curUserId);
+        User blocked = entityManager.getReference(User.class, blockedId);
 
-        // Update already Friendship
-        FriendshipId inviteId = new FriendshipId(friendId, userId);
-        Friendship inviteObj = friendshipRepo.findById(inviteId).orElse(null);
-        inviteObj.setStatus("Blocked");
-        inviteObj.setCreatedAt(LocalDate.now());
+        Block newB = new Block();
+        newB.setBlocker(blocker);
+        newB.setBlocked(blocked);
+        newB.setCreatedAt(LocalDate.now());
 
-        // Save to DB
-        friendshipRepo.save(newT);
-        friendshipRepo.save(inviteObj);
+        blockRepo.save(newB);
 
-        return new FriendshipDTO(userId, friendId, "Blocked", LocalDate.now());
+        return new FriendDTO(blockedId, blocked.getUsername(), blocked.getAvatarUrl());
     }
 
     /**
@@ -192,31 +283,11 @@ public class CommunityService {
      * @param friendId
      */
     @Transactional
-    public void deleteFriendship(long userId, long friendId) {
-        Friendship res = friendshipRepo.findById(new FriendshipId(userId, friendId)).orElse(null);
-        Friendship reverseRes = friendshipRepo.findById(new FriendshipId(friendId, userId)).orElse(null);
+    public void unfriend(Long userId, Long friendId) {
+        Friendship friendship = friendshipRepo.findByUser1AndUser2(
+                (userId < friendId) ? userId : friendId, (userId < friendId) ? friendId : userId).orElse(null);
 
-        if (res != null) {
-            friendshipRepo.delete(res);
-        }
-
-        if (reverseRes != null) {
-            friendshipRepo.delete(reverseRes);
-        }
-
-    }
-
-    /**
-     * Get list FriendDTO from a list of Friendship found in DB that have
-     * current userId.
-     * 
-     * @param userId
-     * @return
-     */
-    public List<FriendDTO> getFriendList(long userId) {
-        return friendshipRepo.findAllFriend(userId).stream().map(friendship -> new FriendDTO(
-                friendship.getFriend().getUserId(),
-                friendship.getFriend().getUsername())).toList();
+        friendshipRepo.delete(friendship);
     }
 
     /**

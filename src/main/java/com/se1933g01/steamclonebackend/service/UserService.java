@@ -13,11 +13,12 @@ import com.se1933g01.steamclonebackend.dto.BannedUserDTO;
 import com.se1933g01.steamclonebackend.dto.user.FriendDTO;
 import com.se1933g01.steamclonebackend.dto.user.UserDetailDTO;
 import com.se1933g01.steamclonebackend.dto.user.UserUpdateDTO;
+import com.se1933g01.steamclonebackend.entity.community.Block;
 import com.se1933g01.steamclonebackend.entity.community.Friendship;
 import com.se1933g01.steamclonebackend.entity.user.User;
 import com.se1933g01.steamclonebackend.mapper.EntityMapper;
+import com.se1933g01.steamclonebackend.repository.BlockRepo;
 import com.se1933g01.steamclonebackend.repository.FriendshipRepo;
-import com.se1933g01.steamclonebackend.repository.TransactionRepo;
 import com.se1933g01.steamclonebackend.repository.UserRepo;
 
 import java.io.IOException;
@@ -25,7 +26,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Random;
-import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -33,23 +33,13 @@ public class UserService {
     private final CloudinaryService CloudinaryService;
 
     private UserRepo userRepo;
-    private TransactionRepo transactionRepo;
-    private final FriendshipRepo friendshipRepo; // Added by Phan NT Son 21-06-2025
+    private final FriendshipRepo friendshipRepo;
+    private final BlockRepo blockRepo;
 
     private EmailService emailService;
 
     private static final String USER_NOT_FOUND_MSG = "User not found";
 
-    public UserService(UserRepo userRepo, TransactionRepo transactionRepo,
-            FriendshipRepo friendshipRepo, CloudinaryService cloudinaryService, EmailService emailService) {
-        this.userRepo = userRepo;
-        this.transactionRepo = transactionRepo;
-        this.friendshipRepo = friendshipRepo;
-        this.CloudinaryService = cloudinaryService;
-        this.emailService = emailService;
-    }
-
-    
     // String constant for user not found message
 
     // author: Ba Thanh
@@ -57,6 +47,15 @@ public class UserService {
 
     public List<User> getAllUsers() {
         return userRepo.findAll();
+    }
+
+    public UserService(com.se1933g01.steamclonebackend.service.CloudinaryService cloudinaryService, UserRepo userRepo,
+            FriendshipRepo friendshipRepo, BlockRepo blockRepo, EmailService emailService) {
+        CloudinaryService = cloudinaryService;
+        this.userRepo = userRepo;
+        this.friendshipRepo = friendshipRepo;
+        this.blockRepo = blockRepo;
+        this.emailService = emailService;
     }
 
     /**
@@ -226,14 +225,24 @@ public class UserService {
      * @return
      */
     public List<FriendDTO> getFriends(Long userId) {
-        List<Friendship> queryResultList = friendshipRepo.findAllFriend(userId);
-        List<FriendDTO> mappingResult = queryResultList.stream()
-                .map(friendship -> new FriendDTO(
-                        friendship.getFriend().getUserId(),
-                        friendship.getFriend().getUsername(),
-                        friendship.getFriend().getAvatarUrl()))
-                .collect(Collectors.toList());
-        return mappingResult;
+        List<Friendship> queryResult = friendshipRepo.findAllFriendship(userId).orElse(null);
+
+        if (queryResult == null) {
+            throw new IllegalStateException("DATABASE_DOES_NOT_RETURN_EMPTY");
+        }
+
+        return queryResult.stream()
+                .map(friendship -> {
+                    boolean isUser1 = friendship.getFriendshipId().getUser1Id().equals(userId);
+                    User friendUser = isUser1 ? friendship.getUser2() : friendship.getUser1();
+
+                    return new FriendDTO(
+                            friendUser.getUserId(),
+                            friendUser.getUsername(),
+                            friendUser.getAvatarUrl());
+                })
+                .toList();
+
     }
 
     /**
@@ -246,13 +255,15 @@ public class UserService {
      * @return
      */
     public List<FriendDTO> getBlocked(Long userId) {
-        List<Friendship> queryResultList = friendshipRepo.findAllBlocked(userId);
+        List<Block> queryResultList = blockRepo.findAllByBlockerId(userId).orElse(null);
+
         List<FriendDTO> mappingResult = queryResultList.stream()
-                .map(friendship -> new FriendDTO(
-                        friendship.getFriend().getUserId(),
-                        friendship.getFriend().getUsername(),
-                        friendship.getFriend().getAvatarUrl()))
-                .collect(Collectors.toList());
+                .map(blocked -> new FriendDTO(
+                        blocked.getBlocked().getUserId(),
+                        blocked.getBlocked().getUsername(),
+                        blocked.getBlocked().getAvatarUrl()))
+                .toList();
+
         return mappingResult;
     }
 

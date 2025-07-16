@@ -2,43 +2,41 @@ package com.se1933g01.steamclonebackend.entity.community;
 
 import java.time.LocalDate;
 
+
 import com.se1933g01.steamclonebackend.entity.user.User;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * @author Phan NT Son
- * @since 21-06-2025
- */
 @Entity
-@Table(name = "Friendships", schema = "public")
+@Table(name = "FriendRequests", schema = "public")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Friendship {
-    @EmbeddedId
-    private FriendshipId friendshipId;
+public class FriendRequest {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "RequestID")
+    private Long requestId;
 
     @ManyToOne
-    @MapsId("user1Id")
-    @JoinColumn(name = "User1ID")
-    private User user1;
+    @JoinColumn(name = "SenderID")
+    private User sender;
 
     @ManyToOne
-    @MapsId("user2Id")
-    @JoinColumn(name = "User2ID")
-    private User user2;
+    @JoinColumn(name = "ReceiverID")
+    private User receiver;
 
     @Column(name = "CreatedAt")
     private LocalDate createdAt;
-
 }
