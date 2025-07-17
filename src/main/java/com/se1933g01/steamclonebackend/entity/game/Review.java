@@ -23,7 +23,7 @@ import lombok.Setter;
  * Author: Phan Son
  */
 @Getter
-@Setter
+@Setter 
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity

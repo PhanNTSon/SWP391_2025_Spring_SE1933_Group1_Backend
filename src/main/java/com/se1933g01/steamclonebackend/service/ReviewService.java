@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -239,4 +240,26 @@ public class ReviewService {
         dto.setType(type);
         simp.convertAndSend("/topic/review." + nReview.getId().getGameId(), dto);
     }
+
+    /**
+     * Get all reviews in the system
+     * Added by Loc Phan
+     * @author Loc Phan
+     * @return List of all reviews
+     */
+    public List<ReviewDTO> getAllReviews() {
+    return reviewRepo.findAll().stream().map(review -> {
+        ReviewDTO dto = new ReviewDTO();
+        dto.setGameId(review.getId().getGameId());
+        dto.setAuthorId(review.getId().getUserId());
+        dto.setReviewContent(review.getReviewContent());
+        dto.setTimeCreated(review.getTimeCreated());
+        dto.setAuthorName(review.getUser().getUsername());
+        dto.setAuthorAvatarUrl(review.getUser().getAvatarUrl());
+        dto.setRecommended(review.isRecommended());
+        dto.setGameName(review.getGame().getName());
+        return dto;
+    }).collect(Collectors.toList());
+    
+}
 }
