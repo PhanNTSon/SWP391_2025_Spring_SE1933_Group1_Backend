@@ -18,11 +18,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "GroupChatMessage", schema = "public")
+@Table(name = "GroupMessage", schema = "public")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class GroupChatMessage {
+public class GroupMessage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,7 +31,7 @@ public class GroupChatMessage {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "GroupID", nullable = false)
-    private Long groupId;
+    private GroupChat group;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "SenderID", nullable = false)

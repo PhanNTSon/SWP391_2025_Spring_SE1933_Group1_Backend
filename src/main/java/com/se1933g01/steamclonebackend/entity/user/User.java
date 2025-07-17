@@ -172,7 +172,7 @@ public class User {
         @JsonIgnore
         private List<Friendship> isFriendList;
 
-        @OneToMany(mappedBy = "user")
+        @OneToMany(mappedBy = "member")
         private List<GroupChatMember> groupMemberships;
 
         @OneToMany(mappedBy = "owner")

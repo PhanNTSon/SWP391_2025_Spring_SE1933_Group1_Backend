@@ -8,11 +8,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.se1933g01.steamclonebackend.entity.community.GroupChat;
+import com.se1933g01.steamclonebackend.entity.community.GroupMessage;
 
 @Repository
-public interface GroupChatRepo extends JpaRepository<GroupChat, Long> {
+public interface GroupMessageRepo extends JpaRepository<GroupMessage, Long> {
 
-    @Query("SELECT g FROM GroupChat g WHERE g.owner.userId = :ownerId")
-    Optional<List<GroupChat>> findAllByOwnerId(@Param("ownerId") Long ownerId);
+    @Query("SELECT gm FROM GroupMessage gm WHERE gm.group.groupId = :groupChatId ")
+    Optional<List<GroupMessage>> findAllByGroupChatId(@Param("groupChatId") Long groupChatId);
 }

@@ -1,7 +1,9 @@
 package com.se1933g01.steamclonebackend.entity.community;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.se1933g01.steamclonebackend.entity.user.User;
 
 import jakarta.persistence.Column;
@@ -12,6 +14,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -38,4 +41,8 @@ public class GroupChat {
 
     @Column(name = "CreatedAt")
     private LocalDateTime createdAt;
+
+    @OneToMany(mappedBy = "group")
+    @JsonIgnore
+    private List<GroupMessage> messages;
 }

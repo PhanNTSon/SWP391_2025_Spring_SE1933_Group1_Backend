@@ -33,7 +33,7 @@ public class GroupChatMember {
     @ManyToOne
     @MapsId("userId")
     @JoinColumn(name = "UserID")
-    private User user;
+    private User member;
 
     @Column(name = "IsAdmin")
     private boolean isAdmin;

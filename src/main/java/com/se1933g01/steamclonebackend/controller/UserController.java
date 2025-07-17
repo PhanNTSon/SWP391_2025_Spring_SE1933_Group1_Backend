@@ -20,6 +20,8 @@ import com.se1933g01.steamclonebackend.dto.ApiRespDTO;
 import com.se1933g01.steamclonebackend.dto.GameBasicDTO;
 import com.se1933g01.steamclonebackend.dto.community.ConversationDTO;
 import com.se1933g01.steamclonebackend.dto.community.FriendRequestDTO;
+import com.se1933g01.steamclonebackend.dto.community.GroupChatDTO;
+import com.se1933g01.steamclonebackend.dto.community.GroupDTO;
 import com.se1933g01.steamclonebackend.dto.user.EmailChangeConfirmDTO;
 import com.se1933g01.steamclonebackend.dto.user.EmailChangeRequestDTO;
 import com.se1933g01.steamclonebackend.dto.community.SearchResult;
@@ -584,4 +586,22 @@ public class UserController {
         return ResponseEntity.ok(communityService.getConversation(me.getUser().getUserId(), fId));
     }
 
+    @GetMapping("/groupchat")
+    @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
+    public ResponseEntity<ApiRespDTO<?>> getGroupList(@AuthenticationPrincipal CustomUserDetail me) {
+        List<GroupDTO> resDTO = userService.getGroups(me.getUser().getUserId());
+
+        return ResponseEntity.ok().body(
+                new ApiRespDTO<List<GroupDTO>>(true, "GET_GROUP_CHAT_LIST_SUCCESSFULLY", "Get all done", resDTO));
+    }
+
+    @GetMapping("/groupchat/{groupchatId}")
+    @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
+    public ResponseEntity<ApiRespDTO<?>> getGroupChatHistory(@PathVariable(name = "groupchatId") long gcId,
+            @AuthenticationPrincipal CustomUserDetail me) {
+
+        GroupChatDTO resDto = communityService.getGroupChat(gcId);
+
+        return ResponseEntity.ok().body(new ApiRespDTO<GroupChatDTO>(true, "", "", resDto));
+    }
 }
