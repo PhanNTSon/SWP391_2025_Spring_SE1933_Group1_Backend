@@ -100,6 +100,8 @@ public class EntityMapper {
         dto.setMemory(game.getMemory());
         dto.setAdditionalNotes(game.getAdditionalNotes());
         dto.setGraphics(game.getGraphics());
+        dto.setGameUrl(game.getGameUrl());
+        dto.setIconUrl(game.getIconUrl());
 
         // Ánh xạ Publisher (quan trọng: xử lý null hoặc lazy loading ở service nếu cần)
         if (game.getPublisher() != null) {

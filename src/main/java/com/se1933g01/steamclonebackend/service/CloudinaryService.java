@@ -38,4 +38,23 @@ public class CloudinaryService {
             throw new IOException("Failed to process file upload", e);
         }
     }
+
+    public void deleteImage(String imageUrl) {
+        try {
+            String publicId = imageUrl.replaceAll(".*/([^/]+)\\.[^.]+$", "$1");
+            Map result = cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
+            String outcome = (String) result.get("result");
+
+            if ("ok".equals(outcome)) {
+                System.out.println("Image deleted successfully: " + publicId);
+            } else if ("not found".equals(outcome)) {
+                System.out.println("Image not found: " + publicId);
+            } else {
+                System.out.println("Cloudinary delete failed: " + outcome);
+            }
+        } catch (IOException e) {
+            System.err.println("Exception deleting image: " + e.getMessage());
+        }
+    }
+    
 }

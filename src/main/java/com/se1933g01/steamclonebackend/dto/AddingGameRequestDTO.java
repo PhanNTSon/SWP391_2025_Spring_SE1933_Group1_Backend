@@ -8,6 +8,7 @@ import lombok.Data;
 @Data
 public class AddingGameRequestDTO {
     private Long requestId;
+    private Long gameId;
     private String gameName;
     private BigDecimal price; // Changed by Phan Son 21-06
     private String shortDescription;

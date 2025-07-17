@@ -5,14 +5,20 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import jakarta.persistence.EntityNotFoundException; // Hoặc exception tùy chỉnh
 import org.hibernate.Hibernate; // Để khởi tạo các collection lazy
+import org.modelmapper.ModelMapper;
+import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional; // QUAN TRỌNG cho lazy loading
 
+import com.se1933g01.steamclonebackend.dto.AddingGameRequestDTO;
 import com.se1933g01.steamclonebackend.dto.GameBasicDTO;
 import com.se1933g01.steamclonebackend.dto.GameDetailDTO;
 import com.se1933g01.steamclonebackend.entity.game.Game;
+import com.se1933g01.steamclonebackend.entity.request.AddingGameRequest;
+import com.se1933g01.steamclonebackend.entity.user.Publisher;
 import com.se1933g01.steamclonebackend.mapper.EntityMapper;
+import com.se1933g01.steamclonebackend.repository.AddingGameRequestRepo;
 import com.se1933g01.steamclonebackend.repository.GameRepository;
 import com.se1933g01.steamclonebackend.specification.GameSpecification;
 
@@ -27,9 +33,12 @@ import java.util.List;
 public class GameService {
 
     private final GameRepository gameRepository;
-
-    public GameService(GameRepository gameRepository) {
+    private final ModelMapper modelMapper;
+    private final AddingGameRequestRepo addingGameRequestRepo;
+    public GameService(GameRepository gameRepository, ModelMapper modelMapper, AddingGameRequestRepo addingGameRequestRepo) {
+        this.addingGameRequestRepo = addingGameRequestRepo;
         this.gameRepository = gameRepository;
+        this.modelMapper = modelMapper;
     }
 
     /**
@@ -101,4 +110,43 @@ public class GameService {
 
         return EntityMapper.toGameDetailDTO(game);
     }
+
+    public Page<GameBasicDTO> getGamesByPublisherApproved(Publisher publisher, Pageable pageable) {
+        Page<Game> gamePage = gameRepository.findByPublisher(publisher, pageable);
+        return gamePage.map(game -> {
+            modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+            GameBasicDTO dto = modelMapper.map(game, GameBasicDTO.class);
+            dto.setTitle(game.getName());
+            dto.setImageUrl(game.getMedia().get(0).getUrl());
+            dto.setId(game.getGameId());
+            return dto;
+        });
+    }
+
+    public Page<AddingGameRequestDTO> getPendingRequestsByPublisher(Long publisherId, Pageable pageable) {
+        Page<AddingGameRequest> requestPage = addingGameRequestRepo.findPendingGamesByPublisher(publisherId, pageable);
+        return requestPage.map(request -> {
+            modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+            AddingGameRequestDTO dto = modelMapper.map(request, AddingGameRequestDTO.class);
+            dto.setSendDate(request.getRequest().getTimeCreated().toString());
+            return dto;
+        });
+    }
+        
+    public Page<AddingGameRequestDTO> getDeclinedRequestsByPublisher(Long publisherId, Pageable pageable) {
+        Page<AddingGameRequest> requestPage = addingGameRequestRepo.findDeclinedGamesByPublisher(publisherId, pageable);
+        return requestPage.map(request -> {
+            modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+            AddingGameRequestDTO dto = modelMapper.map(request, AddingGameRequestDTO.class);
+            dto.setSendDate(request.getRequest().getTimeCreated().toString());
+            return dto;
+        });
+    }
+
+
+
+
+
+
+
 }

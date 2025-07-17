@@ -104,32 +104,92 @@ public class RequestService {
         addingGameRequestRepo.save(addingGameRequest);
     }
 
+    // public void approveGame(Long requestID) {
+    //     Request request = requestRepo.findById(requestID)
+    //             .orElseThrow(() -> new RuntimeException(REQUEST_NOT_FOUND_MESSAGE));
+    //     AddingGameRequest addingGameRequest = addingGameRequestRepo.findById(requestID)
+    //             .orElseThrow(() -> new RuntimeException("AddingGameRequest not found"));
+    //     Publisher publisher = publisherRepo.findById(request.getUser().getUserId())
+    //             .orElseThrow(() -> new RuntimeException("Publisher not found"));
+    //     Game game = new Game();
+    //     game.setPublisher(publisher);
+    //     game.setName(addingGameRequest.getGameName());
+    //     game.setReleaseDate(LocalDate.now());
+    //     game.setState(true);
+    //     game.setPrice(addingGameRequest.getPrice());
+    //     game.setShortDescription(addingGameRequest.getShortDescription());
+    //     game.setFullDescription(addingGameRequest.getFullDescription());
+    //     game.setTotalPurchased(0);
+    //     game.setOs(addingGameRequest.getOs());
+    //     game.setStorage(addingGameRequest.getStorage());
+    //     game.setProcessor(addingGameRequest.getProcessor());
+    //     game.setMemory(addingGameRequest.getMemory());
+    //     game.setGraphics(addingGameRequest.getGraphics());
+    //     game.setAdditionalNotes(addingGameRequest.getAdditionalNotes());
+    //     game.setGameUrl(addingGameRequest.getGameUrl());
+    //     game.setIconUrl(addingGameRequest.getIconUrl());
+
+    //     gameRepo.save(game);
+
+    //     List<String> mediaUrls = addingGameRequest.getMediaUrls();
+    //     List<Media> mediaList = mediaUrls.stream().map(url -> Media.builder().game(game).url(url).type("Image").build())
+    //             .collect(Collectors.toList());
+    //     mediaRepo.saveAll(mediaList);
+
+    //     List<Integer> tagIds = addingGameRequest.getTags();
+    //     List<Tag> tags = tagRepository.findAllById(tagIds);
+    //     Set<Tag> tagSet = new HashSet<>(tags);
+    //     game.setTags(tagSet);
+    //     gameRepo.save(game);
+
+    //     request.setRequestState(1);
+    //     requestRepo.save(request);
+    // }
+
     public void approveGame(Long requestID) {
         Request request = requestRepo.findById(requestID)
                 .orElseThrow(() -> new RuntimeException(REQUEST_NOT_FOUND_MESSAGE));
+
         AddingGameRequest addingGameRequest = addingGameRequestRepo.findById(requestID)
                 .orElseThrow(() -> new RuntimeException("AddingGameRequest not found"));
+
         Publisher publisher = publisherRepo.findById(request.getUser().getUserId())
                 .orElseThrow(() -> new RuntimeException("Publisher not found"));
-        Game game = new Game();
+
+        Game game;
+
+        if (addingGameRequest.getGameId() == null) {
+            game = new Game();
+            game.setReleaseDate(LocalDate.now());
+            game.setTotalPurchased(0);
+            game.setName(addingGameRequest.getGameName());
+        } else {
+            game = gameRepo.findById(addingGameRequest.getGameId())
+                    .orElseThrow(() -> new RuntimeException("Original Game to update not found with ID: " + addingGameRequest.getGameId()));
+
+            mediaRepo.deleteByGame(game);
+            game.getTags().clear();
+        }
+
         game.setPublisher(publisher);
-        game.setName(addingGameRequest.getGameName());
-        game.setReleaseDate(LocalDate.now());
         game.setState(true);
         game.setPrice(addingGameRequest.getPrice());
         game.setShortDescription(addingGameRequest.getShortDescription());
         game.setFullDescription(addingGameRequest.getFullDescription());
-        game.setTotalPurchased(0);
         game.setOs(addingGameRequest.getOs());
         game.setStorage(addingGameRequest.getStorage());
         game.setProcessor(addingGameRequest.getProcessor());
         game.setMemory(addingGameRequest.getMemory());
         game.setGraphics(addingGameRequest.getGraphics());
         game.setAdditionalNotes(addingGameRequest.getAdditionalNotes());
+        game.setGameUrl(addingGameRequest.getGameUrl());
+        game.setIconUrl(addingGameRequest.getIconUrl());
+
         gameRepo.save(game);
 
         List<String> mediaUrls = addingGameRequest.getMediaUrls();
-        List<Media> mediaList = mediaUrls.stream().map(url -> Media.builder().game(game).url(url).type("Image").build())
+        List<Media> mediaList = mediaUrls.stream()
+                .map(url -> Media.builder().game(game).url(url).type("Image").build())
                 .collect(Collectors.toList());
         mediaRepo.saveAll(mediaList);
 
@@ -137,12 +197,12 @@ public class RequestService {
         List<Tag> tags = tagRepository.findAllById(tagIds);
         Set<Tag> tagSet = new HashSet<>(tags);
         game.setTags(tagSet);
+
         gameRepo.save(game);
 
         request.setRequestState(1);
         requestRepo.save(request);
     }
-
     @Transactional
     public void approvePublisher(Long requestID) {
         Request request = requestRepo.findById(requestID)
@@ -260,13 +320,11 @@ public class RequestService {
         AddingGameRequest addingGameRequest = addingGameRequestRepo.findById(requestId)
                 .orElseThrow(() -> new RuntimeException("AddingGameRequest not found"));
         int status = addingGameRequest.getRequest().getRequestState();
-        if (status == 1 || status == 2) {
-            return null;
-        }
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
         AddingGameRequestDTO addingGameRequestDTO = modelMapper.map(addingGameRequest, AddingGameRequestDTO.class);
         addingGameRequestDTO.setPublisherName(addingGameRequestRepo.findPublisherNameByRequestId(requestId));
         addingGameRequestDTO.setPublisherId(addingGameRequestRepo.findPublisherIdByRequestId(requestId));
+        addingGameRequestDTO.setGameId(addingGameRequest.getGameId());
         return addingGameRequestDTO;
     }
 
@@ -381,4 +439,9 @@ public class RequestService {
         requestRepo.delete(feedback.getRequest());
     }
 
+    public void deleteRequest(Long requestId) {
+        Request request = requestRepo.findById(requestId)
+                .orElseThrow(() -> new RuntimeException("Request not found"));
+        requestRepo.delete(request);
+    }
 }

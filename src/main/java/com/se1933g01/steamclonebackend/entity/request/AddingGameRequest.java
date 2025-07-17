@@ -32,6 +32,9 @@ public class AddingGameRequest {
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     private Long requestId;
 
+    @Column(name = "GameId")
+    private Long gameId;
+
     @Column(name = "GameName", length = 100)
     private String gameName;
 
