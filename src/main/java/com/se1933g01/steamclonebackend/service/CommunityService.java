@@ -1,19 +1,19 @@
 package com.se1933g01.steamclonebackend.service;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.se1933g01.steamclonebackend.dto.ChatMessageDTO;
 import com.se1933g01.steamclonebackend.dto.community.ConversationDTO;
 import com.se1933g01.steamclonebackend.dto.community.FriendRequestDTO;
 import com.se1933g01.steamclonebackend.dto.community.GroupChatDTO;
-import com.se1933g01.steamclonebackend.dto.community.GroupMessageDTO;
-import com.se1933g01.steamclonebackend.dto.community.GroupMessageHistoryDTO;
+import com.se1933g01.steamclonebackend.dto.community.GroupChatMessageDTO;
 import com.se1933g01.steamclonebackend.dto.community.MessageDTO;
+import com.se1933g01.steamclonebackend.dto.community.PrivateChatMessageDTO;
 import com.se1933g01.steamclonebackend.dto.community.SearchResult;
 import com.se1933g01.steamclonebackend.dto.user.FriendDTO;
 import com.se1933g01.steamclonebackend.entity.community.Block;
@@ -22,6 +22,7 @@ import com.se1933g01.steamclonebackend.entity.community.FriendRequest;
 import com.se1933g01.steamclonebackend.entity.community.Friendship;
 import com.se1933g01.steamclonebackend.entity.community.FriendshipId;
 import com.se1933g01.steamclonebackend.entity.community.GroupChat;
+import com.se1933g01.steamclonebackend.entity.community.GroupChatMember;
 import com.se1933g01.steamclonebackend.entity.community.GroupMessage;
 import com.se1933g01.steamclonebackend.entity.community.Message;
 import com.se1933g01.steamclonebackend.entity.user.User;
@@ -29,6 +30,7 @@ import com.se1933g01.steamclonebackend.repository.BlockRepo;
 import com.se1933g01.steamclonebackend.repository.ConversationRepo;
 import com.se1933g01.steamclonebackend.repository.FriendRequestRepo;
 import com.se1933g01.steamclonebackend.repository.FriendshipRepo;
+import com.se1933g01.steamclonebackend.repository.GroupChatMemberRepo;
 import com.se1933g01.steamclonebackend.repository.GroupMessageRepo;
 import com.se1933g01.steamclonebackend.repository.MessageRepo;
 import com.se1933g01.steamclonebackend.repository.UserRepo;
@@ -54,13 +56,15 @@ public class CommunityService {
     private final UserRepo userRepo;
     private final SimpMessagingTemplate simp;
     private final GroupMessageRepo groupMessageRepo;
+    private final GroupChatMemberRepo gcmRepo;
 
     private final static String FRIEND_INIVATIONS_CHANNEL = "/queue/friend.invitations";
     private final static String FRIEND_REQUEST_ACTION_CHANNEL = "/queue/friend.request";
 
     public CommunityService(EntityManager entityManager, FriendshipRepo friendshipRepo,
             FriendRequestRepo friendRequestRepo, BlockRepo blockRepo, ConversationRepo conversationRepo,
-            MessageRepo messageRepo, UserRepo userRepo, SimpMessagingTemplate simp, GroupMessageRepo groupMessageRepo) {
+            MessageRepo messageRepo, UserRepo userRepo, SimpMessagingTemplate simp, GroupMessageRepo groupMessageRepo,
+            GroupChatMemberRepo gcm) {
         this.entityManager = entityManager;
         this.friendshipRepo = friendshipRepo;
         this.friendRequestRepo = friendRequestRepo;
@@ -70,6 +74,7 @@ public class CommunityService {
         this.userRepo = userRepo;
         this.simp = simp;
         this.groupMessageRepo = groupMessageRepo;
+        this.gcmRepo = gcm;
     }
 
     public void sendToChannelAcceptOrDecline(String username, Long receiverId) {
@@ -326,27 +331,37 @@ public class CommunityService {
 
         return new ConversationDTO(conversationId,
                 messages.stream().map(message -> new MessageDTO(
+                        message.getSender().getUserId(),
                         message.getSender().getUsername(),
                         message.getMessageContent(),
                         message.getSentAt())).toList());
     }
 
     public GroupChatDTO getGroupChat(Long groupId) {
+        // Get messages
         List<GroupMessage> queryRes = groupMessageRepo.findAllByGroupChatId(groupId).orElse(null);
+        List<MessageDTO> messages = queryRes.stream()
+                .map(m -> new MessageDTO(
+                        m.getSender().getUserId(),
+                        m.getSender().getUsername(),
+                        m.getMessage(), m.getSentAt()))
+                .toList();
 
-        return new GroupChatDTO(
-                queryRes.stream()
-                        .map(message -> new GroupMessageHistoryDTO(
-                                message.getSender().getUserId(),
-                                message.getSender().getUsername(),
-                                message.getSender().getAvatarUrl(),
-                                message.getMessage(),
-                                message.getSentAt()))
-                        .toList());
+        // Get Members
+        List<GroupChatMember> members = gcmRepo.findAllMembersByGroupId(groupId)
+                .orElse(Collections.emptyList());
+        List<FriendDTO> friends = members.stream()
+                .map(member -> new FriendDTO(
+                        member.getMember().getUserId(),
+                        member.getMember().getUsername(),
+                        member.getMember().getAvatarUrl()))
+                .toList();
+                
+        return new GroupChatDTO(friends, messages);
     }
 
     @Transactional
-    public void saveGroupMessage(GroupMessageDTO msg, Long groupId) {
+    public void saveGroupMessage(MessageDTO msg, Long groupId) {
         GroupMessage nMess = new GroupMessage();
 
         GroupChat group = entityManager.getReference(GroupChat.class, groupId);
@@ -354,14 +369,14 @@ public class CommunityService {
 
         nMess.setGroup(group);
         nMess.setSender(sender);
-        nMess.setMessage(msg.getContent());
+        nMess.setMessage(msg.getMessageContent());
         nMess.setSentAt(msg.getSentAt());
 
         groupMessageRepo.save(nMess);
     }
 
     @Transactional
-    public void saveMessage(ChatMessageDTO msg, String username) {
+    public void saveMessage(PrivateChatMessageDTO msg, String username) {
         Message nMessage = new Message();
         Conversation conver = entityManager.getReference(Conversation.class, msg.getConversationId());
         User sender = userRepo.findByUsername(username).orElse(null);
@@ -374,7 +389,8 @@ public class CommunityService {
         messageRepo.save(nMessage);
     }
 
-    public void saveGroupMessage(ChatMessageDTO msg, String username) {
+    @Transactional
+    public void saveGroupMessage(GroupChatMessageDTO msg) {
 
     }
 

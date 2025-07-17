@@ -40,7 +40,4 @@ public class Message {
 
     @Column(name = "SentAt")
     private LocalDateTime sentAt;
-
-    @Column(name = "IsRead")
-    private boolean messageRead;
 }

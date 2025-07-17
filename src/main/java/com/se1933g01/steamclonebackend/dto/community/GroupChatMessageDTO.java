@@ -9,10 +9,9 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class GroupMessageDTO {
+public class GroupChatMessageDTO {
+    private Long groupId;
     private Long senderId;
-    private String senderName;
-    private String senderAvatar;
     private String content;
     private LocalDateTime sentAt;
 }

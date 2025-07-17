@@ -1,9 +1,9 @@
 package com.se1933g01.steamclonebackend.service;
 
+import com.se1933g01.steamclonebackend.utils.GeminiContentModerator;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
-import org.springframework.context.annotation.DeferredImportSelector.Group;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.se1933g01.steamclonebackend.dto.BannedUserDTO;
-import com.se1933g01.steamclonebackend.dto.community.GroupChatDTO;
 import com.se1933g01.steamclonebackend.dto.community.GroupDTO;
 import com.se1933g01.steamclonebackend.dto.user.FriendDTO;
 import com.se1933g01.steamclonebackend.dto.user.UserDetailDTO;
@@ -39,6 +38,8 @@ import java.util.Random;
 @Service
 public class UserService {
 
+    private final GeminiContentModerator geminiContentModerator;
+
     private final CloudinaryService CloudinaryService;
 
     private UserRepo userRepo;
@@ -62,7 +63,7 @@ public class UserService {
 
     public UserService(com.se1933g01.steamclonebackend.service.CloudinaryService cloudinaryService, UserRepo userRepo,
             FriendshipRepo friendshipRepo, BlockRepo blockRepo, GroupChatRepo groupChatRepo,
-            GroupChatMemberRepo gcmRepo, EmailService emailService) {
+            GroupChatMemberRepo gcmRepo, EmailService emailService, GeminiContentModerator geminiContentModerator) {
         CloudinaryService = cloudinaryService;
         this.userRepo = userRepo;
         this.friendshipRepo = friendshipRepo;
@@ -70,6 +71,7 @@ public class UserService {
         this.groupChatRepo = groupChatRepo;
         this.gcmRepo = gcmRepo;
         this.emailService = emailService;
+        this.geminiContentModerator = geminiContentModerator;
     }
 
     /**
