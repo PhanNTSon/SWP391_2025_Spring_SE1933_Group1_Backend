@@ -14,6 +14,7 @@ import com.se1933g01.steamclonebackend.dto.community.CreateGroupChatDTO;
 import com.se1933g01.steamclonebackend.dto.community.FriendRequestDTO;
 import com.se1933g01.steamclonebackend.dto.community.GroupChatDTO;
 import com.se1933g01.steamclonebackend.dto.community.GroupChatMessageDTO;
+import com.se1933g01.steamclonebackend.dto.community.GroupMemberDTO;
 import com.se1933g01.steamclonebackend.dto.community.MessageDTO;
 import com.se1933g01.steamclonebackend.dto.community.PrivateChatMessageDTO;
 import com.se1933g01.steamclonebackend.dto.community.SearchResult;
@@ -66,6 +67,13 @@ public class CommunityService {
     private final static String FRIEND_INIVATIONS_CHANNEL = "/queue/friend.invitations";
     private final static String FRIEND_REQUEST_ACTION_CHANNEL = "/queue/friend.request";
 
+    // server broadcasts these
+    private static final String FRIEND_ADDED_CHANNEL = "/topic/friends.%d.added";
+    private static final String FRIEND_REMOVED_CHANNEL = "/topic/friends.%d.removed";
+
+    private static final String GROUP_ADDED_CHANNEL = "/topic/groups.%d.added";
+    private static final String GROUP_REMOVED_CHANNEL = "/topic/groups.%d.removed";
+
     public CommunityService(EntityManager entityManager, FriendshipRepo friendshipRepo,
             FriendRequestRepo friendRequestRepo, BlockRepo blockRepo, ConversationRepo conversationRepo,
             MessageRepo messageRepo, UserRepo userRepo, SimpMessagingTemplate simp, GroupMessageRepo groupMessageRepo,
@@ -89,6 +97,26 @@ public class CommunityService {
 
     public void sendToChannelCancel(String username, Long senderId) {
         simp.convertAndSendToUser(username, FRIEND_REQUEST_ACTION_CHANNEL + ".b2", senderId);
+    }
+
+    private void sendFriendAdded(Long receiverId, FriendDTO friendDto) {
+        String dest = String.format(FRIEND_ADDED_CHANNEL, receiverId);
+        simp.convertAndSend(dest, friendDto);
+    }
+
+    private void sendFriendRemoved(Long receiverId, Long removedFriendId) {
+        String dest = String.format(FRIEND_REMOVED_CHANNEL, receiverId);
+        simp.convertAndSend(dest, removedFriendId);
+    }
+
+    private void sendGroupAdded(Long receiverId, GroupChatDTO groupChatDTO) {
+        String dest = String.format(GROUP_ADDED_CHANNEL, receiverId);
+        simp.convertAndSend(dest, groupChatDTO);
+    }
+
+    private void sendGroupRemoved(Long receiverId, Long removedGroupId) {
+        String dest = String.format(GROUP_REMOVED_CHANNEL, receiverId);
+        simp.convertAndSend(dest, removedGroupId);
     }
 
     /**
@@ -225,16 +253,28 @@ public class CommunityService {
             conversationRepo.save(newConversation);
         }
 
-        User sender = entityManager.getReference(User.class, senderId);
-        this.sendToChannelAcceptOrDecline(sender.getUsername(), curUserId);
-
         boolean isUser1 = newF.getFriendshipId().getUser1Id().equals(curUserId);
         User friendUser = isUser1 ? newF.getUser2() : newF.getUser1();
+        User curUser = isUser1 ? newF.getUser1() : newF.getUser2();
 
-        return new FriendDTO(
+        FriendDTO dto = new FriendDTO(
                 friendUser.getUserId(),
                 friendUser.getUsername(),
                 friendUser.getAvatarUrl());
+
+        User sender = entityManager.getReference(User.class, senderId);
+        this.sendToChannelAcceptOrDecline(sender.getUsername(), curUserId);
+
+        // send to current user
+        this.sendFriendAdded(curUserId, dto);
+
+        // send to the other party
+        sendFriendAdded(senderId, new FriendDTO(
+                curUser.getUserId(),
+                curUser.getUsername(),
+                curUser.getAvatarUrl()));
+
+        return dto;
     }
 
     /**
@@ -307,6 +347,9 @@ public class CommunityService {
                 (userId < friendId) ? userId : friendId, (userId < friendId) ? friendId : userId).orElse(null);
 
         friendshipRepo.delete(friendship);
+        this.sendFriendRemoved(userId, friendId);
+        this.sendFriendRemoved(friendId, userId);
+
     }
 
     /**
@@ -356,10 +399,11 @@ public class CommunityService {
         // Get Members
         List<GroupChatMember> members = gcmRepo.findAllMembersByGroupId(groupId)
                 .orElse(Collections.emptyList());
-        List<FriendDTO> friends = members.stream()
-                .map(member -> new FriendDTO(
+        List<GroupMemberDTO> friends = members.stream()
+                .map(member -> new GroupMemberDTO(
                         member.getMember().getUserId(),
                         member.getMember().getUsername(),
+                        member.isAdmin(),
                         member.getMember().getAvatarUrl()))
                 .toList();
 
@@ -420,7 +464,18 @@ public class CommunityService {
 
     @Transactional
     public GroupChatDTO createGroupChat(CreateGroupChatDTO newG, Long ownerId) {
+        if (newG == null) {
+            throw new IllegalArgumentException("New Group Details must not be Null");
+        }
+        if (ownerId == null) {
+            throw new IllegalArgumentException("OwnerID must not be Null");
+        }
+
         User owner = entityManager.getReference(User.class, ownerId);
+
+        if (owner == null) {
+            throw new EntityNotFoundException("No Group Owner found to Create");
+        }
 
         GroupChat newGroup = new GroupChat();
         newGroup.setGroupName(newG.getGroupName());
@@ -429,19 +484,57 @@ public class CommunityService {
 
         GroupChat saved = groupChatRepo.save(newGroup);
 
+        // Saved owner to DB
+        GroupChatMemberId oId = new GroupChatMemberId(saved.getGroupId(), ownerId);
+        GroupChatMember o = new GroupChatMember(oId, saved, owner, true, LocalDateTime.now());
+        gcmRepo.save(o);
+
+        // Saved members to DB
         newG.getMembers().stream().forEach(member -> {
-            User m = entityManager.getReference(User.class, member.getFriendId());
-            GroupChatMemberId id = new GroupChatMemberId(saved.getGroupId(), member.getFriendId());
+            if (member.getMemberId() == null) {
+                throw new IllegalArgumentException("MemberID must not be Null in Create new Group");
+            }
+            User m = entityManager.getReference(User.class, member.getMemberId());
+
+            GroupChatMemberId id = new GroupChatMemberId(saved.getGroupId(), member.getMemberId());
             GroupChatMember newMember = new GroupChatMember();
             newMember.setId(id);
             newMember.setMember(m);
-            newMember.setAdmin(member.getFriendId() == ownerId);
+            newMember.setAdmin(false);
             newMember.setGroup(newGroup);
             newMember.setJoinedAt(LocalDateTime.now());
 
             gcmRepo.save(newMember);
         });
 
-        return new GroupChatDTO(newG.getMembers(), Collections.emptyList());
+        GroupChatDTO dto = new GroupChatDTO(newG.getMembers(), Collections.emptyList());
+
+        this.sendGroupAdded(ownerId, dto);
+        newG.getMembers().forEach(member -> this.sendGroupAdded(member.getMemberId(), dto));
+
+        return dto;
+    }
+
+    @Transactional
+    public void deleteGroupChat(Long groupId) {
+
+        if (groupId == null) {
+            throw new IllegalArgumentException("GroupID must not be null");
+        }
+
+        GroupChat gc = entityManager.getReference(GroupChat.class, groupId);
+
+        if (gc == null) {
+            throw new EntityNotFoundException("No Group Found with ID:" + groupId);
+        }
+
+        groupChatRepo.delete(gc);
+
+        this.sendGroupRemoved(gc.getOwner().getUserId(), groupId);
+        List<GroupChatMember> members = gcmRepo.findAllMembersByGroupId(groupId)
+                .orElseThrow(() -> new IllegalStateException("No group members found - DB Error"));
+
+        members.stream().forEach(member -> this.sendGroupRemoved(member.getMember().getUserId(), groupId));
+
     }
 }

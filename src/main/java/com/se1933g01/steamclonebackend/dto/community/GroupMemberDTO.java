@@ -1,8 +1,5 @@
 package com.se1933g01.steamclonebackend.dto.community;
 
-import java.util.List;
-
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,7 +7,9 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class GroupChatDTO {
-    private List<GroupMemberDTO> members;
-    private List<MessageDTO> messages;
+public class GroupMemberDTO {
+    private Long memberId;
+    private String memberName;
+    private boolean isAdmin;
+    private String memberAvatar;
 }
