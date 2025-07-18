@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.se1933g01.steamclonebackend.dto.BannedUserDTO;
+import com.se1933g01.steamclonebackend.dto.community.CreateGroupChatDTO;
 import com.se1933g01.steamclonebackend.dto.community.GroupDTO;
 import com.se1933g01.steamclonebackend.dto.user.FriendDTO;
 import com.se1933g01.steamclonebackend.dto.user.UserDetailDTO;

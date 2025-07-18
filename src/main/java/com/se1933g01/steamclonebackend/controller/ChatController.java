@@ -4,7 +4,6 @@ import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.Set;
 
-import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
@@ -58,8 +57,12 @@ public class ChatController {
         communityService.saveGroupMessage(msg);
 
         MessageDTO sendBack = new MessageDTO();
+        sendBack.setSenderId(msg.getSenderId());
+        sendBack.setSenderName(principal.getName());
+        sendBack.setMessageContent(msg.getContent());
+        sendBack.setSentAt(msg.getSentAt());
 
-        messagingTemplate.convertAndSend("/topic/" + msg.getGroupId() + "/messages", sendBack);
+        messagingTemplate.convertAndSend("/topic/group/" + msg.getGroupId() + "/messages", sendBack);
     }
 
     @SubscribeMapping("/online")

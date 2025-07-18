@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.se1933g01.steamclonebackend.dto.ApiRespDTO;
 import com.se1933g01.steamclonebackend.dto.GameBasicDTO;
 import com.se1933g01.steamclonebackend.dto.community.ConversationDTO;
+import com.se1933g01.steamclonebackend.dto.community.CreateGroupChatDTO;
 import com.se1933g01.steamclonebackend.dto.community.FriendRequestDTO;
 import com.se1933g01.steamclonebackend.dto.community.GroupChatDTO;
 import com.se1933g01.steamclonebackend.dto.community.GroupDTO;
@@ -603,5 +604,21 @@ public class UserController {
         GroupChatDTO resDto = communityService.getGroupChat(gcId);
 
         return ResponseEntity.ok().body(new ApiRespDTO<GroupChatDTO>(true, "", "", resDto));
+    }
+
+    @PostMapping("/groupchat/add")
+    @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
+    public ResponseEntity<ApiRespDTO<?>> createGroupChat(@RequestBody CreateGroupChatDTO dto,
+            @AuthenticationPrincipal CustomUserDetail me) {
+        GroupChatDTO resp = communityService.createGroupChat(dto, me.getUser().getUserId());
+        return ResponseEntity.ok()
+                .body(new ApiRespDTO<GroupChatDTO>(true, "CREATE_SUCCESS", "Create group chat success", resp));
+    }
+
+    @DeleteMapping("/groupchat/delete")
+    @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
+    public ResponseEntity<ApiRespDTO<?>> deleteGroupChat(@RequestBody Long groupId,
+            @AuthenticationPrincipal CustomUserDetail me) {
+        return ResponseEntity.ok().body(new ApiRespDTO<>(true, "DELETE_SUCCESS", "Delete sucess", null));
     }
 }

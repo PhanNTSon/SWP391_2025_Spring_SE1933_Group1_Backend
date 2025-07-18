@@ -1,6 +1,7 @@
 package com.se1933g01.steamclonebackend.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.se1933g01.steamclonebackend.dto.community.ConversationDTO;
+import com.se1933g01.steamclonebackend.dto.community.CreateGroupChatDTO;
 import com.se1933g01.steamclonebackend.dto.community.FriendRequestDTO;
 import com.se1933g01.steamclonebackend.dto.community.GroupChatDTO;
 import com.se1933g01.steamclonebackend.dto.community.GroupChatMessageDTO;
@@ -23,6 +25,7 @@ import com.se1933g01.steamclonebackend.entity.community.Friendship;
 import com.se1933g01.steamclonebackend.entity.community.FriendshipId;
 import com.se1933g01.steamclonebackend.entity.community.GroupChat;
 import com.se1933g01.steamclonebackend.entity.community.GroupChatMember;
+import com.se1933g01.steamclonebackend.entity.community.GroupChatMemberId;
 import com.se1933g01.steamclonebackend.entity.community.GroupMessage;
 import com.se1933g01.steamclonebackend.entity.community.Message;
 import com.se1933g01.steamclonebackend.entity.user.User;
@@ -31,6 +34,7 @@ import com.se1933g01.steamclonebackend.repository.ConversationRepo;
 import com.se1933g01.steamclonebackend.repository.FriendRequestRepo;
 import com.se1933g01.steamclonebackend.repository.FriendshipRepo;
 import com.se1933g01.steamclonebackend.repository.GroupChatMemberRepo;
+import com.se1933g01.steamclonebackend.repository.GroupChatRepo;
 import com.se1933g01.steamclonebackend.repository.GroupMessageRepo;
 import com.se1933g01.steamclonebackend.repository.MessageRepo;
 import com.se1933g01.steamclonebackend.repository.UserRepo;
@@ -57,6 +61,7 @@ public class CommunityService {
     private final SimpMessagingTemplate simp;
     private final GroupMessageRepo groupMessageRepo;
     private final GroupChatMemberRepo gcmRepo;
+    private final GroupChatRepo groupChatRepo;
 
     private final static String FRIEND_INIVATIONS_CHANNEL = "/queue/friend.invitations";
     private final static String FRIEND_REQUEST_ACTION_CHANNEL = "/queue/friend.request";
@@ -64,7 +69,7 @@ public class CommunityService {
     public CommunityService(EntityManager entityManager, FriendshipRepo friendshipRepo,
             FriendRequestRepo friendRequestRepo, BlockRepo blockRepo, ConversationRepo conversationRepo,
             MessageRepo messageRepo, UserRepo userRepo, SimpMessagingTemplate simp, GroupMessageRepo groupMessageRepo,
-            GroupChatMemberRepo gcm) {
+            GroupChatMemberRepo gcmRepo, GroupChatRepo groupChatRepo) {
         this.entityManager = entityManager;
         this.friendshipRepo = friendshipRepo;
         this.friendRequestRepo = friendRequestRepo;
@@ -74,7 +79,8 @@ public class CommunityService {
         this.userRepo = userRepo;
         this.simp = simp;
         this.groupMessageRepo = groupMessageRepo;
-        this.gcmRepo = gcm;
+        this.gcmRepo = gcmRepo;
+        this.groupChatRepo = groupChatRepo;
     }
 
     public void sendToChannelAcceptOrDecline(String username, Long receiverId) {
@@ -356,7 +362,7 @@ public class CommunityService {
                         member.getMember().getUsername(),
                         member.getMember().getAvatarUrl()))
                 .toList();
-                
+
         return new GroupChatDTO(friends, messages);
     }
 
@@ -391,6 +397,15 @@ public class CommunityService {
 
     @Transactional
     public void saveGroupMessage(GroupChatMessageDTO msg) {
+        GroupChat group = entityManager.getReference(GroupChat.class, msg.getGroupId());
+        User sender = entityManager.getReference(User.class, msg.getSenderId());
+        GroupMessage nMessage = new GroupMessage();
+        nMessage.setGroup(group);
+        nMessage.setSender(sender);
+        nMessage.setMessage(msg.getContent());
+        nMessage.setSentAt(msg.getSentAt());
+
+        groupMessageRepo.save(nMessage);
 
     }
 
@@ -401,5 +416,32 @@ public class CommunityService {
         } else {
             return new SearchResult(target.getUserId(), target.getUsername(), target.getAvatarUrl());
         }
+    }
+
+    @Transactional
+    public GroupChatDTO createGroupChat(CreateGroupChatDTO newG, Long ownerId) {
+        User owner = entityManager.getReference(User.class, ownerId);
+
+        GroupChat newGroup = new GroupChat();
+        newGroup.setGroupName(newG.getGroupName());
+        newGroup.setOwner(owner);
+        newGroup.setCreatedAt(LocalDateTime.now());
+
+        GroupChat saved = groupChatRepo.save(newGroup);
+
+        newG.getMembers().stream().forEach(member -> {
+            User m = entityManager.getReference(User.class, member.getFriendId());
+            GroupChatMemberId id = new GroupChatMemberId(saved.getGroupId(), member.getFriendId());
+            GroupChatMember newMember = new GroupChatMember();
+            newMember.setId(id);
+            newMember.setMember(m);
+            newMember.setAdmin(member.getFriendId() == ownerId);
+            newMember.setGroup(newGroup);
+            newMember.setJoinedAt(LocalDateTime.now());
+
+            gcmRepo.save(newMember);
+        });
+
+        return new GroupChatDTO(newG.getMembers(), Collections.emptyList());
     }
 }
