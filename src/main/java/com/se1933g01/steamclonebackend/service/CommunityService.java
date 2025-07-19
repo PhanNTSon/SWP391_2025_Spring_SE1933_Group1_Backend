@@ -40,6 +40,7 @@ import com.se1933g01.steamclonebackend.repository.GroupChatRepo;
 import com.se1933g01.steamclonebackend.repository.GroupMessageRepo;
 import com.se1933g01.steamclonebackend.repository.MessageRepo;
 import com.se1933g01.steamclonebackend.repository.UserRepo;
+import com.se1933g01.steamclonebackend.utils.GroupAvatarGenerator;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
@@ -521,7 +522,8 @@ public class CommunityService {
             gcmRepo.save(newMember);
         });
 
-        GroupDTO dto = new GroupDTO(saved.getGroupId(), saved.getGroupName());
+        GroupDTO dto = new GroupDTO(saved.getGroupId(), saved.getGroupName(),
+                GroupAvatarGenerator.generateGroupAvatar(saved));
 
         this.sendGroupAdded(ownerId, dto);
         newG.getMembers().forEach(member -> this.sendGroupAdded(member.getMemberId(), dto));
@@ -575,7 +577,8 @@ public class CommunityService {
             gcmRepo.save(newMember);
 
             this.sendGroupJoin(groupId, member);
-            this.sendGroupAdded(member.getMemberId(), new GroupDTO(groupId, group.getGroupName()));
+
+            this.sendGroupAdded(member.getMemberId(), new GroupDTO(groupId, group.getGroupName(), GroupAvatarGenerator.generateGroupAvatar(group)));
         });
 
         return newMembers;
