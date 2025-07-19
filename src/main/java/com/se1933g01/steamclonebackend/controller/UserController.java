@@ -23,6 +23,7 @@ import com.se1933g01.steamclonebackend.dto.community.CreateGroupChatDTO;
 import com.se1933g01.steamclonebackend.dto.community.FriendRequestDTO;
 import com.se1933g01.steamclonebackend.dto.community.GroupChatDTO;
 import com.se1933g01.steamclonebackend.dto.community.GroupDTO;
+import com.se1933g01.steamclonebackend.dto.community.GroupMemberDTO;
 import com.se1933g01.steamclonebackend.dto.user.EmailChangeConfirmDTO;
 import com.se1933g01.steamclonebackend.dto.user.EmailChangeRequestDTO;
 import com.se1933g01.steamclonebackend.dto.community.SearchResult;
@@ -598,7 +599,7 @@ public class UserController {
 
     @GetMapping("/groupchat/{groupchatId}")
     @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
-    public ResponseEntity<ApiRespDTO<?>> getGroupChatHistory(@PathVariable(name = "groupchatId") long gcId,
+    public ResponseEntity<ApiRespDTO<?>> getGroupChatHistory(@PathVariable(name = "groupchatId") Long gcId,
             @AuthenticationPrincipal CustomUserDetail me) {
 
         GroupChatDTO resDto = communityService.getGroupChat(gcId);
@@ -610,15 +611,35 @@ public class UserController {
     @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
     public ResponseEntity<ApiRespDTO<?>> createGroupChat(@RequestBody CreateGroupChatDTO dto,
             @AuthenticationPrincipal CustomUserDetail me) {
-        GroupChatDTO resp = communityService.createGroupChat(dto, me.getUser().getUserId());
+        GroupDTO resp = communityService.createGroupChat(dto, me.getUser().getUserId());
         return ResponseEntity.ok()
-                .body(new ApiRespDTO<GroupChatDTO>(true, "CREATE_SUCCESS", "Create group chat success", resp));
+                .body(new ApiRespDTO<GroupDTO>(true, "CREATE_SUCCESS", "Create group chat success", resp));
     }
 
-    @DeleteMapping("/groupchat/delete")
+    @DeleteMapping("/groupchat/delete/{groupId}")
     @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
-    public ResponseEntity<ApiRespDTO<?>> deleteGroupChat(@RequestBody Long groupId,
+    public ResponseEntity<ApiRespDTO<?>> deleteGroupChat(@PathVariable(name = "groupId") Long groupId,
             @AuthenticationPrincipal CustomUserDetail me) {
+        communityService.deleteGroupChat(groupId, me.getUser().getUserId());
         return ResponseEntity.ok().body(new ApiRespDTO<>(true, "DELETE_SUCCESS", "Delete sucess", null));
     }
+
+    @PostMapping("/groupchat/join/{groupId}")
+    @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
+    public ResponseEntity<ApiRespDTO<?>> joinGroup(@RequestBody List<GroupMemberDTO> newMember,
+            @PathVariable(name = "groupId") Long groupId) {
+        List<GroupMemberDTO> resp = communityService.joinGroup(groupId, newMember);
+        return ResponseEntity.ok()
+                .body(new ApiRespDTO<List<GroupMemberDTO>>(true, "JOIN_SUCCESS", "Join group success", resp));
+    }
+
+    @PostMapping("/groupchat/leave/{groupId}/{memberId}")
+    @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
+    public ResponseEntity<ApiRespDTO<?>> leaveGroup(@PathVariable(name = "memberId") Long memberId,
+            @PathVariable(name = "groupId") Long groupId) {
+        communityService.leaveGroup(groupId, memberId);
+        return ResponseEntity.ok()
+                .body(new ApiRespDTO<>(true, "LEAVE_SUCCESS", "Leave group success", null));
+    }
+
 }

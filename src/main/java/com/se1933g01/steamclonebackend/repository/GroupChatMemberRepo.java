@@ -19,4 +19,8 @@ public interface GroupChatMemberRepo extends JpaRepository<GroupChatMember, Grou
 
     @Query("SELECT gcm FROM GroupChatMember gcm WHERE gcm.group.groupId = :groupId")
     Optional<List<GroupChatMember>> findAllMembersByGroupId(@Param("groupId") Long groupId);
+
+    @Query("SELECT gcm FROM GroupChatMember gcm WHERE gcm.member.userId = :memberId AND gcm.group.groupId = :groupId")
+    Optional<GroupChatMember> findByMemberIdAndGroupId(@Param("memberId") Long memberId,
+            @Param("groupId") Long groupId);
 }
