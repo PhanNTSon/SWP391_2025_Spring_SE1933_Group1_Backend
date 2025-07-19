@@ -58,7 +58,8 @@ public class RequestService {
     private final PublisherRepo publisherRepo;
     private final FeedbackRepo feedbackRepo;
     private final TagRepository tagRepository;
-
+    private final CloudinaryService cloudinaryService;
+    private final R2StorageService r2StorageService;
     public RequestService(
             AddingGameRequestRepo addingGameRequestRepo,
             PublisherApplyRequestRepo publisherApplyRequestRepo,
@@ -70,7 +71,9 @@ public class RequestService {
             PublisherRepo publisherRepo,
             FeedbackRepo feedbackRepo,
             RoleRepo roleRepo,
-            TagRepository tagRepository) {
+            TagRepository tagRepository,
+            CloudinaryService cloudinaryService,
+            R2StorageService r2StorageService) {
         this.addingGameRequestRepo = addingGameRequestRepo;
         this.publisherApplyRequestRepo = publisherApplyRequestRepo;
         this.requestRepo = requestRepo;
@@ -82,6 +85,8 @@ public class RequestService {
         this.feedbackRepo = feedbackRepo;
         this.roleRepo = roleRepo;
         this.tagRepository = tagRepository;
+        this.cloudinaryService = cloudinaryService;
+        this.r2StorageService = r2StorageService;
     }
 
     @PersistenceContext
@@ -100,6 +105,7 @@ public class RequestService {
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
         AddingGameRequest addingGameRequest = modelMapper.map(addingGameRequestDTO, AddingGameRequest.class);
         addingGameRequest.setReleaseDate(LocalDate.now());
+        addingGameRequest.setDeclineMessage(null);
         addingGameRequest.setRequest(savedRequest);
         addingGameRequestRepo.save(addingGameRequest);
     }
@@ -249,7 +255,11 @@ public class RequestService {
         rejectRequestById(requestID);
     }
 
-    public void rejectGame(Long requestID) {
+    public void rejectGame(Long requestID,String declineMessage) {
+        AddingGameRequest addingGameRequest = addingGameRequestRepo.findById(requestID)
+                .orElseThrow(() -> new RuntimeException("AddingGameRequest not found"));
+        addingGameRequest.setDeclineMessage(declineMessage);
+        addingGameRequestRepo.save(addingGameRequest);
         rejectRequestById(requestID);
     }
 
@@ -439,9 +449,16 @@ public class RequestService {
         requestRepo.delete(feedback.getRequest());
     }
 
-    public void deleteRequest(Long requestId) {
+    public void deleteGameRequest(Long requestId) {
         Request request = requestRepo.findById(requestId)
                 .orElseThrow(() -> new RuntimeException("Request not found"));
+        AddingGameRequest addingGameRequest = addingGameRequestRepo.findById(requestId)
+                .orElseThrow(() -> new RuntimeException("Request not found"));
+        for (int i = 0; i < addingGameRequest.getMediaUrls().size(); i++) {
+            cloudinaryService.deleteImage(addingGameRequest.getMediaUrls().get(i));
+        }
+        r2StorageService.deleteFile(addingGameRequest.getGameUrl());
+        addingGameRequestRepo.delete(addingGameRequest);
         requestRepo.delete(request);
     }
 }

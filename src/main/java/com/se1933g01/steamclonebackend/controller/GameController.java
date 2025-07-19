@@ -96,12 +96,13 @@ public class GameController {
     public ResponseEntity<Page<GameBasicDTO>> getMyGames(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size,
+            @RequestParam(required = false) String name,
             @AuthenticationPrincipal CustomUserDetail userDetails) {
 
         Pageable pageable = PageRequest.of(page, size);
         Publisher publisher = publisherService.findById(userDetails.getUser().getUserId());
 
-        Page<GameBasicDTO> gamePage = gameService.getGamesByPublisherApproved(publisher, pageable);
+        Page<GameBasicDTO> gamePage = gameService.getGamesByPublisherApproved(publisher,name,pageable);
 
         return ResponseEntity.ok(gamePage);
     }
@@ -110,11 +111,13 @@ public class GameController {
     public ResponseEntity<Page<AddingGameRequestDTO>> getPendingAddingRequests(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size,
+            @RequestParam(required = false) String name,
             @AuthenticationPrincipal CustomUserDetail userDetails) {
 
         Long publisherId = userDetails.getUser().getUserId();
         Pageable pageable = PageRequest.of(page, size);
-        Page<AddingGameRequestDTO> result = gameService.getPendingRequestsByPublisher(publisherId, pageable);
+        Page<AddingGameRequestDTO> result = gameService.getPendingRequestsByPublisher(publisherId,name, pageable);
+
 
         return ResponseEntity.ok(result);
     }
@@ -123,16 +126,13 @@ public class GameController {
     public ResponseEntity<Page<AddingGameRequestDTO>> getDeclinedAddingRequests(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size,
+            @RequestParam(required = false) String name,
             @AuthenticationPrincipal CustomUserDetail userDetails) {
 
         Long publisherId = userDetails.getUser().getUserId();
         Pageable pageable = PageRequest.of(page, size);
-        Page<AddingGameRequestDTO> result = gameService.getDeclinedRequestsByPublisher(publisherId, pageable);
+        Page<AddingGameRequestDTO> result = gameService.getDeclinedRequestsByPublisher(publisherId,name, pageable);
         return ResponseEntity.ok(result);
     }
-
-
-
-    
 
 }

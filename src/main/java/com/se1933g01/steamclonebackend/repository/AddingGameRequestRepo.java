@@ -27,8 +27,12 @@ public interface AddingGameRequestRepo extends JpaRepository<AddingGameRequest,L
     String findPublisherIdByRequestId(@Param("requestId") Long requestId);
     @Query("SELECT agr FROM AddingGameRequest agr WHERE agr.request.requestState = 0 AND agr.request.user.id = :publisherId")
     Page<AddingGameRequest> findPendingGamesByPublisher(@Param("publisherId") Long publisherId, Pageable pageable);
+    @Query("SELECT agr FROM AddingGameRequest agr WHERE agr.request.requestState = 0 AND agr.request.user.id = :publisherId AND LOWER(agr.gameName) LIKE LOWER(CONCAT('%', :name, '%'))")
+    Page<AddingGameRequest> findByPublisherAndGameNameContainingIgnoreCase(@Param("publisherId") Long publisherId, @Param("name") String name, Pageable pageable);
     @Query("SELECT agr FROM AddingGameRequest agr WHERE agr.request.requestState = 2 AND agr.request.user.id = :publisherId")
     Page<AddingGameRequest> findDeclinedGamesByPublisher(@Param("publisherId") Long publisherId, Pageable pageable);
+    @Query("SELECT agr FROM AddingGameRequest agr WHERE agr.request.requestState = 2 AND agr.request.user.id = :publisherId AND LOWER(agr.gameName) LIKE LOWER(CONCAT('%', :name, '%'))")
+    Page<AddingGameRequest> findDeclinedGamesByPublisherAndGameNameContainingIgnoreCase(@Param("publisherId") Long publisherId, @Param("name") String name, Pageable pageable);
 
 
 }

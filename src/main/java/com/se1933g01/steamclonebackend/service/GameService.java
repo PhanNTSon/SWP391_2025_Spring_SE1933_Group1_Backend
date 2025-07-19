@@ -111,8 +111,15 @@ public class GameService {
         return EntityMapper.toGameDetailDTO(game);
     }
 
-    public Page<GameBasicDTO> getGamesByPublisherApproved(Publisher publisher, Pageable pageable) {
-        Page<Game> gamePage = gameRepository.findByPublisher(publisher, pageable);
+    public Page<GameBasicDTO> getGamesByPublisherApproved(Publisher publisher, String name, Pageable pageable) {
+        Page<Game> gamePage;
+
+        if (name != null && !name.trim().isEmpty()) {
+            gamePage = gameRepository.findByPublisherAndNameContainingIgnoreCase(publisher, name, pageable);
+        } else {
+            gamePage = gameRepository.findByPublisher(publisher, pageable);
+        }
+
         return gamePage.map(game -> {
             modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
             GameBasicDTO dto = modelMapper.map(game, GameBasicDTO.class);
@@ -123,8 +130,15 @@ public class GameService {
         });
     }
 
-    public Page<AddingGameRequestDTO> getPendingRequestsByPublisher(Long publisherId, Pageable pageable) {
-        Page<AddingGameRequest> requestPage = addingGameRequestRepo.findPendingGamesByPublisher(publisherId, pageable);
+    public Page<AddingGameRequestDTO> getPendingRequestsByPublisher(Long publisherId, String name, Pageable pageable) {
+        Page<AddingGameRequest> requestPage;
+
+        if (name != null && !name.trim().isEmpty()) {
+            requestPage = addingGameRequestRepo.findByPublisherAndGameNameContainingIgnoreCase(publisherId, name, pageable);
+        } else {
+            requestPage = addingGameRequestRepo.findPendingGamesByPublisher(publisherId, pageable);
+        }
+
         return requestPage.map(request -> {
             modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
             AddingGameRequestDTO dto = modelMapper.map(request, AddingGameRequestDTO.class);
@@ -132,9 +146,16 @@ public class GameService {
             return dto;
         });
     }
-        
-    public Page<AddingGameRequestDTO> getDeclinedRequestsByPublisher(Long publisherId, Pageable pageable) {
-        Page<AddingGameRequest> requestPage = addingGameRequestRepo.findDeclinedGamesByPublisher(publisherId, pageable);
+      
+    public Page<AddingGameRequestDTO> getDeclinedRequestsByPublisher(Long publisherId, String name, Pageable pageable) {
+        Page<AddingGameRequest> requestPage;
+
+        if (name != null && !name.trim().isEmpty()) {
+            requestPage = addingGameRequestRepo.findDeclinedGamesByPublisherAndGameNameContainingIgnoreCase(publisherId, name, pageable);
+        } else {
+            requestPage = addingGameRequestRepo.findDeclinedGamesByPublisher(publisherId, pageable);
+        }
+
         return requestPage.map(request -> {
             modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
             AddingGameRequestDTO dto = modelMapper.map(request, AddingGameRequestDTO.class);

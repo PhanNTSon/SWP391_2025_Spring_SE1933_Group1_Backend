@@ -87,8 +87,8 @@ public class RequestController {
 
     @PatchMapping("/game/reject/{requestID}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, String>> rejectGame(@PathVariable String requestID) {
-        return handleAction(() -> requestService.rejectGame(Long.parseLong(requestID)),
+    public ResponseEntity<Map<String, String>> rejectGame(@PathVariable String requestID,@RequestBody AddingGameRequestDTO addingGameRequestDTO) {
+        return handleAction(() -> requestService.rejectGame(Long.parseLong(requestID),addingGameRequestDTO.getDeclineMessage()),
                 "Game Rejected", "Game Reject Failed");
     }
 
@@ -332,12 +332,12 @@ public class RequestController {
             return ResponseEntity.badRequest().body(response);
         }
     }
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/game/delete/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','PUBLISHER')")
     public ResponseEntity<Map<String, String>> deleteGameRequest(@PathVariable("id") Long requestId) {
         try {
-            requestService.deleteRequest(requestId);
-            return ResponseEntity.ok(Map.of(RESPONSE_MESSAGE_KEY, "request deleted successfully"));
+            requestService.deleteGameRequest(requestId);
+            return ResponseEntity.ok(Map.of(RESPONSE_MESSAGE_KEY, "Game request deleted successfully"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of(RESPONSE_MESSAGE_KEY, e.getMessage()));
         }
