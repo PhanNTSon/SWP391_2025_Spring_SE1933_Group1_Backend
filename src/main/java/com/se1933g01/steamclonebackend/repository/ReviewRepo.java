@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import com.se1933g01.steamclonebackend.entity.game.Review;
 import com.se1933g01.steamclonebackend.entity.game.ReviewKey;
@@ -13,6 +14,7 @@ import com.se1933g01.steamclonebackend.entity.game.ReviewKey;
 /**
  * Author: Phan Son
  */
+@Repository
 public interface ReviewRepo extends JpaRepository<Review, ReviewKey> {
     @Query("SELECT r FROM Review r JOIN FETCH r.user WHERE r.game.gameId = :gameId")
     List<Review> findByGame_GameId(@Param("gameId") Long gameId);

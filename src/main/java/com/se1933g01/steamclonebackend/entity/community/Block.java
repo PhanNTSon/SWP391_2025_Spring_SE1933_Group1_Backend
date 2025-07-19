@@ -15,30 +15,26 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * @author Phan NT Son
- * @since 21-06-2025
- */
 @Entity
-@Table(name = "Friendships", schema = "public")
+@Table(name = "Blocks", schema = "public")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Friendship {
+public class Block {
+
     @EmbeddedId
-    private FriendshipId friendshipId;
+    private BlockId blockId;
 
     @ManyToOne
-    @MapsId("user1Id")
-    @JoinColumn(name = "User1ID")
-    private User user1;
+    @JoinColumn(name = "BlockerID")
+    @MapsId("blockerId")
+    private User blocker;
 
     @ManyToOne
-    @MapsId("user2Id")
-    @JoinColumn(name = "User2ID")
-    private User user2;
+    @JoinColumn(name = "BlockedID")
+    @MapsId("blockedId")
+    private User blocked;
 
     @Column(name = "CreatedAt")
     private LocalDate createdAt;
-
 }

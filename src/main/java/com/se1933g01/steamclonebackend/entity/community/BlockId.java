@@ -12,10 +12,13 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class FriendshipId implements Serializable {
-    private Long user1Id;
+public class BlockId implements Serializable {
 
-    private Long user2Id;
+    @Column(name = "BlockerID")
+    private Long blockerId;
+    
+    @Column(name = "BlockedID")
+    private Long blockedId;
 
     @Override
     public boolean equals(Object obj) {
@@ -23,12 +26,13 @@ public class FriendshipId implements Serializable {
             return true;
         if (obj == null || obj.getClass() != getClass())
             return false;
-        FriendshipId that = (FriendshipId) obj;
-        return user1Id == that.user1Id && user2Id == that.user2Id;
+        BlockId that = (BlockId) obj;
+        return blockerId == that.blockerId && blockedId == that.blockedId;
     }
 
     @Override
     public int hashCode() {
-        return 31 * Long.hashCode(user1Id) + Long.hashCode(user2Id);
+        return 31 * Long.hashCode(blockerId) + Long.hashCode(blockedId);
     }
+
 }

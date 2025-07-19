@@ -1,6 +1,6 @@
 package com.se1933g01.steamclonebackend.entity.community;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import com.se1933g01.steamclonebackend.entity.user.User;
 
@@ -15,30 +15,29 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * @author Phan NT Son
- * @since 21-06-2025
- */
 @Entity
-@Table(name = "Friendships", schema = "public")
+@Table(name = "GroupChatMember", schema = "public")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Friendship {
+public class GroupChatMember {
+
     @EmbeddedId
-    private FriendshipId friendshipId;
+    private GroupChatMemberId id;
 
     @ManyToOne
-    @MapsId("user1Id")
-    @JoinColumn(name = "User1ID")
-    private User user1;
+    @MapsId("groupId")
+    @JoinColumn(name = "GroupID")
+    private GroupChat group;
 
     @ManyToOne
-    @MapsId("user2Id")
-    @JoinColumn(name = "User2ID")
-    private User user2;
+    @MapsId("userId")
+    @JoinColumn(name = "UserID")
+    private User member;
 
-    @Column(name = "CreatedAt")
-    private LocalDate createdAt;
+    @Column(name = "IsAdmin")
+    private boolean isAdmin;
 
+    @Column(name = "JoinedAt")
+    private LocalDateTime joinedAt;
 }
