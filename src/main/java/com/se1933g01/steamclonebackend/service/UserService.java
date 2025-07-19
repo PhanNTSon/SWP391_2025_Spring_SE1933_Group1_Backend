@@ -1,6 +1,8 @@
 package com.se1933g01.steamclonebackend.service;
 
 import com.se1933g01.steamclonebackend.utils.GeminiContentModerator;
+import com.se1933g01.steamclonebackend.utils.GroupAvatarGenerator;
+
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
@@ -38,8 +40,6 @@ import java.util.Random;
 @Service
 public class UserService {
 
-    private final GeminiContentModerator geminiContentModerator;
-
     private final CloudinaryService CloudinaryService;
 
     private UserRepo userRepo;
@@ -63,7 +63,7 @@ public class UserService {
 
     public UserService(com.se1933g01.steamclonebackend.service.CloudinaryService cloudinaryService, UserRepo userRepo,
             FriendshipRepo friendshipRepo, BlockRepo blockRepo, GroupChatRepo groupChatRepo,
-            GroupChatMemberRepo gcmRepo, EmailService emailService, GeminiContentModerator geminiContentModerator) {
+            GroupChatMemberRepo gcmRepo, EmailService emailService) {
         CloudinaryService = cloudinaryService;
         this.userRepo = userRepo;
         this.friendshipRepo = friendshipRepo;
@@ -71,7 +71,6 @@ public class UserService {
         this.groupChatRepo = groupChatRepo;
         this.gcmRepo = gcmRepo;
         this.emailService = emailService;
-        this.geminiContentModerator = geminiContentModerator;
     }
 
     /**
@@ -270,18 +269,20 @@ public class UserService {
 
         List<GroupChatMember> memberships = gcmRepo.findAllGroupsByMemberId(userId).orElse(null);
 
-        Map<Long, String> groupMap = new LinkedHashMap<>();
+        Map<Long, GroupChat> groupMap = new LinkedHashMap<>();
 
         for (GroupChat g : owned) {
-            groupMap.put(g.getGroupId(), g.getGroupName());
+            groupMap.put(g.getGroupId(), g);
         }
 
         for (GroupChatMember gcm : memberships) {
-            groupMap.put(gcm.getGroup().getGroupId(), gcm.getGroup().getGroupName());
+            groupMap.put(gcm.getGroup().getGroupId(), gcm.getGroup());
         }
 
         return groupMap.entrySet().stream()
-                .map(e -> new GroupDTO(e.getKey(), e.getValue())).toList();
+                .map(e -> new GroupDTO(e.getKey(), e.getValue().getGroupName(),
+                        GroupAvatarGenerator.generateGroupAvatar(e.getValue())))
+                .toList();
 
     }
 
