@@ -84,7 +84,7 @@ public class User {
         private String summary;
 
         @Column(name = "BanStatus")
-        private boolean banStatus = false;
+        private boolean banStatus;
 
         @Column(name = "CreatedAt")
         private LocalDate createdAt;
