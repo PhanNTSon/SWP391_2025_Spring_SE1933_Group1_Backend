@@ -27,4 +27,5 @@ public class AddingGameRequestDTO {
     private String sendDate;
     private List<Integer> tags;
     private String declineMessage;
+    private String updateLog;
 }

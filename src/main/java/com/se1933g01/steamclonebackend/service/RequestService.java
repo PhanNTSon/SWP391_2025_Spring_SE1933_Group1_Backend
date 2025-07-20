@@ -190,7 +190,7 @@ public class RequestService {
         game.setAdditionalNotes(addingGameRequest.getAdditionalNotes());
         game.setGameUrl(addingGameRequest.getGameUrl());
         game.setIconUrl(addingGameRequest.getIconUrl());
-
+        game.setUpdateLog(addingGameRequest.getUpdateLog());
         gameRepo.save(game);
 
         List<String> mediaUrls = addingGameRequest.getMediaUrls();

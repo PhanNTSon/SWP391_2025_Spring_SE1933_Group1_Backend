@@ -126,6 +126,7 @@ public class GameService {
             dto.setTitle(game.getName());
             dto.setImageUrl(game.getMedia().get(0).getUrl());
             dto.setId(game.getGameId());
+            dto.setState(game.getState());
             return dto;
         });
     }
@@ -163,11 +164,16 @@ public class GameService {
             return dto;
         });
     }
-
-
-
-
-
-
-
+    public void hideGame(Long gameId) {
+        Game game = gameRepository.findById(gameId)
+                .orElseThrow(() -> new EntityNotFoundException("Game not found with id: " + gameId));
+        game.setState(false);
+        gameRepository.save(game);
+    }
+    public void unhideGame(Long gameId) {
+        Game game = gameRepository.findById(gameId)
+                .orElseThrow(() -> new EntityNotFoundException("Game not found with id: " + gameId));
+        game.setState(true);
+        gameRepository.save(game);
+    }
 }

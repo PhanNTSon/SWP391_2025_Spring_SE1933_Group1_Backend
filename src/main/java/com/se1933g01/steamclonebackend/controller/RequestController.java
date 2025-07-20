@@ -201,12 +201,6 @@ public class RequestController {
         return ResponseEntity.ok(Map.of(RESPONSE_MESSAGE_KEY, "Feedback deleted successfully"));
     }
 
-    @GetMapping("/banned-users/{page}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Page<BannedUserDTO>> getAllBannedUser(@PathVariable("page") int pageNum) {
-        return ResponseEntity.ok(userService.getAllBannedUser(pageNum));
-    }
-
     @PostMapping("/game/add")
     @PreAuthorize("hasRole('PUBLISHER')")
     public ResponseEntity<Map<String, String>> addGame(

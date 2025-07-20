@@ -135,4 +135,17 @@ public class GameController {
         return ResponseEntity.ok(result);
     }
 
+    @PatchMapping("/hide/{gameId}")
+    @PreAuthorize("hasRole('PUBLISHER')")
+    public ResponseEntity<Void> hideGame(@PathVariable Long gameId) {
+        gameService.hideGame(gameId);
+        return ResponseEntity.noContent().build();
+    }
+    @PatchMapping("/unhide/{gameId}")
+    @PreAuthorize("hasRole('PUBLISHER')")
+    public ResponseEntity<Void> unhideGame(@PathVariable Long gameId) {
+        gameService.unhideGame(gameId);
+        return ResponseEntity.noContent().build();
+    }
+
 }

@@ -77,6 +77,9 @@ public class AddingGameRequest {
     @Column(name = "DeclineMessage", length = 255)
     private String declineMessage;
 
+    @Column(name = "UpdateLog")
+    private String updateLog;
+
     @Column(name = "MediaUrls")
     @ElementCollection
     @CollectionTable(name = "AddingGameRequest_mediaUrls", joinColumns = @JoinColumn(name = "RequestID"))

@@ -5,6 +5,7 @@ import jakarta.transaction.Transactional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,6 +28,10 @@ import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 
+import org.modelmapper.ModelMapper;
+import org.modelmapper.convention.MatchingStrategies;
+
+
 @Service
 public class UserService {
 
@@ -37,16 +42,18 @@ public class UserService {
     private final FriendshipRepo friendshipRepo; // Added by Phan NT Son 21-06-2025
 
     private EmailService emailService;
+    private ModelMapper modelMapper;
 
     private static final String USER_NOT_FOUND_MSG = "User not found";
 
     public UserService(UserRepo userRepo, TransactionRepo transactionRepo,
-            FriendshipRepo friendshipRepo, CloudinaryService cloudinaryService, EmailService emailService) {
+            FriendshipRepo friendshipRepo, CloudinaryService cloudinaryService, EmailService emailService, ModelMapper modelMapper) {
         this.userRepo = userRepo;
         this.transactionRepo = transactionRepo;
         this.friendshipRepo = friendshipRepo;
         this.CloudinaryService = cloudinaryService;
         this.emailService = emailService;
+        this.modelMapper = modelMapper;
     }
 
     
@@ -145,12 +152,50 @@ public class UserService {
      * @return
      * @since 13-06-2025
      */
-    public Page<BannedUserDTO> getAllBannedUser(int page) {
-        PageRequest pageable = PageRequest.of(page, 10, Sort.by("username").descending());
-        return userRepo.findAllByBannedStatus(pageable).map(u -> new BannedUserDTO(
-                u.getUserId(),
-                u.getUsername(),
-                u.getRole().getRoleName()));
+    public Page<UserDetailDTO> getAllActiveUser(String name,Pageable pageable) {
+
+        Page<User> requestUser;
+        if (name != null && !name.trim().isEmpty()) {
+            requestUser = userRepo.findAllByUsernameContainingIgnoreCaseAndBannedStatusFalse(name, pageable);
+        } else {
+            requestUser = userRepo.findAllByBannedStatusFalse(pageable);
+        }
+
+        return requestUser.map(user -> {
+            modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+            UserDetailDTO dto = modelMapper.map(user, UserDetailDTO.class);
+            dto.setAvatarUrl(user.getAvatarUrl());
+            return dto;
+        });
+    }
+    public Page<UserDetailDTO> getAllBannedUser(String name,Pageable pageable) {
+
+        Page<User> requestUser;
+        if (name != null && !name.trim().isEmpty()) {
+            requestUser = userRepo.findAllByUsernameContainingIgnoreCaseAndBannedStatusTrue(name, pageable);
+        } else {
+            requestUser = userRepo.findAllByBannedStatusTrue(pageable);
+        }
+
+        return requestUser.map(user -> {
+            modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+            UserDetailDTO dto = modelMapper.map(user, UserDetailDTO.class);
+            dto.setAvatarUrl(user.getAvatarUrl());
+            return dto;
+        });
+    }
+    public void banUser(Long userId){
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_MSG));
+        user.setBanStatus(true);
+        userRepo.save(user);
+    }
+
+    public void unbanUser(Long userId){
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_MSG));
+        user.setBanStatus(false);
+        userRepo.save(user);
     }
 
     /**

@@ -84,6 +84,10 @@ public class Game {
 
     @Column(name = "IconUrl")
     private String iconUrl;
+
+    @Column(name = "UpdateLog")
+    private String updateLog;
+
     // ================ Relationships =============
     @ManyToOne
     @JoinColumn(name = "PublisherID")
