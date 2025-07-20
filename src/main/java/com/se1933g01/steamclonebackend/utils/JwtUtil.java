@@ -44,12 +44,13 @@ public class JwtUtil {
      * @param role
      * @return compact JWT string
      */
-    public String generateToken(String username, Long userId, String role, String avatarUrl) {
+    public String generateToken(String username, Long userId, String role, String avatarUrl, boolean banned) {
         return Jwts.builder()
                 .setSubject(username)
                 .claim("userId", userId)
                 .claim("role", role)
                 .claim("avatarUrl", avatarUrl)
+                .claim("banned", banned)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expirationMs))
                 .signWith(getSignedKey(), SignatureAlgorithm.HS256)
