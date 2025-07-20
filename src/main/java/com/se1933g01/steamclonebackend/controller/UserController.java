@@ -642,4 +642,13 @@ public class UserController {
                 .body(new ApiRespDTO<>(true, "LEAVE_SUCCESS", "Leave group success", null));
     }
 
+    @PostMapping("/groupchat/kick/{groupId}")
+    @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
+    public ResponseEntity<ApiRespDTO<?>> kickMembersInGroup(@RequestBody List<Long> kickMemberIds,
+            @PathVariable(name = "groupId") Long groupId) {
+        communityService.kickMembersInGroup(groupId, kickMemberIds);
+        return ResponseEntity.ok()
+                .body(new ApiRespDTO<>(true, "LEAVE_SUCCESS", "Leave group success", null));
+    }
+
 }

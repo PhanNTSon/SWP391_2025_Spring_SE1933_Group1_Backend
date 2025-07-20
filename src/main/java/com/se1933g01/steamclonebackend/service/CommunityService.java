@@ -275,7 +275,8 @@ public class CommunityService {
         FriendDTO dto = new FriendDTO(
                 friendUser.getUserId(),
                 friendUser.getUsername(),
-                friendUser.getAvatarUrl());
+                friendUser.getAvatarUrl(),
+                friendUser.getGroupChatList().size() + friendUser.getGroupMemberships().size());
 
         User sender = entityManager.getReference(User.class, senderId);
         this.sendToChannelAcceptOrDecline(sender.getUsername(), curUserId);
@@ -287,7 +288,8 @@ public class CommunityService {
         sendFriendAdded(senderId, new FriendDTO(
                 curUser.getUserId(),
                 curUser.getUsername(),
-                curUser.getAvatarUrl()));
+                curUser.getAvatarUrl(),
+                curUser.getGroupChatList().size() + curUser.getGroupMemberships().size()));
 
         return dto;
     }
@@ -346,7 +348,8 @@ public class CommunityService {
 
         blockRepo.save(newB);
 
-        return new FriendDTO(blockedId, blocked.getUsername(), blocked.getAvatarUrl());
+        return new FriendDTO(blockedId, blocked.getUsername(), blocked.getAvatarUrl(),
+                blocked.getGroupChatList().size() + blocked.getGroupMemberships().size());
     }
 
     /**
@@ -488,8 +491,8 @@ public class CommunityService {
 
         User owner = entityManager.getReference(User.class, ownerId);
 
-        if (owner == null) {
-            throw new EntityNotFoundException("No Group Owner found to Create");
+        if (owner.getGroupChatList().size() + owner.getGroupMemberships().size() >= 10) {
+            throw new IllegalStateException("[Creater] Exceed limitation number of Groups");
         }
 
         GroupChat newGroup = new GroupChat();
@@ -510,6 +513,10 @@ public class CommunityService {
                 throw new IllegalArgumentException("MemberID must not be Null in Create new Group");
             }
             User m = entityManager.getReference(User.class, member.getMemberId());
+
+            if (m.getGroupChatList().size() + m.getGroupMemberships().size() >= 10) {
+                throw new IllegalStateException("[Member] Exceed limitations number of Groups take part in");
+            }
 
             GroupChatMemberId id = new GroupChatMemberId(saved.getGroupId(), member.getMemberId());
             GroupChatMember newMember = new GroupChatMember();
@@ -541,10 +548,6 @@ public class CommunityService {
 
         GroupChat gc = entityManager.getReference(GroupChat.class, groupId);
 
-        if (gc == null) {
-            throw new EntityNotFoundException("No Group Found with ID:" + groupId);
-        }
-
         if (gc.getOwner().getUserId() != userId) {
             throw new IllegalArgumentException("UserID does not match with OwnerID of current Group");
         }
@@ -566,6 +569,10 @@ public class CommunityService {
                 throw new IllegalArgumentException("MemberID must not be Null in Joining to Group");
             }
             User m = entityManager.getReference(User.class, member.getMemberId());
+
+            if (m.getGroupChatList().size() + m.getGroupMemberships().size() >= 10) {
+                throw new IllegalStateException("[Member] Exceed limitations number of Groups take part in");
+            }
 
             GroupChatMemberId id = new GroupChatMemberId(groupId, member.getMemberId());
             GroupChatMember newMember = new GroupChatMember();
@@ -593,5 +600,16 @@ public class CommunityService {
         gcmRepo.delete(member);
         this.sendGroupRemoved(memberId, groupId);
         this.sendGroupLeave(groupId, memberId);
+    }
+
+    @Transactional
+    public void kickMembersInGroup(Long groupId, List<Long> kickMemberIds) {
+        kickMemberIds.stream().forEach(id -> {
+            GroupChatMemberId dbId = new GroupChatMemberId(groupId, id);
+            GroupChatMember ref = entityManager.getReference(GroupChatMember.class, dbId);
+
+            gcmRepo.delete(ref);
+            this.sendGroupLeave(groupId, id);
+        });
     }
 }
