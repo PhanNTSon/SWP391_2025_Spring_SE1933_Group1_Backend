@@ -254,7 +254,8 @@ public class UserService {
                     return new FriendDTO(
                             friendUser.getUserId(),
                             friendUser.getUsername(),
-                            friendUser.getAvatarUrl());
+                            friendUser.getAvatarUrl(),
+                            friendUser.getGroupChatList().size() + friendUser.getGroupMemberships().size());
                 })
                 .toList();
 
@@ -302,7 +303,9 @@ public class UserService {
                 .map(blocked -> new FriendDTO(
                         blocked.getBlocked().getUserId(),
                         blocked.getBlocked().getUsername(),
-                        blocked.getBlocked().getAvatarUrl()))
+                        blocked.getBlocked().getAvatarUrl(),
+                        blocked.getBlocked().getGroupChatList().size()
+                                + blocked.getBlocked().getGroupMemberships().size()))
                 .toList();
 
         return mappingResult;

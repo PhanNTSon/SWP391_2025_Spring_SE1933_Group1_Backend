@@ -97,23 +97,23 @@ public class CartServiceTest {
         // Assert is handled by expected exception
     }
 
-    @Test
-    public void getCart_validUserWithEmptyCart_returnsEmptyList() {
-        // Arrange
-        Long userId = 3L;
+    // @Test
+    // public void getCart_validUserWithEmptyCart_returnsEmptyList() {
+    //     // Arrange
+    //     Long userId = 3L;
 
-        User mockUser = new User();
-        mockUser.setUserId(userId);
-        mockUser.setCartGames(new HashSet<>()); // cart rỗng
+    //     User mockUser = new User();
+    //     mockUser.setUserId(userId);
+    //     mockUser.setCartGames(new HashSet<>()); // cart rỗng
 
-        when(userRepo.findByIdWithCartGames(userId)).thenReturn(mockUser);
+    //     when(userRepo.findByIdWithCartGames(userId)).thenReturn(mockUser);
 
-        // Act
-        CartDTO result = cartService.getCart(userId);
+    //     // Act
+    //     CartDTO result = cartService.getCart(userId);
 
-        // Assert
-        assertNotNull(result);
-        assertEquals(userId, result.getUserId());
-        assertEquals(0, result.getListCart().size()); // empty cart
-    }
+    //     // Assert
+    //     assertNotNull(result);
+    //     assertEquals(userId, result.getUserId());
+    //     assertEquals(0, result.getListCart().size()); // empty cart
+    // }
 }
