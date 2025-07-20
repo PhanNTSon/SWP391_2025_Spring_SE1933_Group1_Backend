@@ -523,7 +523,8 @@ public class CommunityService {
         });
 
         GroupDTO dto = new GroupDTO(saved.getGroupId(), saved.getGroupName(),
-                GroupAvatarGenerator.generateGroupAvatar(saved));
+                GroupAvatarGenerator.generateGroupAvatar(
+                        newG.getMembers().stream().map(member -> member.getMemberAvatar()).toList()));
 
         this.sendGroupAdded(ownerId, dto);
         newG.getMembers().forEach(member -> this.sendGroupAdded(member.getMemberId(), dto));
@@ -578,7 +579,8 @@ public class CommunityService {
 
             this.sendGroupJoin(groupId, member);
 
-            this.sendGroupAdded(member.getMemberId(), new GroupDTO(groupId, group.getGroupName(), GroupAvatarGenerator.generateGroupAvatar(group)));
+            this.sendGroupAdded(member.getMemberId(),
+                    new GroupDTO(groupId, group.getGroupName(), GroupAvatarGenerator.generateGroupAvatar(group)));
         });
 
         return newMembers;
