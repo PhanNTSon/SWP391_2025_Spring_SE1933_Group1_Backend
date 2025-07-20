@@ -16,5 +16,6 @@ public class DiscussionThreadDTO {
     private String content;
     private LocalDateTime createdAt;
     private String username;
+    private Long userId;
 }
 
