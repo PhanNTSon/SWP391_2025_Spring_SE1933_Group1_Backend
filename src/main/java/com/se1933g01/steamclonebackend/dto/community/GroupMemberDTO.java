@@ -7,8 +7,9 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class InviteDTO {
-    private long invitorId;
-    private String invitorAvatarUrl;
-    private String invitorName;
+public class GroupMemberDTO {
+    private Long memberId;
+    private String memberName;
+    private boolean isAdmin;
+    private String memberAvatar;
 }

@@ -19,5 +19,5 @@ public class ReviewDTO {
     private long helpful;
     private long notHelpful;
     private LocalDate timeCreated;
-
+    private String gameName; //added by Loc Phan
 }

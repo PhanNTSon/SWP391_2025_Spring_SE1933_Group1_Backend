@@ -69,7 +69,7 @@ public class AuthServiceTest {
         when(auth.getPrincipal()).thenReturn(mockUserDetail);
         when(authenticationManager.authenticate(any())).thenReturn(auth);
 
-        when(jwtUtil.generateToken("loc", 1L, "USER", "avatar.png"))
+        when(jwtUtil.generateToken("loc", 1L, "USER", "avatar.png",true))
                 .thenReturn("mocked-token");
 
         ResponseEntity<?> response = authService.login(request);

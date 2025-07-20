@@ -9,9 +9,11 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class MessageDTO {
+public class PrivateChatMessageDTO {
+    private Long conversationId;
     private Long senderId;
-    private String senderName;
-    private String messageContent;
+    private String senderUsername;
+    private String receiverUsername;
+    private String content;
     private LocalDateTime sentAt;
 }

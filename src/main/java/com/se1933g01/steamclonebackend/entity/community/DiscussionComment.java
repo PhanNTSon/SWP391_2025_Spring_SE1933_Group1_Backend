@@ -13,31 +13,30 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
-@Table(name = "Messages", schema = "public")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class Message {
+@Table(name = "DiscussionComment")
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor
+public class DiscussionComment {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "MessageID")
-    private long messageId;
+    private Long commentId;
+
+    @Column(nullable = false)
+    private String content;
+    private LocalDateTime createdAt;
 
     @ManyToOne
-    @JoinColumn(name = "ConversationID")
-    private Conversation conversation;
+    @JoinColumn(name = "UserID", nullable = false)
+    private User user;
 
     @ManyToOne
-    @JoinColumn(name = "SenderID", nullable = false)
-    private User sender;
-
-    @Column(name = "MessageContent")
-    private String messageContent;
-
-    @Column(name = "SentAt")
-    private LocalDateTime sentAt;
+    @JoinColumn(name = "ThreadID", nullable = false)
+    private DiscussionThread thread;
 }
+

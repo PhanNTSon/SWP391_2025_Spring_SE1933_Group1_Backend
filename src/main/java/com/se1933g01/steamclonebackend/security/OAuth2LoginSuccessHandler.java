@@ -67,7 +67,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         System.out.println("User role: " + user.getRole());
         System.out.println("User avatar: " + user.getAvatarUrl());
         String jwt = jwtUtil.generateToken(user.getUsername(), user.getUserId(), user.getRole().getRoleName(),
-                user.getAvatarUrl()); // Added by Phan Son 21-06
+                user.getAvatarUrl(), user.isBanStatus()); // Added by Phan Son 21-06
 
         // Redirect to frontend
         String redirectUrl = frontendUrl + "/oauth2/callback?token=" + jwt;

@@ -19,6 +19,7 @@ import com.se1933g01.steamclonebackend.dto.review.CreateReviewDTO;
 import com.se1933g01.steamclonebackend.dto.review.PatchReviewDTO;
 import com.se1933g01.steamclonebackend.dto.review.ReviewDTO;
 import com.se1933g01.steamclonebackend.dto.review.UpdateReviewDTO;
+import com.se1933g01.steamclonebackend.entity.game.Review;
 import com.se1933g01.steamclonebackend.entity.user.CustomUserDetail;
 import com.se1933g01.steamclonebackend.service.ReviewService;
 import com.se1933g01.steamclonebackend.utils.GeminiContentModerator;
@@ -191,6 +192,19 @@ public class ReviewController {
             @PathVariable(name = "gameId") Long gameId) {
         reviewService.deleteReview(me.getUser().getUserId(), gameId);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Show all Reviews
+     * Added by Loc Phan
+     * 
+     * @author Loc Phan
+     * @return list of all reviews
+     */
+    @GetMapping("/list-all")
+    public ResponseEntity<List<ReviewDTO>> getAllReviews() {
+        List<ReviewDTO> reviews = reviewService.getAllReviews();
+        return ResponseEntity.ok(reviews);
     }
 
 }

@@ -1,6 +1,6 @@
 package com.se1933g01.steamclonebackend.dto.community;
 
-import java.time.LocalDateTime;
+import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,9 +9,8 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class MessageDTO {
-    private Long senderId;
-    private String senderName;
-    private String messageContent;
-    private LocalDateTime sentAt;
+public class GroupDTO {
+    private Long groupId;
+    private String groupName;
+    private List<String> groupAvatar;
 }

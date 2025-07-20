@@ -1,7 +1,5 @@
 package com.se1933g01.steamclonebackend.dto.community;
 
-import java.time.LocalDateTime;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,9 +7,13 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class MessageDTO {
+public class FriendRequestDTO {
     private Long senderId;
+    private Long receiverId;
+
     private String senderName;
-    private String messageContent;
-    private LocalDateTime sentAt;
+    private String receiverName;
+
+    private String senderAvatar;
+    private String receiverAvatar;
 }

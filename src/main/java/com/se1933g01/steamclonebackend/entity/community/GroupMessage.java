@@ -6,6 +6,7 @@ import com.se1933g01.steamclonebackend.entity.user.User;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -17,26 +18,27 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "Messages", schema = "public")
+@Table(name = "GroupMessage", schema = "public")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Message {
+public class GroupMessage {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "MessageID")
-    private long messageId;
+    private Long messageId;
 
-    @ManyToOne
-    @JoinColumn(name = "ConversationID")
-    private Conversation conversation;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "GroupID", nullable = false)
+    private GroupChat group;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "SenderID", nullable = false)
     private User sender;
 
-    @Column(name = "MessageContent")
-    private String messageContent;
+    @Column(name = "Message", nullable = false)
+    private String message;
 
     @Column(name = "SentAt")
     private LocalDateTime sentAt;
