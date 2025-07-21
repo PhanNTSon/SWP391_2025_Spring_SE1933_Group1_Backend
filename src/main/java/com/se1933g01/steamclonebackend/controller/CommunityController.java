@@ -67,7 +67,7 @@ public class CommunityController {
         return service.updateThread(id, request, userDetails.getUsername());
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public void deleteThread(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails) {
