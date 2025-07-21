@@ -491,7 +491,7 @@ public class CommunityService {
 
         User owner = entityManager.getReference(User.class, ownerId);
 
-        if (owner.getGroupChatList().size() + owner.getGroupMemberships().size() >= 10) {
+        if (owner.getGroupMemberships().size() >= 10) {
             throw new IllegalStateException("[Creater] Exceed limitation number of Groups");
         }
 
@@ -514,7 +514,7 @@ public class CommunityService {
             }
             User m = entityManager.getReference(User.class, member.getMemberId());
 
-            if (m.getGroupChatList().size() + m.getGroupMemberships().size() >= 10) {
+            if (m.getGroupMemberships().size() >= 10) {
                 throw new IllegalStateException("[Member] Exceed limitations number of Groups take part in");
             }
 
@@ -570,7 +570,7 @@ public class CommunityService {
             }
             User m = entityManager.getReference(User.class, member.getMemberId());
 
-            if (m.getGroupChatList().size() + m.getGroupMemberships().size() >= 10) {
+            if (m.getGroupMemberships().size() >= 10) {
                 throw new IllegalStateException("[Member] Exceed limitations number of Groups take part in");
             }
 
