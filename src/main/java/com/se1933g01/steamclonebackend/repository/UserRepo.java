@@ -29,5 +29,12 @@ public interface UserRepo extends JpaRepository<User, Long> {
      * @since 13-06-2025
      */
     @Query("SELECT u FROM User u WHERE u.banStatus = true")
-    Page<User> findAllByBannedStatus(Pageable pageable);
+    Page<User> findAllByBannedStatusTrue(Pageable pageable);
+    @Query("SELECT u FROM User u WHERE u.banStatus = false")
+    Page<User> findAllByBannedStatusFalse(Pageable pageable);
+    @Query("SELECT u FROM User u WHERE u.username LIKE %:username% AND u.banStatus = false")
+    Page<User> findAllByUsernameContainingIgnoreCaseAndBannedStatusFalse(String username, Pageable pageable);
+    @Query("SELECT u FROM User u WHERE u.username LIKE %:username% AND u.banStatus = true")
+    Page<User> findAllByUsernameContainingIgnoreCaseAndBannedStatusTrue(String username, Pageable pageable);
+
 }

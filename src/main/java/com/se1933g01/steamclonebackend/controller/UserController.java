@@ -1,6 +1,7 @@
 package com.se1933g01.steamclonebackend.controller;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -588,6 +589,49 @@ public class UserController {
         return ResponseEntity.ok(communityService.getConversation(me.getUser().getUserId(), fId));
     }
 
+    @GetMapping("/active")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<UserDetailDTO>> getActiveUser(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String name,
+            @AuthenticationPrincipal CustomUserDetail userDetails) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<UserDetailDTO> result = userService.getAllActiveUser(name,pageable);
+        return ResponseEntity.ok(result);
+    }
+    @GetMapping("/banned")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<UserDetailDTO>> getBannedUser(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String name,
+            @AuthenticationPrincipal CustomUserDetail userDetails) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<UserDetailDTO> result = userService.getAllBannedUser(name,pageable);
+        return ResponseEntity.ok(result);
+    }
+    @PatchMapping("/ban/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, String>> banUser(@PathVariable(name = "userId") long userId) {
+        try {
+            userService.banUser(userId);
+            return ResponseEntity.ok(Map.of("message", "User has been banned successfully."));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+    @PatchMapping("/unban/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, String>> unbanUser(@PathVariable(name = "userId") long userId) {
+        try {
+            userService.unbanUser(userId);
+            return ResponseEntity.ok(Map.of("message", "User has been unbanned successfully."));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+    
     @GetMapping("/groupchat")
     @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
     public ResponseEntity<ApiRespDTO<?>> getGroupList(@AuthenticationPrincipal CustomUserDetail me) {

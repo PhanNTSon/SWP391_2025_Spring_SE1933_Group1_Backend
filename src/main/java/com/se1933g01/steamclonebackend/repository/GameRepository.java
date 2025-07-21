@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.se1933g01.steamclonebackend.entity.game.Game;
+import com.se1933g01.steamclonebackend.entity.user.Publisher;
 
 @Repository
 public interface GameRepository extends JpaRepository<Game, Long>, JpaSpecificationExecutor<Game> {
@@ -18,4 +19,6 @@ public interface GameRepository extends JpaRepository<Game, Long>, JpaSpecificat
 
     @Query("SELECT g FROM Game g WHERE LOWER(g.name) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
     Page<Game> findByNameContainingIgnoreCase(@Param("searchTerm") String searchTerm, Pageable pageable);
+    Page<Game> findByPublisher(Publisher publisher, Pageable pageable);
+    Page<Game> findByPublisherAndNameContainingIgnoreCase(Publisher publisher, String name, Pageable pageable);
 }
