@@ -17,8 +17,12 @@ import com.se1933g01.steamclonebackend.entity.user.Publisher;
 public interface GameRepository extends JpaRepository<Game, Long>, JpaSpecificationExecutor<Game> {
     List<Game> findAll();
 
+    Game findById(long id);
+
     @Query("SELECT g FROM Game g WHERE LOWER(g.name) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
     Page<Game> findByNameContainingIgnoreCase(@Param("searchTerm") String searchTerm, Pageable pageable);
+
     Page<Game> findByPublisher(Publisher publisher, Pageable pageable);
+
     Page<Game> findByPublisherAndNameContainingIgnoreCase(Publisher publisher, String name, Pageable pageable);
 }

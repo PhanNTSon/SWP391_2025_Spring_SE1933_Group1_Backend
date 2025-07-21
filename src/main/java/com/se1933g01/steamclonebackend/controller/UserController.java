@@ -284,6 +284,32 @@ public class UserController {
         return ResponseEntity.ok(libraryPage);
     }
 
+    @GetMapping("/library/{userId}/{gameId}")
+    public ResponseEntity<LibraryGameDTO> getSpecificGameInLibrary(
+            @PathVariable Long userId,
+            @PathVariable Long gameId) {
+
+        LibraryGameDTO gameDto = libraryService.getGameInLibrary(userId, gameId);
+        return ResponseEntity.ok(gameDto);
+    }
+
+    @PutMapping("/library/{gameId}/playtime")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Map<String, String>> updatePlaytime(
+            @AuthenticationPrincipal CustomUserDetail principal,
+            @PathVariable Long gameId,
+            @RequestBody Long PlaytimeInMillis) {
+
+        try {
+            Long userId = principal.getUser().getUserId();
+            libraryService.updatePlaytime(userId, gameId, PlaytimeInMillis);
+            return ResponseEntity.ok(Map.of("message", "Cập nhật thời gian chơi thành công."));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
     /* author: bathanh */
     // api check if game is in cart or not
     @GetMapping("/cart/contain/{gameId}")
@@ -597,9 +623,10 @@ public class UserController {
             @RequestParam(required = false) String name,
             @AuthenticationPrincipal CustomUserDetail userDetails) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<UserDetailDTO> result = userService.getAllActiveUser(name,pageable);
+        Page<UserDetailDTO> result = userService.getAllActiveUser(name, pageable);
         return ResponseEntity.ok(result);
     }
+
     @GetMapping("/banned")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<UserDetailDTO>> getBannedUser(
@@ -608,9 +635,10 @@ public class UserController {
             @RequestParam(required = false) String name,
             @AuthenticationPrincipal CustomUserDetail userDetails) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<UserDetailDTO> result = userService.getAllBannedUser(name,pageable);
+        Page<UserDetailDTO> result = userService.getAllBannedUser(name, pageable);
         return ResponseEntity.ok(result);
     }
+
     @PatchMapping("/ban/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> banUser(@PathVariable(name = "userId") long userId) {
@@ -621,6 +649,7 @@ public class UserController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+
     @PatchMapping("/unban/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> unbanUser(@PathVariable(name = "userId") long userId) {
@@ -631,7 +660,7 @@ public class UserController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
-    
+
     @GetMapping("/groupchat")
     @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
     public ResponseEntity<ApiRespDTO<?>> getGroupList(@AuthenticationPrincipal CustomUserDetail me) {
