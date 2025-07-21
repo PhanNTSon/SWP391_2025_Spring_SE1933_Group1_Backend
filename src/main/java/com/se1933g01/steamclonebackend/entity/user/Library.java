@@ -33,4 +33,6 @@ public class Library {
 
     @Column(name = "PlaytimeInMillis", nullable = false)
     private Long playtimeInMillis = 0L;
+
+    
 }

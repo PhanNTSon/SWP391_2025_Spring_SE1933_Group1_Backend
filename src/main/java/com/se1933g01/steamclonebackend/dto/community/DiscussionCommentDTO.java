@@ -15,5 +15,6 @@ public class DiscussionCommentDTO {
     private String content;
     private LocalDateTime createdAt;
     private String username;
+    private Long userId;
 }
 

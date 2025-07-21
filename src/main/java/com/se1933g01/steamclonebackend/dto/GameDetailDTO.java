@@ -33,4 +33,6 @@ public class GameDetailDTO {
     private String memory;
     private String additionalNotes;
     private String graphics;
+    private String gameUrl;
+    private String iconUrl;
 }

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.se1933g01.steamclonebackend.dto.PublisherBasicDTO;
+import com.se1933g01.steamclonebackend.entity.user.Publisher;
 import com.se1933g01.steamclonebackend.mapper.EntityMapper;
 import com.se1933g01.steamclonebackend.repository.PublisherRepo;
 
@@ -25,5 +26,9 @@ public class PublisherService {
         return publisherRepo.findAll().stream()
                 .map(EntityMapper::toPublisherBasicDTO)
                 .collect(Collectors.toList());
+    }
+    @Transactional
+    public Publisher findById(Long id){
+        return publisherRepo.findById(id).orElseThrow();
     }
 }

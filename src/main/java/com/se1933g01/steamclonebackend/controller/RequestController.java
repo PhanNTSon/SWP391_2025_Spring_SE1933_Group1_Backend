@@ -87,8 +87,8 @@ public class RequestController {
 
     @PatchMapping("/game/reject/{requestID}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, String>> rejectGame(@PathVariable String requestID) {
-        return handleAction(() -> requestService.rejectGame(Long.parseLong(requestID)),
+    public ResponseEntity<Map<String, String>> rejectGame(@PathVariable String requestID,@RequestBody AddingGameRequestDTO addingGameRequestDTO) {
+        return handleAction(() -> requestService.rejectGame(Long.parseLong(requestID),addingGameRequestDTO.getDeclineMessage()),
                 "Game Rejected", "Game Reject Failed");
     }
 
@@ -149,7 +149,7 @@ public class RequestController {
     
 
     @GetMapping("/game/details/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','PUBLISHER')")
     public ResponseEntity<AddingGameRequestDTO> getGameRequest(@PathVariable Long id) {
         AddingGameRequestDTO details = requestService.getGameDetails(id);
         return details == null
@@ -201,12 +201,6 @@ public class RequestController {
         return ResponseEntity.ok(Map.of(RESPONSE_MESSAGE_KEY, "Feedback deleted successfully"));
     }
 
-    @GetMapping("/banned-users/{page}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Page<BannedUserDTO>> getAllBannedUser(@PathVariable("page") int pageNum) {
-        return ResponseEntity.ok(userService.getAllBannedUser(pageNum));
-    }
-
     @PostMapping("/game/add")
     @PreAuthorize("hasRole('PUBLISHER')")
     public ResponseEntity<Map<String, String>> addGame(
@@ -236,6 +230,14 @@ public class RequestController {
             return ResponseEntity.badRequest().body(response);
         }
     }
+
+    @PostMapping("/image/delete/{url}")
+    @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
+    public ResponseEntity<Map<String, String>> deleteImage(@PathVariable("url") String imageUrl) {
+        cloudinaryService.deleteImage(imageUrl);
+        return ResponseEntity.ok(Map.of(RESPONSE_MESSAGE_KEY, "Image deleted successfully"));
+    }
+    
 
     @PostMapping("/file/upload")
     @PreAuthorize("hasRole('PUBLISHER')")
@@ -322,6 +324,16 @@ public class RequestController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(response);
+        }
+    }
+    @DeleteMapping("/game/delete/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','PUBLISHER')")
+    public ResponseEntity<Map<String, String>> deleteGameRequest(@PathVariable("id") Long requestId) {
+        try {
+            requestService.deleteGameRequest(requestId);
+            return ResponseEntity.ok(Map.of(RESPONSE_MESSAGE_KEY, "Game request deleted successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(RESPONSE_MESSAGE_KEY, e.getMessage()));
         }
     }
 

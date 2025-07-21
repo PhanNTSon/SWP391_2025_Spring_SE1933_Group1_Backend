@@ -8,6 +8,9 @@ import com.se1933g01.steamclonebackend.dto.user.LibraryGameDTO;
 import com.se1933g01.steamclonebackend.entity.user.Library;
 import com.se1933g01.steamclonebackend.entity.game.Game;
 import com.se1933g01.steamclonebackend.repository.LibraryRepository;
+
+import jakarta.persistence.EntityNotFoundException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -98,5 +101,31 @@ public class LibraryService {
         libraryGameDTO.setPlaytimeInMillis(libraryEntry.getPlaytimeInMillis());
 
         return libraryGameDTO;
+    }
+
+    /**
+     * Lấy thông tin chi tiết của một game cụ thể trong thư viện của người dùng.
+     * 
+     * @param userId ID của người dùng.
+     * @param gameId ID của game.
+     * @return một đối tượng LibraryGameDTO.
+     * @throws EntityNotFoundException nếu người dùng không sở hữu game này.
+     */
+    @Transactional(readOnly = true)
+    public LibraryGameDTO getGameInLibrary(Long userId, Long gameId) {
+        Library libraryEntry = libraryRepository.findById_UserIdAndId_GameId(userId, gameId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Không tìm thấy game với ID " + gameId + " trong thư viện của người dùng ID " + userId));
+        return this.mapLibraryEntryToDto(libraryEntry);
+    }
+
+    @Transactional
+    public void updatePlaytime(Long userId, Long gameId, Long PlaytimeInMillis) {
+        // Tìm bản ghi library tương ứng
+        Library libraryEntry = libraryRepository.findById_UserIdAndId_GameId(userId, gameId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy game trong thư viện."));
+        libraryEntry.setPlaytimeInMillis(PlaytimeInMillis);
+
+        libraryRepository.save(libraryEntry);
     }
 }

@@ -32,6 +32,9 @@ public class AddingGameRequest {
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     private Long requestId;
 
+    @Column(name = "GameId")
+    private Long gameId;
+
     @Column(name = "GameName", length = 100)
     private String gameName;
 
@@ -70,6 +73,12 @@ public class AddingGameRequest {
 
     @Column(name = "IconUrl", length = 255)
     private String iconUrl;
+
+    @Column(name = "DeclineMessage", length = 255)
+    private String declineMessage;
+
+    @Column(name = "UpdateLog")
+    private String updateLog;
 
     @Column(name = "MediaUrls")
     @ElementCollection

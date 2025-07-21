@@ -56,6 +56,8 @@ public class RequestServiceTest {
     @Mock private FeedbackRepo feedbackRepo;
     @Mock private RoleRepo roleRepo;
     @Mock private TagRepository tagRepository;
+    @Mock private CloudinaryService cloudinaryService;
+    @Mock private R2StorageService r2StorageService;
 
     @Captor private ArgumentCaptor<Feedback> feedbackCaptor;
 
@@ -77,7 +79,9 @@ public class RequestServiceTest {
             publisherRepo,
             feedbackRepo,
             roleRepo,
-            tagRepository
+            tagRepository,
+            cloudinaryService,
+            r2StorageService
         );
     }
 

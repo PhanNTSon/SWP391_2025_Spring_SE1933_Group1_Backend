@@ -19,7 +19,7 @@ public class GameBasicDTO {
     private BigDecimal price; // Changed by Phan Son 21-06
     private BigDecimal discountPrice; // Changed by Phan Son 21-06
     private BigDecimal originalPrice; // Changed by Phan Son 21-06
-
+    private boolean state;
     // Added by Phan NT Son 17-06-2025
     private LocalDate releaseDate;
 
