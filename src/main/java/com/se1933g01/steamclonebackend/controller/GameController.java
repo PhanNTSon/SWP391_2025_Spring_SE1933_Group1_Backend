@@ -60,7 +60,7 @@ public class GameController {
 
     @GetMapping("/top-selling")
     @PreAuthorize("permitAll()")
-    public ResponseEntity<ApiRespDTO<?>> getTopSellingGame(@RequestParam String param) {
+    public ResponseEntity<ApiRespDTO<?>> getTopSellingGame() {
         List<GamePresentDTO> resp = gameService.getTopSellingGame();
         return ResponseEntity.ok().body(new ApiRespDTO<List<GamePresentDTO>>(true, "GET_SUCCESS", "Get success", resp));
 
