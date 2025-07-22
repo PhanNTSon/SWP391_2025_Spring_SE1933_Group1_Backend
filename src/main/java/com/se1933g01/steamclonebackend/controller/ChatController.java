@@ -35,6 +35,8 @@ public class ChatController {
 
     @MessageMapping("/chat/private.send")
     public void sendPrivateMessage(Principal principal, PrivateChatMessageDTO msg) {
+        
+
         msg.setSenderUsername(principal.getName());
         msg.setSentAt(LocalDateTime.now());
         communityService.saveMessage(msg, msg.getSenderUsername());

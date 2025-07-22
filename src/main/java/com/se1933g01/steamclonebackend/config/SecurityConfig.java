@@ -85,6 +85,7 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(List.of(
                 "http://localhost:4173", // Cho phép dev local
                 "http://localhost:5173",
+                "http://localhost:5174",
                 frontendUrl // FE production
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));

@@ -90,6 +90,8 @@ public class LibraryService {
         gameDetail.setGameUrl(gameEntity.getGameUrl());
         gameDetail.setIconUrl(gameEntity.getIconUrl());
 
+        gameDetail.setGameUrl(gameEntity.getGameUrl());
+
         // Bước B: Tạo DTO chính cho game trong thư viện
         LibraryGameDTO libraryGameDTO = new LibraryGameDTO();
         libraryGameDTO.setGameDetail(gameDetail); // Gán đối tượng GameDetailDTO vừa tạo

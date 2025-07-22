@@ -448,6 +448,9 @@ public class CommunityService {
         Message nMessage = new Message();
         Conversation conver = entityManager.getReference(Conversation.class, msg.getConversationId());
         User sender = userRepo.findByUsername(username).orElse(null);
+        if (sender.isBanStatus()) {
+            throw new IllegalStateException("[User] Current sender is being Banned");
+        }
 
         nMessage.setConversation(conver);
         nMessage.setSender(sender);
