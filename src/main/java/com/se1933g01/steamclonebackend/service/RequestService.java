@@ -110,48 +110,6 @@ public class RequestService {
         addingGameRequestRepo.save(addingGameRequest);
     }
 
-    // public void approveGame(Long requestID) {
-    //     Request request = requestRepo.findById(requestID)
-    //             .orElseThrow(() -> new RuntimeException(REQUEST_NOT_FOUND_MESSAGE));
-    //     AddingGameRequest addingGameRequest = addingGameRequestRepo.findById(requestID)
-    //             .orElseThrow(() -> new RuntimeException("AddingGameRequest not found"));
-    //     Publisher publisher = publisherRepo.findById(request.getUser().getUserId())
-    //             .orElseThrow(() -> new RuntimeException("Publisher not found"));
-    //     Game game = new Game();
-    //     game.setPublisher(publisher);
-    //     game.setName(addingGameRequest.getGameName());
-    //     game.setReleaseDate(LocalDate.now());
-    //     game.setState(true);
-    //     game.setPrice(addingGameRequest.getPrice());
-    //     game.setShortDescription(addingGameRequest.getShortDescription());
-    //     game.setFullDescription(addingGameRequest.getFullDescription());
-    //     game.setTotalPurchased(0);
-    //     game.setOs(addingGameRequest.getOs());
-    //     game.setStorage(addingGameRequest.getStorage());
-    //     game.setProcessor(addingGameRequest.getProcessor());
-    //     game.setMemory(addingGameRequest.getMemory());
-    //     game.setGraphics(addingGameRequest.getGraphics());
-    //     game.setAdditionalNotes(addingGameRequest.getAdditionalNotes());
-    //     game.setGameUrl(addingGameRequest.getGameUrl());
-    //     game.setIconUrl(addingGameRequest.getIconUrl());
-
-    //     gameRepo.save(game);
-
-    //     List<String> mediaUrls = addingGameRequest.getMediaUrls();
-    //     List<Media> mediaList = mediaUrls.stream().map(url -> Media.builder().game(game).url(url).type("Image").build())
-    //             .collect(Collectors.toList());
-    //     mediaRepo.saveAll(mediaList);
-
-    //     List<Integer> tagIds = addingGameRequest.getTags();
-    //     List<Tag> tags = tagRepository.findAllById(tagIds);
-    //     Set<Tag> tagSet = new HashSet<>(tags);
-    //     game.setTags(tagSet);
-    //     gameRepo.save(game);
-
-    //     request.setRequestState(1);
-    //     requestRepo.save(request);
-    // }
-
     public void approveGame(Long requestID) {
         Request request = requestRepo.findById(requestID)
                 .orElseThrow(() -> new RuntimeException(REQUEST_NOT_FOUND_MESSAGE));
@@ -191,7 +149,7 @@ public class RequestService {
         game.setGameUrl(addingGameRequest.getGameUrl());
         game.setIconUrl(addingGameRequest.getIconUrl());
         game.setUpdateLog(addingGameRequest.getUpdateLog());
-        gameRepo.save(game);
+        // gameRepo.save(game); disable for called onced
 
         List<String> mediaUrls = addingGameRequest.getMediaUrls();
         List<Media> mediaList = mediaUrls.stream()
