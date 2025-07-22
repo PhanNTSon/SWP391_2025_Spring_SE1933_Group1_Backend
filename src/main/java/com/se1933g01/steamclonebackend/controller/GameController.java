@@ -33,7 +33,6 @@ public class GameController {
     @Autowired
     private final GameService gameService;
     private final PublisherService publisherService;
-    @Autowired
     public GameController(GameService gameService,PublisherService publisherService) {
         this.gameService = gameService;
         this.publisherService = publisherService;

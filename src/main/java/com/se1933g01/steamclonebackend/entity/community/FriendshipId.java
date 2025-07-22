@@ -2,7 +2,6 @@ package com.se1933g01.steamclonebackend.entity.community;
 
 import java.io.Serializable;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.Data;

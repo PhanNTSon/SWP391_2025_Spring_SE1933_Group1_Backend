@@ -6,7 +6,6 @@ import com.se1933g01.steamclonebackend.entity.game.Media;
 import com.se1933g01.steamclonebackend.repository.GameRepository;
 import com.se1933g01.steamclonebackend.repository.MediaRepo;
 import jakarta.persistence.EntityNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -24,7 +23,6 @@ public class MediaService {
     private final YouTubeService youTubeService;
     private final R2StorageService r2StorageService;
 
-    @Autowired
     public MediaService(MediaRepo mediaRepository, GameRepository gameRepository, YouTubeService youTubeService,
             R2StorageService r2StorageService) {
         this.mediaRepository = mediaRepository;
