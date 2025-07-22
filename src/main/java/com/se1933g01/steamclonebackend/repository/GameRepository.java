@@ -1,5 +1,6 @@
 package com.se1933g01.steamclonebackend.repository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -25,4 +26,13 @@ public interface GameRepository extends JpaRepository<Game, Long>, JpaSpecificat
     Page<Game> findByPublisher(Publisher publisher, Pageable pageable);
 
     Page<Game> findByPublisherAndNameContainingIgnoreCase(Publisher publisher, String name, Pageable pageable);
+
+    @Query("SELECT g FROM Game g WHERE g.price <= 5 ORDER BY g.totalPurchased DESC")
+    List<Game> findTop10PriceUnder5(Pageable pageable);
+
+    @Query("SELECT g FROM Game g WHERE g.releaseDate >= :fromDate ORDER BY g.releaseDate DESC")
+    List<Game> findTop10NewPublish(@Param("fromDate") LocalDate fromDate, Pageable pageable);
+
+    @Query("SELECT g FROM Game g ORDER BY g.totalPurchased DESC")
+    List<Game> findTop10TopSelling(Pageable pageable);
 }

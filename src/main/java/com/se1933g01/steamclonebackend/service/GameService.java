@@ -14,6 +14,9 @@ import org.springframework.transaction.annotation.Transactional; // QUAN TRỌNG
 import com.se1933g01.steamclonebackend.dto.AddingGameRequestDTO;
 import com.se1933g01.steamclonebackend.dto.GameBasicDTO;
 import com.se1933g01.steamclonebackend.dto.GameDetailDTO;
+import com.se1933g01.steamclonebackend.dto.GamePresentDTO;
+import com.se1933g01.steamclonebackend.dto.MediaDTO;
+import com.se1933g01.steamclonebackend.dto.TagDTO;
 import com.se1933g01.steamclonebackend.entity.game.Game;
 import com.se1933g01.steamclonebackend.entity.request.AddingGameRequest;
 import com.se1933g01.steamclonebackend.entity.user.Publisher;
@@ -23,6 +26,7 @@ import com.se1933g01.steamclonebackend.repository.GameRepository;
 import com.se1933g01.steamclonebackend.specification.GameSpecification;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 
@@ -35,10 +39,66 @@ public class GameService {
     private final GameRepository gameRepository;
     private final ModelMapper modelMapper;
     private final AddingGameRequestRepo addingGameRequestRepo;
-    public GameService(GameRepository gameRepository, ModelMapper modelMapper, AddingGameRequestRepo addingGameRequestRepo) {
+
+    public GameService(GameRepository gameRepository, ModelMapper modelMapper,
+            AddingGameRequestRepo addingGameRequestRepo) {
         this.addingGameRequestRepo = addingGameRequestRepo;
         this.gameRepository = gameRepository;
         this.modelMapper = modelMapper;
+    }
+
+    public List<GamePresentDTO> getGameUnder5() {
+        PageRequest top20 = PageRequest.of(0, 20);
+        List<Game> cheapGames = gameRepository.findTop10PriceUnder5(top20);
+        return cheapGames.stream().map(game -> new GamePresentDTO(
+                game.getGameId(),
+                game.getName(),
+                game.getMedia().stream().map(media -> new MediaDTO(
+                        media.getMediaId(),
+                        media.getUrl(),
+                        media.getType())).toList(),
+                game.getShortDescription(),
+                game.getPrice(),
+                game.getTags().stream().map(tag -> new TagDTO(
+                        tag.getTagId(),
+                        tag.getTagName())).toList()))
+                .toList();
+    }
+
+    public List<GamePresentDTO> getNewPublishGame() {
+        PageRequest top20 = PageRequest.of(0, 20);
+        List<Game> newGames = gameRepository.findTop10NewPublish(LocalDate.now().minusDays(30), top20);
+        return newGames.stream().map(game -> new GamePresentDTO(
+                game.getGameId(),
+                game.getName(),
+                game.getMedia().stream().map(media -> new MediaDTO(
+                        media.getMediaId(),
+                        media.getUrl(),
+                        media.getType())).toList(),
+                game.getShortDescription(),
+                game.getPrice(),
+                game.getTags().stream().map(tag -> new TagDTO(
+                        tag.getTagId(),
+                        tag.getTagName())).toList()))
+                .toList();
+    }
+
+    public List<GamePresentDTO> getTopSellingGame() {
+        PageRequest top20 = PageRequest.of(0, 20);
+        List<Game> topSelling = gameRepository.findTop10TopSelling(top20);
+        return topSelling.stream().map(game -> new GamePresentDTO(
+                game.getGameId(),
+                game.getName(),
+                game.getMedia().stream().map(media -> new MediaDTO(
+                        media.getMediaId(),
+                        media.getUrl(),
+                        media.getType())).toList(),
+                game.getShortDescription(),
+                game.getPrice(),
+                game.getTags().stream().map(tag -> new TagDTO(
+                        tag.getTagId(),
+                        tag.getTagName())).toList()))
+                .toList();
     }
 
     /**
@@ -135,7 +195,8 @@ public class GameService {
         Page<AddingGameRequest> requestPage;
 
         if (name != null && !name.trim().isEmpty()) {
-            requestPage = addingGameRequestRepo.findByPublisherAndGameNameContainingIgnoreCase(publisherId, name, pageable);
+            requestPage = addingGameRequestRepo.findByPublisherAndGameNameContainingIgnoreCase(publisherId, name,
+                    pageable);
         } else {
             requestPage = addingGameRequestRepo.findPendingGamesByPublisher(publisherId, pageable);
         }
@@ -147,12 +208,13 @@ public class GameService {
             return dto;
         });
     }
-      
+
     public Page<AddingGameRequestDTO> getDeclinedRequestsByPublisher(Long publisherId, String name, Pageable pageable) {
         Page<AddingGameRequest> requestPage;
 
         if (name != null && !name.trim().isEmpty()) {
-            requestPage = addingGameRequestRepo.findDeclinedGamesByPublisherAndGameNameContainingIgnoreCase(publisherId, name, pageable);
+            requestPage = addingGameRequestRepo.findDeclinedGamesByPublisherAndGameNameContainingIgnoreCase(publisherId,
+                    name, pageable);
         } else {
             requestPage = addingGameRequestRepo.findDeclinedGamesByPublisher(publisherId, pageable);
         }
@@ -164,12 +226,14 @@ public class GameService {
             return dto;
         });
     }
+
     public void hideGame(Long gameId) {
         Game game = gameRepository.findById(gameId)
                 .orElseThrow(() -> new EntityNotFoundException("Game not found with id: " + gameId));
         game.setState(false);
         gameRepository.save(game);
     }
+
     public void unhideGame(Long gameId) {
         Game game = gameRepository.findById(gameId)
                 .orElseThrow(() -> new EntityNotFoundException("Game not found with id: " + gameId));
