@@ -33,8 +33,9 @@ public class GameController {
     @Autowired
     private final GameService gameService;
     private final PublisherService publisherService;
+
     @Autowired
-    public GameController(GameService gameService,PublisherService publisherService) {
+    public GameController(GameService gameService, PublisherService publisherService) {
         this.gameService = gameService;
         this.publisherService = publisherService;
     }
@@ -44,6 +45,7 @@ public class GameController {
     public ResponseEntity<GameDetailDTO> getGameDetailById(@PathVariable Long id) {
         try {
             GameDetailDTO gameDetail = gameService.getGameDetailsById(id);
+            System.out.println("gameDetail" + gameDetail);
             return new ResponseEntity<>(gameDetail, HttpStatus.OK);
         } catch (EntityNotFoundException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -102,7 +104,7 @@ public class GameController {
         Pageable pageable = PageRequest.of(page, size);
         Publisher publisher = publisherService.findById(userDetails.getUser().getUserId());
 
-        Page<GameBasicDTO> gamePage = gameService.getGamesByPublisherApproved(publisher,name,pageable);
+        Page<GameBasicDTO> gamePage = gameService.getGamesByPublisherApproved(publisher, name, pageable);
 
         return ResponseEntity.ok(gamePage);
     }
@@ -116,8 +118,7 @@ public class GameController {
 
         Long publisherId = userDetails.getUser().getUserId();
         Pageable pageable = PageRequest.of(page, size);
-        Page<AddingGameRequestDTO> result = gameService.getPendingRequestsByPublisher(publisherId,name, pageable);
-
+        Page<AddingGameRequestDTO> result = gameService.getPendingRequestsByPublisher(publisherId, name, pageable);
 
         return ResponseEntity.ok(result);
     }
@@ -131,7 +132,7 @@ public class GameController {
 
         Long publisherId = userDetails.getUser().getUserId();
         Pageable pageable = PageRequest.of(page, size);
-        Page<AddingGameRequestDTO> result = gameService.getDeclinedRequestsByPublisher(publisherId,name, pageable);
+        Page<AddingGameRequestDTO> result = gameService.getDeclinedRequestsByPublisher(publisherId, name, pageable);
         return ResponseEntity.ok(result);
     }
 
@@ -141,13 +142,12 @@ public class GameController {
         gameService.hideGame(gameId);
         return ResponseEntity.noContent().build();
     }
+
     @PatchMapping("/unhide/{gameId}")
     @PreAuthorize("hasRole('PUBLISHER')")
     public ResponseEntity<Void> unhideGame(@PathVariable Long gameId) {
         gameService.unhideGame(gameId);
         return ResponseEntity.noContent().build();
     }
-
-    
 
 }

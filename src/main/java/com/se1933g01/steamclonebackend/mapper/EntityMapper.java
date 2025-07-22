@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-
 import com.se1933g01.steamclonebackend.dto.*;
 import com.se1933g01.steamclonebackend.dto.user.UserDetailDTO;
 import com.se1933g01.steamclonebackend.entity.game.Game;
@@ -33,7 +32,7 @@ public class EntityMapper {
     public static PublisherBasicDTO toPublisherBasicDTO(Publisher publisher) {
         if (publisher == null)
             return null;
-        return new PublisherBasicDTO(publisher.getPublisherId(), publisher.getPublisherName(),publisher.getImageUrl());
+        return new PublisherBasicDTO(publisher.getPublisherId(), publisher.getPublisherName(), publisher.getImageUrl());
     }
 
     // --- Media Mapper ---

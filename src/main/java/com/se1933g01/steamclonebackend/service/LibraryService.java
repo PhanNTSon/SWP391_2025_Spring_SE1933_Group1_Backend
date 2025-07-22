@@ -53,7 +53,6 @@ public class LibraryService {
     public LibraryGameDTO mapLibraryEntryToDto(Library libraryEntry) {
         Game gameEntity = libraryEntry.getGame();
 
-        // Bước A: Tạo một đối tượng GameDetailDTO hoàn chỉnh từ Game Entity
         GameDetailDTO gameDetail = new GameDetailDTO();
         gameDetail.setGameId(gameEntity.getGameId());
 
@@ -88,6 +87,8 @@ public class LibraryService {
         gameDetail.setMemory(gameEntity.getMemory());
         gameDetail.setAdditionalNotes(gameEntity.getAdditionalNotes());
         gameDetail.setGraphics(gameEntity.getGraphics());
+        gameDetail.setGameUrl(gameEntity.getGameUrl());
+        gameDetail.setIconUrl(gameEntity.getIconUrl());
 
         // Bước B: Tạo DTO chính cho game trong thư viện
         LibraryGameDTO libraryGameDTO = new LibraryGameDTO();
@@ -115,15 +116,14 @@ public class LibraryService {
     public LibraryGameDTO getGameInLibrary(Long userId, Long gameId) {
         Library libraryEntry = libraryRepository.findById_UserIdAndId_GameId(userId, gameId)
                 .orElseThrow(() -> new EntityNotFoundException(
-                        "Không tìm thấy game với ID " + gameId + " trong thư viện của người dùng ID " + userId));
+                        "Not found game " + gameId + " in library of user " + userId));
         return this.mapLibraryEntryToDto(libraryEntry);
     }
 
     @Transactional
     public void updatePlaytime(Long userId, Long gameId, Long PlaytimeInMillis) {
-        // Tìm bản ghi library tương ứng
         Library libraryEntry = libraryRepository.findById_UserIdAndId_GameId(userId, gameId)
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy game trong thư viện."));
+                .orElseThrow(() -> new EntityNotFoundException("Not found game " + gameId + " in library of user "));
         libraryEntry.setPlaytimeInMillis(PlaytimeInMillis);
 
         libraryRepository.save(libraryEntry);
