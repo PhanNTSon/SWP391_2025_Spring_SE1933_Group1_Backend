@@ -47,7 +47,7 @@ public class GameService {
         this.modelMapper = modelMapper;
     }
 
-    public List<GamePresentDTO> getGameUnder5() {
+    public List<GamePresentDTO> getGamesUnder5() {
         PageRequest top20 = PageRequest.of(0, 20);
         List<Game> cheapGames = gameRepository.findTop10PriceUnder5(top20);
         return cheapGames.stream().map(game -> new GamePresentDTO(
@@ -65,7 +65,7 @@ public class GameService {
                 .toList();
     }
 
-    public List<GamePresentDTO> getNewPublishGame() {
+    public List<GamePresentDTO> getNewPublishGames() {
         PageRequest top20 = PageRequest.of(0, 20);
         List<Game> newGames = gameRepository.findTop10NewPublish(LocalDate.now().minusDays(30), top20);
         return newGames.stream().map(game -> new GamePresentDTO(
@@ -83,9 +83,27 @@ public class GameService {
                 .toList();
     }
 
-    public List<GamePresentDTO> getTopSellingGame() {
-        PageRequest top20 = PageRequest.of(0, 20);
-        List<Game> topSelling = gameRepository.findTop10TopSelling(top20);
+    public List<GamePresentDTO> getTopSellingGames() {
+        PageRequest top10 = PageRequest.of(0, 10);
+        List<Game> topSelling = gameRepository.findTop10TopSelling(top10);
+        return topSelling.stream().map(game -> new GamePresentDTO(
+                game.getGameId(),
+                game.getName(),
+                game.getMedia().stream().map(media -> new MediaDTO(
+                        media.getMediaId(),
+                        media.getUrl(),
+                        media.getType())).toList(),
+                game.getShortDescription(),
+                game.getPrice(),
+                game.getTags().stream().map(tag -> new TagDTO(
+                        tag.getTagId(),
+                        tag.getTagName())).toList()))
+                .toList();
+    }
+
+    public List<GamePresentDTO> getMostRatedGames() {
+        PageRequest top16 = PageRequest.of(0, 16);
+        List<Game> topSelling = gameRepository.findTop16MostRecommended(top16);
         return topSelling.stream().map(game -> new GamePresentDTO(
                 game.getGameId(),
                 game.getName(),

@@ -46,14 +46,14 @@ public class GameController {
     @GetMapping("/under5")
     @PreAuthorize("permitAll()")
     public ResponseEntity<ApiRespDTO<?>> getGameUnder5() {
-        List<GamePresentDTO> resp = gameService.getGameUnder5();
+        List<GamePresentDTO> resp = gameService.getGamesUnder5();
         return ResponseEntity.ok().body(new ApiRespDTO<List<GamePresentDTO>>(true, "GET_SUCCESS", "Get success", resp));
     }
 
     @GetMapping("/new-publish")
     @PreAuthorize("permitAll()")
     public ResponseEntity<ApiRespDTO<?>> getNewPublishGame() {
-        List<GamePresentDTO> resp = gameService.getNewPublishGame();
+        List<GamePresentDTO> resp = gameService.getNewPublishGames();
         return ResponseEntity.ok().body(new ApiRespDTO<List<GamePresentDTO>>(true, "GET_SUCCESS", "Get success", resp));
 
     }
@@ -61,7 +61,15 @@ public class GameController {
     @GetMapping("/top-selling")
     @PreAuthorize("permitAll()")
     public ResponseEntity<ApiRespDTO<?>> getTopSellingGame() {
-        List<GamePresentDTO> resp = gameService.getTopSellingGame();
+        List<GamePresentDTO> resp = gameService.getTopSellingGames();
+        return ResponseEntity.ok().body(new ApiRespDTO<List<GamePresentDTO>>(true, "GET_SUCCESS", "Get success", resp));
+
+    }
+
+    @GetMapping("/most-rated")
+    @PreAuthorize("permitAll()")
+    public ResponseEntity<ApiRespDTO<?>> getMostRatedGames() {
+        List<GamePresentDTO> resp = gameService.getMostRatedGames();
         return ResponseEntity.ok().body(new ApiRespDTO<List<GamePresentDTO>>(true, "GET_SUCCESS", "Get success", resp));
 
     }

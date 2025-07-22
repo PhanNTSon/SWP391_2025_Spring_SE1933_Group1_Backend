@@ -110,8 +110,8 @@ public class Game {
     // @ManyToMany(mappedBy = "games")
     // private Set<User> users;
 
-    // @OneToMany(mappedBy = "game")
-    // private List<Review> reviews;
+    @OneToMany(mappedBy = "game")
+    private List<Review> reviews;
 
     @OneToMany(mappedBy = "game")
     private List<Media> media;
