@@ -31,8 +31,10 @@ public class Library {
     @Column(name = "DateAdded")
     private LocalDateTime dateAdded;
 
-    @Column(name = "PlaytimeInMillis", nullable = false)
+    @Column(name = "PlaytimeInMillis")
     private Long playtimeInMillis = 0L;
 
-    
+    @Column(name = "LastTimePlayed")
+    private LocalDateTime lastTimePlayed;
+
 }

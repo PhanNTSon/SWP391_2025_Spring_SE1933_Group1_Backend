@@ -11,8 +11,8 @@ import lombok.Setter;
 @Setter
 public class LibraryGameDTO {
     private GameDetailDTO gameDetail;
-    // Thông tin dành riêng cho user trong thư viện
     private LocalDateTime dateAdded;
     private Long playtimeInMillis;
+    private LocalDateTime lastTimePlayed;
 
 }

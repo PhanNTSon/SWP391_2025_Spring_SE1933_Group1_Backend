@@ -290,6 +290,7 @@ public class UserController {
             @PathVariable Long gameId) {
 
         LibraryGameDTO gameDto = libraryService.getGameInLibrary(userId, gameId);
+        System.out.println("DIT ME M" + gameDto.getGameDetail().getFullDescription());
         return ResponseEntity.ok(gameDto);
     }
 
