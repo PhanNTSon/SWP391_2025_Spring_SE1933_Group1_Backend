@@ -292,7 +292,6 @@ public class UserController {
             @PathVariable Long gameId) {
 
         LibraryGameDTO gameDto = libraryService.getGameInLibrary(userId, gameId);
-        System.out.println("DIT ME M" + gameDto.getGameDetail().getFullDescription());
         return ResponseEntity.ok(gameDto);
     }
 
@@ -304,9 +303,8 @@ public class UserController {
             @RequestBody Long PlaytimeInMillis) {
 
         try {
-            LocalDateTime lastTimePlayed = LocalDateTime.now();
             Long userId = principal.getUser().getUserId();
-            libraryService.updatePlaytime(userId, gameId, PlaytimeInMillis, lastTimePlayed);
+            libraryService.updatePlaytime(userId, gameId, PlaytimeInMillis);
             return ResponseEntity.ok(Map.of("message", "Updated playtime"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
