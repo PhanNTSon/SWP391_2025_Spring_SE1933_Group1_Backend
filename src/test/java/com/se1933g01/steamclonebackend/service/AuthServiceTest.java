@@ -35,7 +35,7 @@ public class AuthServiceTest {
         authenticationManager = mock(AuthenticationManager.class);
         jwtUtil = mock(JwtUtil.class);
         userRepo = mock(UserRepo.class);
-        authService = new AuthService(userRepo);
+        authService = new AuthService(userRepo, null);
         authService.setAuthenticationManager(authenticationManager);
         try {
             var jwtField = AuthService.class.getDeclaredField("jwtUtil");
