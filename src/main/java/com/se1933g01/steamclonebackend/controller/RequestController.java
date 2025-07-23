@@ -18,7 +18,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.se1933g01.steamclonebackend.dto.AddingGameRequestDTO;
-import com.se1933g01.steamclonebackend.dto.BannedUserDTO;
 import com.se1933g01.steamclonebackend.dto.FeedbackDTO;
 import com.se1933g01.steamclonebackend.dto.PublisherApplyRequestDTO;
 import com.se1933g01.steamclonebackend.entity.user.CustomUserDetail;

@@ -1,7 +1,6 @@
 package com.se1933g01.steamclonebackend.controller;
 
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,7 +21,6 @@ public class PublisherController {
 
     private PublisherService publisherService;
 
-    @Autowired
     public PublisherController(PublisherService publisherService1) {
         publisherService = publisherService1;
     }

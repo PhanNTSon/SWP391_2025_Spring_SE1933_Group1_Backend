@@ -19,7 +19,6 @@ import com.se1933g01.steamclonebackend.dto.review.CreateReviewDTO;
 import com.se1933g01.steamclonebackend.dto.review.PatchReviewDTO;
 import com.se1933g01.steamclonebackend.dto.review.ReviewDTO;
 import com.se1933g01.steamclonebackend.dto.review.UpdateReviewDTO;
-import com.se1933g01.steamclonebackend.entity.game.Review;
 import com.se1933g01.steamclonebackend.entity.user.CustomUserDetail;
 import com.se1933g01.steamclonebackend.service.ReviewService;
 import com.se1933g01.steamclonebackend.utils.GeminiContentModerator;

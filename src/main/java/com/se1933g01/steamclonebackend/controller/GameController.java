@@ -13,8 +13,10 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import com.se1933g01.steamclonebackend.dto.AddingGameRequestDTO;
+import com.se1933g01.steamclonebackend.dto.ApiRespDTO;
 import com.se1933g01.steamclonebackend.dto.GameBasicDTO;
 import com.se1933g01.steamclonebackend.dto.GameDetailDTO;
+import com.se1933g01.steamclonebackend.dto.GamePresentDTO;
 import com.se1933g01.steamclonebackend.entity.user.CustomUserDetail;
 import com.se1933g01.steamclonebackend.entity.user.Publisher;
 import com.se1933g01.steamclonebackend.service.GameService;
@@ -24,6 +26,8 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.logging.Logger;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequestMapping("/game")
@@ -34,10 +38,40 @@ public class GameController {
     private final GameService gameService;
     private final PublisherService publisherService;
 
-    @Autowired
     public GameController(GameService gameService, PublisherService publisherService) {
         this.gameService = gameService;
         this.publisherService = publisherService;
+    }
+
+    @GetMapping("/under5")
+    @PreAuthorize("permitAll()")
+    public ResponseEntity<ApiRespDTO<?>> getGameUnder5() {
+        List<GamePresentDTO> resp = gameService.getGamesUnder5();
+        return ResponseEntity.ok().body(new ApiRespDTO<List<GamePresentDTO>>(true, "GET_SUCCESS", "Get success", resp));
+    }
+
+    @GetMapping("/new-publish")
+    @PreAuthorize("permitAll()")
+    public ResponseEntity<ApiRespDTO<?>> getNewPublishGame() {
+        List<GamePresentDTO> resp = gameService.getNewPublishGames();
+        return ResponseEntity.ok().body(new ApiRespDTO<List<GamePresentDTO>>(true, "GET_SUCCESS", "Get success", resp));
+
+    }
+
+    @GetMapping("/top-selling")
+    @PreAuthorize("permitAll()")
+    public ResponseEntity<ApiRespDTO<?>> getTopSellingGame() {
+        List<GamePresentDTO> resp = gameService.getTopSellingGames();
+        return ResponseEntity.ok().body(new ApiRespDTO<List<GamePresentDTO>>(true, "GET_SUCCESS", "Get success", resp));
+
+    }
+
+    @GetMapping("/most-rated")
+    @PreAuthorize("permitAll()")
+    public ResponseEntity<ApiRespDTO<?>> getMostRatedGames() {
+        List<GamePresentDTO> resp = gameService.getMostRatedGames();
+        return ResponseEntity.ok().body(new ApiRespDTO<List<GamePresentDTO>>(true, "GET_SUCCESS", "Get success", resp));
+
     }
 
     @GetMapping("/detail/{id}")
@@ -45,7 +79,6 @@ public class GameController {
     public ResponseEntity<GameDetailDTO> getGameDetailById(@PathVariable Long id) {
         try {
             GameDetailDTO gameDetail = gameService.getGameDetailsById(id);
-            System.out.println("gameDetail" + gameDetail);
             return new ResponseEntity<>(gameDetail, HttpStatus.OK);
         } catch (EntityNotFoundException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
