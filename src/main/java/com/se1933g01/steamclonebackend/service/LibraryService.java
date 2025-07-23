@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.util.stream.Collectors;
 
 @Service
@@ -88,21 +89,21 @@ public class LibraryService {
         gameDetail.setMemory(gameEntity.getMemory());
         gameDetail.setAdditionalNotes(gameEntity.getAdditionalNotes());
         gameDetail.setGraphics(gameEntity.getGraphics());
-        gameDetail.setGameUrl(gameEntity.getGameUrl());
         gameDetail.setIconUrl(gameEntity.getIconUrl());
 
         gameDetail.setGameUrl(gameEntity.getGameUrl());
 
-        // Bước B: Tạo DTO chính cho game trong thư viện
         LibraryGameDTO libraryGameDTO = new LibraryGameDTO();
-        libraryGameDTO.setGameDetail(gameDetail); // Gán đối tượng GameDetailDTO vừa tạo
-
-        // Chuyển đổi LocalDate thành LocalDateTime (nếu cần)
+        libraryGameDTO.setGameDetail(gameDetail);
         if (libraryEntry.getDateAdded() != null) {
             libraryGameDTO.setDateAdded(libraryEntry.getDateAdded());
         }
-
         libraryGameDTO.setPlaytimeInMillis(libraryEntry.getPlaytimeInMillis());
+        if (libraryEntry.getLastTimePlayed() != null) {
+            libraryGameDTO.setLastTimePlayed(libraryEntry.getLastTimePlayed());
+        } else {
+            libraryGameDTO.setLastTimePlayed(LocalDateTime.of(0, Month.JANUARY, 1, 01, 00, 00));
+        }
 
         return libraryGameDTO;
     }
@@ -124,12 +125,13 @@ public class LibraryService {
     }
 
     @Transactional
-    public void updatePlaytime(Long userId, Long gameId, Long PlaytimeInMillis, LocalDateTime LastTimePlayed) {
+    public void updatePlaytime(Long userId, Long gameId, Long PlaytimeInMillis) {
         Library libraryEntry = libraryRepository.findById_UserIdAndId_GameId(userId, gameId)
                 .orElseThrow(() -> new EntityNotFoundException("Not found game " + gameId + " in library of user "));
-        libraryEntry.setPlaytimeInMillis(PlaytimeInMillis);
-        libraryEntry.setLastTimePlayed(LastTimePlayed);
-
+        long previousPlaytime = libraryEntry.getPlaytimeInMillis();
+        previousPlaytime += PlaytimeInMillis;
+        libraryEntry.setPlaytimeInMillis(previousPlaytime);
+        libraryEntry.setLastTimePlayed(LocalDateTime.now().plusHours(7));
 
         libraryRepository.save(libraryEntry);
     }
