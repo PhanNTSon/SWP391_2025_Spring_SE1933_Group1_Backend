@@ -1,5 +1,6 @@
 package com.se1933g01.steamclonebackend.service;
 
+import com.google.api.client.util.DateTime;
 import com.se1933g01.steamclonebackend.dto.GameDetailDTO;
 import com.se1933g01.steamclonebackend.dto.MediaDTO;
 import com.se1933g01.steamclonebackend.dto.PublisherBasicDTO;
@@ -17,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
 @Service
@@ -123,10 +125,12 @@ public class LibraryService {
     }
 
     @Transactional
-    public void updatePlaytime(Long userId, Long gameId, Long PlaytimeInMillis) {
+    public void updatePlaytime(Long userId, Long gameId, Long PlaytimeInMillis, LocalDateTime LastTimePlayed) {
         Library libraryEntry = libraryRepository.findById_UserIdAndId_GameId(userId, gameId)
                 .orElseThrow(() -> new EntityNotFoundException("Not found game " + gameId + " in library of user "));
         libraryEntry.setPlaytimeInMillis(PlaytimeInMillis);
+        libraryEntry.setLastTimePlayed(LastTimePlayed);
+
 
         libraryRepository.save(libraryEntry);
     }

@@ -47,6 +47,8 @@ import jakarta.persistence.EntityManager;
 import java.io.IOException;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -302,9 +304,10 @@ public class UserController {
             @RequestBody Long PlaytimeInMillis) {
 
         try {
+            LocalDateTime lastTimePlayed = LocalDateTime.now();
             Long userId = principal.getUser().getUserId();
-            libraryService.updatePlaytime(userId, gameId, PlaytimeInMillis);
-            return ResponseEntity.ok(Map.of("message", "Cập nhật thời gian chơi thành công."));
+            libraryService.updatePlaytime(userId, gameId, PlaytimeInMillis, lastTimePlayed);
+            return ResponseEntity.ok(Map.of("message", "Updated playtime"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", e.getMessage()));
