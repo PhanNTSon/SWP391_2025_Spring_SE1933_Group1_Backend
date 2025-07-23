@@ -131,7 +131,7 @@ public class LibraryService {
         long previousPlaytime = libraryEntry.getPlaytimeInMillis();
         previousPlaytime += PlaytimeInMillis;
         libraryEntry.setPlaytimeInMillis(previousPlaytime);
-        libraryEntry.setLastTimePlayed(LocalDateTime.now());
+        libraryEntry.setLastTimePlayed(LocalDateTime.now().plusHours(7));
 
         libraryRepository.save(libraryEntry);
     }
