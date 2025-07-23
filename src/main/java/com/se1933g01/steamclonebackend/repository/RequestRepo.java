@@ -13,4 +13,7 @@ public interface RequestRepo extends JpaRepository<Request, Long> {
     @Modifying
     @Query(value = "DELETE FROM \"Request\" WHERE \"RequestID\" = :id", nativeQuery = true)
     void deleteById(@Param("id") Long id);
+
+    @Query(value = "SELECT COUNT(*) FROM \"Request\" WHERE \"Status\" = 0", nativeQuery = true)
+    Long countAllPendingRequests();
 }

@@ -44,10 +44,10 @@ public class AddingGameRequest {
     @Column(name = "Price", precision = 10, scale = 2)
     private BigDecimal price;
 
-    @Column(name = "ShortDescription")
+    @Column(name = "ShortDescription", columnDefinition = "TEXT")
     private String shortDescription;
 
-    @Column(name = "FullDescription")
+    @Column(name = "FullDescription", columnDefinition = "TEXT")
     private String fullDescription;
 
     @Column(name = "OS", length = 50)

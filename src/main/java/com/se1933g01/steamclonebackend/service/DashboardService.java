@@ -1,7 +1,6 @@
 package com.se1933g01.steamclonebackend.service;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,13 +9,24 @@ import java.util.stream.IntStream;
 import org.springframework.stereotype.Service;
 
 import com.se1933g01.steamclonebackend.dto.LoginChartDTO;
+import com.se1933g01.steamclonebackend.repository.PublisherRepo;
+import com.se1933g01.steamclonebackend.repository.RequestRepo;
 import com.se1933g01.steamclonebackend.repository.SessionLogRepo;
+import com.se1933g01.steamclonebackend.repository.TransactionRepo;
+import com.se1933g01.steamclonebackend.repository.UserRepo;
 @Service
 public class DashboardService {
     private final SessionLogRepo sessionLogRepo;
-
-    public DashboardService(SessionLogRepo sessionLogRepo) {
+    private final TransactionRepo transactionRepo;
+    private final UserRepo userRepo;
+    private final PublisherRepo publisherRepo;
+    private final RequestRepo requestRepo;
+    public DashboardService(SessionLogRepo sessionLogRepo, TransactionRepo transactionRepo, UserRepo userRepo, PublisherRepo publisherRepo, RequestRepo requestRepo) {
         this.sessionLogRepo = sessionLogRepo;
+        this.transactionRepo = transactionRepo;
+        this.userRepo = userRepo;
+        this.publisherRepo = publisherRepo;
+        this.requestRepo = requestRepo;
     }
     public List<LoginChartDTO> getLoginsForDays(int days) {
         LocalDate today = LocalDate.now();
@@ -39,5 +49,19 @@ public class DashboardService {
             .toList();
     }
 
-
+    public double getCurrentMonthRevenue() {
+        return transactionRepo.getMonthlyRevenue() != null
+            ? transactionRepo.getMonthlyRevenue()
+            : 0.0;
+    }
+    public long getTotalUserCount() {
+        return userRepo.countAllUsers();
+    }
+    public long getTotalPublisherCount() {
+        return publisherRepo.countAllPublishers();
+    }
+    public long getTotalPendingRequests() {
+        return requestRepo.countAllPendingRequests();
+    }
 }
+
