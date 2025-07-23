@@ -37,4 +37,7 @@ public interface UserRepo extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u WHERE u.username LIKE %:username% AND u.banStatus = true")
     Page<User> findAllByUsernameContainingIgnoreCaseAndBannedStatusTrue(String username, Pageable pageable);
 
+    @Query(value = "SELECT COUNT(*) FROM \"User\"", nativeQuery = true)
+    Long countAllUsers();
+
 }

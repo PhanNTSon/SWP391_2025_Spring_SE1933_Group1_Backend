@@ -24,10 +24,10 @@ public class Feedback {
     @Column(name = "Subject", length = 256)
     private String subject;
 
-    @Column(name = "Message")
+    @Column(name = "Message", columnDefinition = "TEXT")
     private String message;
     
-    @Column(name = "Response")
+    @Column(name = "Response", columnDefinition = "TEXT")
     private String response;
     
     @Column(name = "MediaUrls")
