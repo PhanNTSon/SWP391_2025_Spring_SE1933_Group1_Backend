@@ -2,6 +2,7 @@ package com.se1933g01.steamclonebackend.repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,6 +13,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.se1933g01.steamclonebackend.entity.game.Game;
+import com.se1933g01.steamclonebackend.entity.game.Tag;
 import com.se1933g01.steamclonebackend.entity.user.Publisher;
 
 @Repository
@@ -47,4 +49,15 @@ public interface GameRepository extends JpaRepository<Game, Long>, JpaSpecificat
     List<Game> findTop16MostRecommended(Pageable pageable);
 
     
+@Query(value = """
+    SELECT gt2."GameID"
+    FROM "GameTags" gt1
+    JOIN "GameTags" gt2 ON gt1."TagID" = gt2."TagID"
+    WHERE gt1."GameID" = :gameId AND gt2."GameID" != :gameId
+    GROUP BY gt2."GameID"
+    ORDER BY COUNT(*) DESC
+    LIMIT 10
+    """, nativeQuery = true)
+List<Long> findRelatedGameIdsByTag(@Param("gameId") Long gameId);
+List<Game> findDistinctByTagsInAndGameIdNotInAndStateTrue(Set<Tag> tags, Set<Long> excludeIds);
 }

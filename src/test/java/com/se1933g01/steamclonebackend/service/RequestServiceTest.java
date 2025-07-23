@@ -2,6 +2,7 @@ package com.se1933g01.steamclonebackend.service;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -12,6 +13,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -28,10 +30,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.se1933g01.steamclonebackend.dto.AddingGameRequestDTO;
 import com.se1933g01.steamclonebackend.dto.FeedbackDTO;
+import com.se1933g01.steamclonebackend.dto.PublisherApplyRequestDTO;
 import com.se1933g01.steamclonebackend.entity.game.Game;
 import com.se1933g01.steamclonebackend.entity.game.Tag;
 import com.se1933g01.steamclonebackend.entity.request.AddingGameRequest;
@@ -566,10 +573,292 @@ public class RequestServiceTest {
 
         assertEquals("Request not found", ex.getMessage());
     }
+    @Test
+    void getAllAddingGameRequest_shouldMapEntitiesToDTOs_withPublisherDetails() {
+        Pageable pageable = PageRequest.of(0, 10);
+
+        // Mocked entity tree
+        User user = new User();
+        Publisher publisher = new Publisher();
+        publisher.setPublisherId(99L);
+        publisher.setPublisherName("Indie Dev Co.");
+        user.setPublisher(publisher);
+
+        Request request = new Request();
+        request.setUser(user);
+        request.setTimeCreated(LocalDate.of(2024, 12, 25));
+
+        AddingGameRequest gameRequest = new AddingGameRequest();
+        gameRequest.setGameName("Test Game");
+        gameRequest.setRequest(request);
+
+        List<AddingGameRequest> content = List.of(gameRequest);
+        Page<AddingGameRequest> mockPage = new PageImpl<>(content, pageable, 1);
+
+        // Stub repository
+        when(addingGameRequestRepo.findAllByRequestStateZero(pageable)).thenReturn(mockPage);
+
+        // Execute
+        Page<AddingGameRequestDTO> result = requestService.getAllAddingGameRequest(pageable);
+
+        // Verify
+        assertEquals(1, result.getTotalElements());
+        AddingGameRequestDTO dto = result.getContent().get(0);
+
+        assertEquals("Test Game", dto.getGameName());
+        assertEquals("Indie Dev Co.", dto.getPublisherName());
+        assertEquals("99", dto.getPublisherId());
+        assertEquals("2024-12-25", dto.getSendDate());
+    }
+    @Test
+    void getAllPublisherApplyRequest_shouldMapEntitiesToDTOs_withUserDetails() {
+        Pageable pageable = PageRequest.of(0, 5);
+
+        User user = new User(); user.setUserId(88L); user.setUsername("devuser");
+        Request request = new Request(); request.setUser(user); request.setTimeCreated(LocalDate.of(2023, 5, 1));
+        PublisherApplyRequest entity = new PublisherApplyRequest(); entity.setRequest(request);
+
+        Page<PublisherApplyRequest> entityPage = new PageImpl<>(List.of(entity), pageable, 1);
+        when(publisherApplyRequestRepo.findAllByRequestStateZero(pageable)).thenReturn(entityPage);
+
+        Page<PublisherApplyRequestDTO> dtoPage = requestService.getAllPublisherApplyRequest(pageable);
+        PublisherApplyRequestDTO dto = dtoPage.getContent().get(0);
+
+        assertEquals("devuser", dto.getUsername());
+        assertEquals("2023-05-01", dto.getCreatedDate());
+        assertEquals("88", dto.getUserId());
+    }
+
+    @Test
+    void getAllFeedback_shouldMapFeedbackWithUserInfo_andCreatedDate() {
+        Pageable pageable = PageRequest.of(0, 5);
+
+        Request request = new Request(); request.setRequestId(7L); request.setTimeCreated(LocalDate.of(2023, 7, 14));
+        Feedback feedback = new Feedback(); feedback.setRequest(request);
+
+        Page<Feedback> entityPage = new PageImpl<>(List.of(feedback), pageable, 1);
+
+        when(feedbackRepo.findAllByRequestStateZero(pageable)).thenReturn(entityPage);
+        when(feedbackRepo.findUserNameByRequestId(7L)).thenReturn("user42");
+        when(feedbackRepo.findUserIdByRequestId(7L)).thenReturn("123");
+
+        Page<FeedbackDTO> result = requestService.getAllFeedback(pageable);
+        FeedbackDTO dto = result.getContent().get(0);
+
+        assertEquals("user42", dto.getUserName());
+        assertEquals(123L, dto.getUserId());
+        assertEquals("2023-07-14", dto.getCreatedDate());
+    }
+
+    @Test
+    void getAllFeedbackFromUser_shouldMapFeedbackAndIncludeEnrichedFields() {
+        Pageable pageable = PageRequest.of(0, 5);
+        Long userId = 42L;
+
+        Request request = new Request();
+        request.setRequestId(99L);
+        request.setRequestState(1);
+        request.setTimeCreated(LocalDate.of(2023, 4, 22));
+
+        Feedback feedback = new Feedback();
+        feedback.setRequest(request);
+
+        Page<Feedback> page = new PageImpl<>(List.of(feedback), pageable, 1);
+        when(feedbackRepo.findAllByUserId(userId, pageable)).thenReturn(page);
+        when(feedbackRepo.findUserNameByRequestId(99L)).thenReturn("hoangdev");
+        when(feedbackRepo.findUserIdByRequestId(99L)).thenReturn("42");
+
+        Page<FeedbackDTO> result = requestService.getAllFeedbackFromUser(userId, pageable);
+        FeedbackDTO dto = result.getContent().get(0);
+
+        assertEquals("hoangdev", dto.getUserName());
+        assertEquals(42L, dto.getUserId());
+        assertEquals(1, dto.getStatus());
+        assertEquals("2023-04-22", dto.getCreatedDate());
+    }
+    @Test
+    void getGameDetails_shouldReturnMappedDTO_withPublisherAndGameInfo() {
+        Long requestId = 77L;
+
+        User user = new User();
+        Publisher publisher = new Publisher();
+        publisher.setPublisherName("Studio X");
+        publisher.setPublisherId(900L);
+        user.setPublisher(publisher);
+
+        Request request = new Request();
+        request.setRequestId(requestId);
+        request.setUser(user);
+        request.setRequestState(0);
+
+        AddingGameRequest gameRequest = new AddingGameRequest();
+        gameRequest.setRequest(request);
+        gameRequest.setGameId(111L);
+
+        when(addingGameRequestRepo.findById(requestId)).thenReturn(Optional.of(gameRequest));
+        when(addingGameRequestRepo.findPublisherNameByRequestId(requestId)).thenReturn("Studio X");
+        when(addingGameRequestRepo.findPublisherIdByRequestId(requestId)).thenReturn("900");
+
+        AddingGameRequestDTO dto = requestService.getGameDetails(requestId);
+
+        assertEquals("Studio X", dto.getPublisherName());
+        assertEquals("900", dto.getPublisherId());
+        assertEquals((Long) 111L, dto.getGameId());
+    }
+
+    @Test
+    void getPublisherDetails_shouldReturnDTO_whenRequestIsPending() {
+        Long requestId = 10L;
+
+        Request request = new Request();
+        request.setRequestState(0); // Pending
+
+        PublisherApplyRequest entity = new PublisherApplyRequest();
+        entity.setRequest(request);
+
+        when(publisherApplyRequestRepo.findById(requestId)).thenReturn(Optional.of(entity));
+        when(publisherApplyRequestRepo.findUserIdByRequestId(requestId)).thenReturn("10");
+
+        PublisherApplyRequestDTO dto = requestService.getPublisherDetails(requestId);
+
+        assertNotNull(dto);
+        assertEquals("10", dto.getUserId());
+    }
+
+    @Test
+    void getPublisherDetails_shouldReturnNull_whenRequestIsApproved() {
+        Long requestId = 12L;
+
+        Request request = new Request();
+        request.setRequestState(1); // Approved
+
+        PublisherApplyRequest entity = new PublisherApplyRequest();
+        entity.setRequest(request);
+
+        when(publisherApplyRequestRepo.findById(requestId)).thenReturn(Optional.of(entity));
+
+        PublisherApplyRequestDTO result = requestService.getPublisherDetails(requestId);
+
+        assertNull(result); // Approved should return null
+    }
+
+    @Test
+    void getPublisherDetails_shouldReturnNull_whenRequestIsRejected() {
+        Long requestId = 13L;
+
+        Request request = new Request();
+        request.setRequestState(2); // Rejected
+
+        PublisherApplyRequest entity = new PublisherApplyRequest();
+        entity.setRequest(request);
+
+        when(publisherApplyRequestRepo.findById(requestId)).thenReturn(Optional.of(entity));
+
+        PublisherApplyRequestDTO result = requestService.getPublisherDetails(requestId);
+
+        assertNull(result); // Rejected should also return null
+    }
 
 
 
+    @Test
+    void getPublisherDetails_shouldThrowException_whenEntityNotFound() {
+        Long requestId = 99L;
 
+        when(publisherApplyRequestRepo.findById(requestId)).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () ->
+            requestService.getPublisherDetails(requestId)
+        );
+
+        assertEquals("PublisherApplyRequest not found", ex.getMessage());
+    }
+
+    @Test
+    void getFeedbackDetails_shouldReturnDTO_whenStatusIsPending() {
+        Long requestId = 1L;
+
+        Request request = new Request(); request.setRequestState(0); request.setRequestId(requestId);
+        Feedback feedback = new Feedback(); feedback.setRequest(request);
+
+        when(feedbackRepo.findById(requestId)).thenReturn(Optional.of(feedback));
+        when(feedbackRepo.findUserNameByRequestId(requestId)).thenReturn("hoang");
+        when(feedbackRepo.findUserIdByRequestId(requestId)).thenReturn("42");
+
+        FeedbackDTO dto = requestService.getFeedbackDetails(requestId);
+
+        assertEquals("hoang", dto.getUserName());
+        assertEquals(42L, dto.getUserId());
+    }
+
+    @Test
+    void getFeedbackDetails_shouldReturnNull_whenStatusIsApprovedOrRejected() {
+        Long requestId = 2L;
+
+        Request approvedRequest = new Request(); approvedRequest.setRequestState(1);
+        Feedback approvedFeedback = new Feedback(); approvedFeedback.setRequest(approvedRequest);
+
+        when(feedbackRepo.findById(requestId)).thenReturn(Optional.of(approvedFeedback));
+        assertNull(requestService.getFeedbackDetails(requestId));
+
+        approvedRequest.setRequestState(2); // Rejected
+        assertNull(requestService.getFeedbackDetails(requestId));
+    }
+
+    @Test
+    void getFeedbackDetails_shouldThrowException_whenFeedbackNotFound() {
+        Long requestId = 99L;
+        when(feedbackRepo.findById(requestId)).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () ->
+            requestService.getFeedbackDetails(requestId)
+        );
+
+        assertEquals("Feedback not found", ex.getMessage());
+    }
+@Test
+void getUserFeedbackDetails_shouldReturnDTO_whenUserOwnsRequest() {
+    Long requestId = 5L;
+    Long userId = 42L;
+
+    User user = new User(); user.setUserId(userId);
+    Request request = new Request(); request.setUser(user);
+    Feedback feedback = new Feedback(); feedback.setRequest(request);
+
+    when(feedbackRepo.findById(requestId)).thenReturn(Optional.of(feedback));
+
+    FeedbackDTO dto = requestService.getUserFeedbackDetails(requestId, userId);
+    assertNotNull(dto);
+}
+
+@Test
+void getUserFeedbackDetails_shouldReturnNull_whenUserMismatch() {
+    Long requestId = 6L;
+    Long userId = 99L;
+
+    User owner = new User(); owner.setUserId(42L);
+    Request request = new Request(); request.setUser(owner);
+    Feedback feedback = new Feedback(); feedback.setRequest(request);
+
+    when(feedbackRepo.findById(requestId)).thenReturn(Optional.of(feedback));
+
+    FeedbackDTO dto = requestService.getUserFeedbackDetails(requestId, userId);
+    assertNull(dto); // Caller does not match owner
+}
+
+@Test
+void getUserFeedbackDetails_shouldThrowException_whenFeedbackNotFound() {
+    Long requestId = 7L;
+    Long userId = 42L;
+
+    when(feedbackRepo.findById(requestId)).thenReturn(Optional.empty());
+
+    RuntimeException ex = assertThrows(RuntimeException.class, () ->
+        requestService.getUserFeedbackDetails(requestId, userId)
+    );
+
+    assertEquals("Feedback not found", ex.getMessage());
+}
 
 
 
