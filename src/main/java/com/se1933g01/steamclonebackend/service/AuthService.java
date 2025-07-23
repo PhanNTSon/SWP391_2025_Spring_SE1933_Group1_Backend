@@ -3,6 +3,7 @@ package com.se1933g01.steamclonebackend.service;
 import jakarta.transaction.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,7 +22,9 @@ import com.se1933g01.steamclonebackend.dto.LoginDTO;
 import com.se1933g01.steamclonebackend.dto.RegisterRequestDTO;
 import com.se1933g01.steamclonebackend.entity.user.CustomUserDetail;
 import com.se1933g01.steamclonebackend.entity.user.Role;
+import com.se1933g01.steamclonebackend.entity.user.SessionLog;
 import com.se1933g01.steamclonebackend.entity.user.User;
+import com.se1933g01.steamclonebackend.repository.SessionLogRepo;
 import com.se1933g01.steamclonebackend.repository.UserRepo;
 import com.se1933g01.steamclonebackend.utils.JwtUtil;
 
@@ -43,9 +46,10 @@ public class AuthService {
     private PasswordEncoder passwordEncoder;
 
     private final UserRepo userRepo;
-
-    public AuthService(UserRepo userRepo) {
+    private final SessionLogRepo sessionLogRepo;
+    public AuthService(UserRepo userRepo, SessionLogRepo sessionLogRepo) {
         this.userRepo = userRepo;
+        this.sessionLogRepo = sessionLogRepo;
     }
 
     @Autowired
@@ -109,7 +113,11 @@ public class AuthService {
 
             // Lấy thông tin người dùng sau khi xác thực thành công
             CustomUserDetail userDetails = (CustomUserDetail) authentication.getPrincipal();
-
+            //save to sessionlog
+            SessionLog log = new SessionLog();
+            log.setUser(userDetails.getUser());  // assuming this returns a User entity
+            log.setLoginTime(LocalDateTime.now());
+            sessionLogRepo.save(log);
             // Tạo JWT token
             String token = jwtUtil.generateToken(
                     userDetails.getUsername(),
