@@ -3,6 +3,7 @@ package com.se1933g01.steamclonebackend.mapper;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.se1933g01.steamclonebackend.dto.*;
@@ -73,6 +74,9 @@ public class EntityMapper {
         dto.setDiscountPrice(discountPrice);
         dto.setPrice(currentPrice); // price trong DTO là giá bán hiệu lực
         // --!!
+        dto.setTags(game.getTags().stream()
+                .map(Tag::getTagName)
+                .collect(Collectors.toSet()));
 
         // Added by Phan NT Son 17-06-2025
         dto.setReleaseDate(game.getReleaseDate());

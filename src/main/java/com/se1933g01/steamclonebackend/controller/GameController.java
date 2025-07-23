@@ -109,7 +109,6 @@ public class GameController {
         Pageable pageable = PageRequest.of(page, size, sortOrder);
 
         Page<GameBasicDTO> gamePage = gameService.findGamesByCriteria(searchTerm, maxPrice, tags, publishers, pageable);
-
         return ResponseEntity.ok(gamePage);
     }
 
