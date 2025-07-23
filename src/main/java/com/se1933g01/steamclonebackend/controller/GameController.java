@@ -183,4 +183,16 @@ public class GameController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/related/tags/{gameId}")
+    public ResponseEntity<List<GameBasicDTO>> getRelatedGames(@PathVariable Long gameId) {
+        List<GameBasicDTO> recommendedGames = gameService.getTagBasedRecommendations(gameId);
+        return ResponseEntity.ok(recommendedGames);
+    }
+
+    @GetMapping("/related/owned/{userId}")
+    public ResponseEntity<List<GameBasicDTO>> getLibraryBasedRecommendations(@PathVariable Long userId) {
+        List<GameBasicDTO> recommendedGames = gameService.recommendSimilarToLibrary(userId);
+        return ResponseEntity.ok(recommendedGames);
+    }
+
 }

@@ -3,6 +3,7 @@ package com.se1933g01.steamclonebackend.repository;
 import com.se1933g01.steamclonebackend.entity.user.Library;
 import com.se1933g01.steamclonebackend.entity.user.LibraryId;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -29,4 +30,5 @@ public interface LibraryRepository extends JpaRepository<Library, LibraryId> {
     Page<Library> findByIdUserId(Long userId, Pageable pageable);
 
     Optional<Library> findById_UserIdAndId_GameId(Long userId, Long gameId);
+    List<Library> findByUser_UserId(Long userId);
 }

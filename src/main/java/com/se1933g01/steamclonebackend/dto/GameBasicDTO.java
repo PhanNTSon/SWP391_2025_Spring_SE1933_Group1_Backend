@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -19,10 +20,10 @@ public class GameBasicDTO {
     private BigDecimal price; // Changed by Phan Son 21-06
     private BigDecimal discountPrice; // Changed by Phan Son 21-06
     private BigDecimal originalPrice; // Changed by Phan Son 21-06
-    private boolean state;
+    private boolean state; 
     // Added by Phan NT Son 17-06-2025
     private LocalDate releaseDate;
-
+    private Set<String> tags;
     public GameBasicDTO(long gameId, String gameName, BigDecimal price) { // Changed by Phan Son 21-06
         this.id = gameId;
         this.title = gameName;
