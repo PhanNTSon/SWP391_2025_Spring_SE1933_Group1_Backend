@@ -35,8 +35,8 @@ public class PasswordResetService {
     }
 
     @Transactional
-    public void requestPasswordReset(String username, String email) {
-        User user = userRepository.findByUsernameAndEmail(username, email)
+    public void requestPasswordReset(String email) {
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         String otp = emailService.generateOtp();
@@ -57,12 +57,12 @@ public class PasswordResetService {
     }
 
     @Transactional
-    public void resetPassword(String username, String otp, String newPassword, String confirmPassword) {
+    public void resetPassword(String email, String otp, String newPassword, String confirmPassword) {
         if (!newPassword.equals(confirmPassword)) {
             throw new RuntimeException("Passwords do not match.");
         }
 
-        User user = userRepository.findByUsername(username)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         PasswordResetToken token = tokenRepository.findByUserIDAndOtp(user.getUserId(), otp)
