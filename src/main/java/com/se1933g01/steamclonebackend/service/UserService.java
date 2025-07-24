@@ -22,6 +22,7 @@ import com.se1933g01.steamclonebackend.entity.community.Block;
 import com.se1933g01.steamclonebackend.entity.community.Friendship;
 import com.se1933g01.steamclonebackend.entity.community.GroupChat;
 import com.se1933g01.steamclonebackend.entity.community.GroupChatMember;
+import com.se1933g01.steamclonebackend.entity.user.Role;
 import com.se1933g01.steamclonebackend.entity.user.User;
 import com.se1933g01.steamclonebackend.mapper.EntityMapper;
 import com.se1933g01.steamclonebackend.repository.BlockRepo;
@@ -32,6 +33,7 @@ import com.se1933g01.steamclonebackend.repository.UserRepo;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -40,7 +42,6 @@ import java.util.Random;
 
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
-
 
 @Service
 public class UserService {
@@ -167,7 +168,7 @@ public class UserService {
      * @return
      * @since 13-06-2025
      */
-    public Page<UserDetailDTO> getAllActiveUser(String name,Pageable pageable) {
+    public Page<UserDetailDTO> getAllActiveUser(String name, Pageable pageable) {
 
         Page<User> requestUser;
         if (name != null && !name.trim().isEmpty()) {
@@ -183,7 +184,8 @@ public class UserService {
             return dto;
         });
     }
-    public Page<UserDetailDTO> getAllBannedUser(String name,Pageable pageable) {
+
+    public Page<UserDetailDTO> getAllBannedUser(String name, Pageable pageable) {
 
         Page<User> requestUser;
         if (name != null && !name.trim().isEmpty()) {
@@ -199,14 +201,15 @@ public class UserService {
             return dto;
         });
     }
-    public void banUser(Long userId){
+
+    public void banUser(Long userId) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_MSG));
         user.setBanStatus(true);
         userRepo.save(user);
     }
 
-    public void unbanUser(Long userId){
+    public void unbanUser(Long userId) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_MSG));
         user.setBanStatus(false);
@@ -411,5 +414,26 @@ public class UserService {
         user.setEmailChangeTokenExpiry(null);
 
         userRepo.save(user);
+    }
+
+    public User findByEmail(String email) {
+        return userRepo.findByEmail(email).orElse(null);
+    }
+
+    public User createGoogleUser(String email, String name) {
+        User user = new User();
+        user.setEmail(email);
+        user.setUsername(email.split("@")[0]); // Tạo username bằng email trước dấu '@'
+        user.setPassword("");
+        Role userRole = new Role();
+        userRole.setRoleId(1L); // Default user role
+        user.setRole(userRole);
+        user.setWalletBalance(BigDecimal.ZERO);
+        user.setBanStatus(false);
+        user.setCountry("Vietnam");
+        user.setCreatedAt(LocalDate.now());
+        user.setAvatarUrl("https://avatars.steamstatic.com/b5bd56c1aa4644a474a2e4972be27ef9e82e517e_full.jpg");
+        userRepo.save(user);
+        return user;
     }
 }
