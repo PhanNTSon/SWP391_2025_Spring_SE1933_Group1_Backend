@@ -59,7 +59,7 @@ public class CommunityController {
         return service.createComment(id, request, userDetails.getUsername());
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/update/{id}")
     public DiscussionThreadDTO updateThread(
             @PathVariable Long id,
             @RequestBody UpdateThreadRequestDTO request,
