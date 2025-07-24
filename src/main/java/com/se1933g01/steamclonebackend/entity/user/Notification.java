@@ -20,17 +20,17 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "Notifications")
+@Table(name = "Notifications", schema = "public")
 public class Notification {
     @Id
     @Column(name = "NotificationID")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long notificationId;
 
-    @Column(name = "NotificationType")
+    @Column(name = "NotificationType", length = 100, nullable = false)
     private String notificationType;
     
-    @Column(name = "NotificationContent")
+    @Column(name = "NotificationContent", nullable = false)
     private String notificationContent;
     
     @Column(name = "IsRead")

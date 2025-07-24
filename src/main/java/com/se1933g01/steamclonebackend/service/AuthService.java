@@ -3,6 +3,7 @@ package com.se1933g01.steamclonebackend.service;
 import jakarta.transaction.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,7 +22,9 @@ import com.se1933g01.steamclonebackend.dto.LoginDTO;
 import com.se1933g01.steamclonebackend.dto.RegisterRequestDTO;
 import com.se1933g01.steamclonebackend.entity.user.CustomUserDetail;
 import com.se1933g01.steamclonebackend.entity.user.Role;
+import com.se1933g01.steamclonebackend.entity.user.SessionLog;
 import com.se1933g01.steamclonebackend.entity.user.User;
+import com.se1933g01.steamclonebackend.repository.SessionLogRepo;
 import com.se1933g01.steamclonebackend.repository.UserRepo;
 import com.se1933g01.steamclonebackend.utils.JwtUtil;
 
@@ -43,9 +46,10 @@ public class AuthService {
     private PasswordEncoder passwordEncoder;
 
     private final UserRepo userRepo;
-
-    AuthService(UserRepo userRepo) {
+    private final SessionLogRepo sessionLogRepo;
+    public AuthService(UserRepo userRepo, SessionLogRepo sessionLogRepo) {
         this.userRepo = userRepo;
+        this.sessionLogRepo = sessionLogRepo;
     }
 
     @Autowired
@@ -67,7 +71,7 @@ public class AuthService {
         user.setCountry(request.getCountry());
         user.setWalletBalance(BigDecimal.ZERO); // Changed by Pha Son 21-06
         user.setBanStatus(false); // default status
-        user.setAvatarUrl("https://avatars.fastly.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg");
+        user.setAvatarUrl("https://avatars.steamstatic.com/b5bd56c1aa4644a474a2e4972be27ef9e82e517e_full.jpg");
         // ↑ Added by Phan Son 28-06
 
         Role userRole = new Role();
@@ -109,12 +113,20 @@ public class AuthService {
 
             // Lấy thông tin người dùng sau khi xác thực thành công
             CustomUserDetail userDetails = (CustomUserDetail) authentication.getPrincipal();
-
+            //save to sessionlog
+            SessionLog log = new SessionLog();
+            log.setUser(userDetails.getUser());  // assuming this returns a User entity
+            log.setLoginTime(LocalDateTime.now());
+            sessionLogRepo.save(log);
             // Tạo JWT token
-            String token = jwtUtil.generateToken(userDetails.getUsername(), userDetails.getUser().getUserId(),
-                    userDetails.getUser().getRole().getRoleName(), userDetails.getUser().getAvatarUrl()); // Added by
-                                                                                                          // Phan Son
-                                                                                                          // 21-06
+            String token = jwtUtil.generateToken(
+                    userDetails.getUsername(),
+                    userDetails.getUser().getUserId(),
+                    userDetails.getUser().getRole().getRoleName(),
+                    userDetails.getUser().getAvatarUrl(),
+                    userDetails.getUser().isBanStatus()); // Added by
+                                                          // Phan Son
+                                                          // 21-06
 
             // Trả về cho client
             Map<String, Object> response = new HashMap<>();
@@ -153,14 +165,16 @@ public class AuthService {
         }
 
         // Generate JWT
-        return jwtUtil.generateToken(user.getUsername(), user.getUserId(), user.getRole().getRoleName(),
-                user.getAvatarUrl()); // Added by Phan Son 21-06
+        return jwtUtil.generateToken(user.getUsername(),
+                user.getUserId(),
+                user.getRole().getRoleName(),
+                user.getAvatarUrl(),
+                user.isBanStatus()); // Added by Phan Son 21-06
     }
 
     public boolean emailExists(String email) {
         return userRepo.existsByEmail(email);
     }
-
 
     /**
      * @author Loc Phan
@@ -170,5 +184,5 @@ public class AuthService {
     public boolean usernameExists(String username) {
         return userRepo.existsByUsername(username);
     }
-    
+
 }

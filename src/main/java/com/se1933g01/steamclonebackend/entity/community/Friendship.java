@@ -20,7 +20,7 @@ import lombok.NoArgsConstructor;
  * @since 21-06-2025
  */
 @Entity
-@Table(name = "Friendships")
+@Table(name = "Friendships", schema = "public")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -29,17 +29,14 @@ public class Friendship {
     private FriendshipId friendshipId;
 
     @ManyToOne
-    @MapsId("userId")
-    @JoinColumn(name = "UserID")
-    private User user;
+    @MapsId("user1Id")
+    @JoinColumn(name = "User1ID")
+    private User user1;
 
     @ManyToOne
-    @MapsId("friendId")
-    @JoinColumn(name = "FriendID")
-    private User friend;
-
-    @Column(name = "Status")
-    private String status;
+    @MapsId("user2Id")
+    @JoinColumn(name = "User2ID")
+    private User user2;
 
     @Column(name = "CreatedAt")
     private LocalDate createdAt;

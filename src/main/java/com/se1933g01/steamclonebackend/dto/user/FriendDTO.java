@@ -12,7 +12,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class FriendDTO {
-    private long friendId;
+    private Long friendId;
     private String friendName;
     private String friendAvatarUrl;
+    private Integer groupsTakeIn;
 }

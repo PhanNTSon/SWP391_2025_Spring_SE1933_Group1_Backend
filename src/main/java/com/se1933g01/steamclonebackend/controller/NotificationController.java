@@ -47,20 +47,6 @@ public class NotificationController {
     }
 
     /**
-     * Get list of Unread Notifications
-     * 
-     * @param userId
-     * @return
-     */
-    @GetMapping("/list/unread")
-    @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<List<NotificationDTO>> getUnreadNotificationList(
-            @AuthenticationPrincipal CustomUserDetail me) {
-        List<NotificationDTO> result = notifService.getUnreadNotifList(me.getUser().getUserId());
-        return ResponseEntity.ok(result);
-    }
-
-    /**
      * Create new Notification
      * 
      * @param dto

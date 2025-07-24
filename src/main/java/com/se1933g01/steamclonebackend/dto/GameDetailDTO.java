@@ -25,7 +25,6 @@ public class GameDetailDTO {
     private String fullDescription;
     private Integer totalPurchased;
     private Set<TagDTO> tags; // Danh sách DTO cho tags
-    // private SystemRequirementDTO systemRequirement; // DTO cho systemRequirement
     private List<MediaDTO> media; // Danh sách DTO cho media
     private String os;
     private String storage;
@@ -33,4 +32,6 @@ public class GameDetailDTO {
     private String memory;
     private String additionalNotes;
     private String graphics;
+    private String gameUrl;
+    private String iconUrl;
 }

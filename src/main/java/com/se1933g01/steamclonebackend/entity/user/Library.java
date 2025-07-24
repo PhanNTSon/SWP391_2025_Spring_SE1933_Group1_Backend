@@ -7,7 +7,7 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "[Library]")
+@Table(name = "Library", schema = "public")
 @Getter
 @Setter
 public class Library {
@@ -31,6 +31,10 @@ public class Library {
     @Column(name = "DateAdded")
     private LocalDateTime dateAdded;
 
-    @Column(name = "PlaytimeInMillis", nullable = false)
+    @Column(name = "PlaytimeInMillis")
     private Long playtimeInMillis = 0L;
+
+    @Column(name = "LastTimePlayed")
+    private LocalDateTime lastTimePlayed;
+
 }

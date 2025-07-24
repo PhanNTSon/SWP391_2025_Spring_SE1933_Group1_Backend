@@ -2,7 +2,6 @@ package com.se1933g01.steamclonebackend.entity.transaction;
 
 import java.math.BigDecimal;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.se1933g01.steamclonebackend.entity.CompositedKey;
 import com.se1933g01.steamclonebackend.entity.game.Game;
 
@@ -18,7 +17,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "TransactionDetail")
+@Table(name = "TransactionDetail", schema = "public")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -27,7 +26,7 @@ public class TransactionDetail {
     @EmbeddedId
     private CompositedKey id;
 
-    @Column(name = "Price")
+    @Column(name = "Price", precision = 10, scale = 2)
     private BigDecimal price;
 
     //================ Relationships =============

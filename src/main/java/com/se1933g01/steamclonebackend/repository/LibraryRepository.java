@@ -2,6 +2,10 @@ package com.se1933g01.steamclonebackend.repository;
 
 import com.se1933g01.steamclonebackend.entity.user.Library;
 import com.se1933g01.steamclonebackend.entity.user.LibraryId;
+
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -24,4 +28,7 @@ public interface LibraryRepository extends JpaRepository<Library, LibraryId> {
      * @return một đối tượng Page chứa danh sách Library và thông tin phân trang.
      */
     Page<Library> findByIdUserId(Long userId, Pageable pageable);
+
+    Optional<Library> findById_UserIdAndId_GameId(Long userId, Long gameId);
+    List<Library> findByUser_UserId(Long userId);
 }

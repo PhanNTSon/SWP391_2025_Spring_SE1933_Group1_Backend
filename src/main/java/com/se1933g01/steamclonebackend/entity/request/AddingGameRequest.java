@@ -25,44 +25,70 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "AddingGameRequest")
+@Table(name = "AddingGameRequest", schema = "public")
 public class AddingGameRequest {
     @Id
     @Column(name = "RequestID")
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     private Long requestId;
 
-    @Column(name = "GameName")
+    @Column(name = "GameId")
+    private Long gameId;
+
+    @Column(name = "GameName", length = 100)
     private String gameName;
+
     @Column(name = "ReleaseDate")
     private LocalDate releaseDate;
-    @Column(name = "Price")
+
+    @Column(name = "Price", precision = 10, scale = 2)
     private BigDecimal price;
-    @Column(name = "ShortDescription", columnDefinition = "NVARCHAR(MAX)")
+
+    @Column(name = "ShortDescription", columnDefinition = "TEXT")
     private String shortDescription;
-    @Column(name = "FullDescription", columnDefinition = "NVARCHAR(MAX)")
+
+    @Column(name = "FullDescription", columnDefinition = "TEXT")
     private String fullDescription;
-    @Column(name = "Os")
+
+    @Column(name = "OS", length = 50)
     private String os;
-    @Column(name = "Storage")
+
+    @Column(name = "Storage", length = 50)
     private String storage;
-    @Column(name = "Processor")
+
+    @Column(name = "Processor", length = 50)
     private String processor;
-    @Column(name = "Memory")
+
+    @Column(name = "Memory", length = 50)
     private String memory;
+
     @Column(name = "AdditionalNotes")
     private String additionalNotes;
-    @Column(name = "Graphics")
+    
+    @Column(name = "Graphics", length = 50)
     private String graphics;
-    @Column(name = "GameUrl")
+    
+    @Column(name = "GameUrl", length = 255)
     private String gameUrl;
-    @Column(name = "IconUrl")
+
+    @Column(name = "IconUrl", length = 255)
     private String iconUrl;
+
+    @Column(name = "DeclineMessage", length = 255)
+    private String declineMessage;
+
+    @Column(name = "UpdateLog")
+    private String updateLog;
 
     @Column(name = "MediaUrls")
     @ElementCollection
     @CollectionTable(name = "AddingGameRequest_mediaUrls", joinColumns = @JoinColumn(name = "RequestID"))
     private List<String> mediaUrls;
+
+    @Column(name = "Tags")
+    @ElementCollection
+    @CollectionTable(name = "AddingGameRequest_tags", joinColumns = @JoinColumn(name = "RequestID"))
+    private List<Integer> tags;
 
     // ================ Relationships =============
 

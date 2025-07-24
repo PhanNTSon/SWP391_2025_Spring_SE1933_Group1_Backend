@@ -1,6 +1,7 @@
 package com.se1933g01.steamclonebackend.controller;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,30 +17,38 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.se1933g01.steamclonebackend.dto.ApiRespDTO;
 import com.se1933g01.steamclonebackend.dto.GameBasicDTO;
 import com.se1933g01.steamclonebackend.dto.community.ConversationDTO;
-import com.se1933g01.steamclonebackend.dto.community.FriendshipDTO;
-import com.se1933g01.steamclonebackend.dto.community.InviteDTO;
+import com.se1933g01.steamclonebackend.dto.community.CreateGroupChatDTO;
+import com.se1933g01.steamclonebackend.dto.community.FriendRequestDTO;
+import com.se1933g01.steamclonebackend.dto.community.GroupChatDTO;
+import com.se1933g01.steamclonebackend.dto.community.GroupDTO;
+import com.se1933g01.steamclonebackend.dto.community.GroupMemberDTO;
 import com.se1933g01.steamclonebackend.dto.user.EmailChangeConfirmDTO;
 import com.se1933g01.steamclonebackend.dto.user.EmailChangeRequestDTO;
 import com.se1933g01.steamclonebackend.dto.community.SearchResult;
 import com.se1933g01.steamclonebackend.dto.user.FriendDTO;
-import com.se1933g01.steamclonebackend.dto.user.LibraryDTO;
 import com.se1933g01.steamclonebackend.dto.user.LibraryGameDTO;
 import com.se1933g01.steamclonebackend.dto.user.UserDetailDTO;
 import com.se1933g01.steamclonebackend.dto.user.UserUpdateDTO;
 import com.se1933g01.steamclonebackend.entity.transaction.Transaction;
 import com.se1933g01.steamclonebackend.entity.transaction.TransactionDetail;
 import com.se1933g01.steamclonebackend.entity.user.CustomUserDetail;
+import com.se1933g01.steamclonebackend.entity.user.User;
 import com.se1933g01.steamclonebackend.service.CartService;
 import com.se1933g01.steamclonebackend.service.CommunityService;
 import com.se1933g01.steamclonebackend.service.LibraryService;
 import com.se1933g01.steamclonebackend.service.TransactionService;
 import com.se1933g01.steamclonebackend.service.UserService;
 
+import jakarta.persistence.EntityManager;
+
 import java.io.IOException;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,17 +62,19 @@ public class UserController {
 
     private final UserService userService;
     private final CartService cartService;
-    private final TransactionService transactionService; // Added by Ba Thanh 25-06
-    private final LibraryService libraryService; // Added by Ba Thanh 25-06
-    private final CommunityService communityService; // Added by Phan NT Son 23-06
+    private final TransactionService transactionService;
+    private final LibraryService libraryService;
+    private final CommunityService communityService;
+    private final EntityManager entityManager;
 
-    public UserController(UserService userService, CartService cartService,
-            CommunityService communityService, TransactionService transactionService, LibraryService libraryService) {
+    public UserController(UserService userService, CartService cartService, TransactionService transactionService,
+            LibraryService libraryService, CommunityService communityService, EntityManager entityManager) {
         this.userService = userService;
         this.cartService = cartService;
-        this.communityService = communityService;
         this.transactionService = transactionService;
         this.libraryService = libraryService;
+        this.communityService = communityService;
+        this.entityManager = entityManager;
     }
 
     /**
@@ -170,6 +181,33 @@ public class UserController {
     }
 
     /**
+     * Author: kerri
+     */
+    // Refund transaction
+    @PostMapping("/transaction/refund/{transactionId}")
+    @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
+    public ResponseEntity<Map<String, Object>> refundTransaction(@PathVariable Long transactionId) {
+        Map<String, Object> response = new HashMap<>();
+        cartService.refund(transactionId);
+        response.put("success", true);
+        response.put("message", "Refund successfully.");
+        return ResponseEntity.ok(response);
+
+    }
+
+    /**
+     * @author phan nt son
+     * @param me
+     * @return total number of games in cart
+     * @since 05-7-2025
+     */
+    @GetMapping("/cart/total")
+    public ResponseEntity<ApiRespDTO<?>> getTotalGamesInCart(@AuthenticationPrincipal CustomUserDetail me) {
+        return ResponseEntity.ok(new ApiRespDTO<Long>(true, "SUCCESS", "TOTAL NUMBER OF GAMES IN CART",
+                cartService.getTotalGamesInCart(me.getUser().getUserId())));
+    }
+
+    /**
      * Author: Ba Thanh
      */
     // Show transaction history (chỉ trả về các trường cần thiết)
@@ -184,6 +222,7 @@ public class UserController {
                 Map<String, Object> map = new HashMap<>();
                 map.put("transactionId", tran.getTransactionId());
                 map.put("dateCreated", tran.getCreatedAt());
+                map.put("type", tran.getType());
                 // Get game info from the first TransactionDetail (each transaction has one
                 // game)
                 if (tran.getTransactionDetail() != null && !tran.getTransactionDetail().isEmpty()) {
@@ -263,6 +302,33 @@ public class UserController {
         return ResponseEntity.ok(libraryPage);
     }
 
+    @GetMapping("/library/{userId}/{gameId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<LibraryGameDTO> getSpecificGameInLibrary(
+            @PathVariable Long userId,
+            @PathVariable Long gameId) {
+
+        LibraryGameDTO gameDto = libraryService.getGameInLibrary(userId, gameId);
+        return ResponseEntity.ok(gameDto);
+    }
+
+    @PutMapping("/library/{gameId}/playtime")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Map<String, String>> updatePlaytime(
+            @AuthenticationPrincipal CustomUserDetail principal,
+            @PathVariable Long gameId,
+            @RequestBody Long PlaytimeInMillis) {
+
+        try {
+            Long userId = principal.getUser().getUserId();
+            libraryService.updatePlaytime(userId, gameId, PlaytimeInMillis);
+            return ResponseEntity.ok(Map.of("message", "Updated playtime"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
     /* author: bathanh */
     // api check if game is in cart or not
     @GetMapping("/cart/contain/{gameId}")
@@ -313,6 +379,7 @@ public class UserController {
             @RequestParam BigDecimal amount) {
         Long userId = me.getUser().getUserId();
         BigDecimal newBalance = userService.subtractUserBalance(userId, amount);
+        userService.addUserBalance((long) 10, amount);
         return ResponseEntity.ok(newBalance);
     }
 
@@ -385,9 +452,12 @@ public class UserController {
      */
     @GetMapping("/pendinginvite/init")
     @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
-    public ResponseEntity<List<InviteDTO>> getInviteFromUser(@AuthenticationPrincipal CustomUserDetail me) {
-        List<InviteDTO> res = communityService.getInviteFromUser(me.getUser().getUserId());
-        return ResponseEntity.ok(res);
+    public ResponseEntity<ApiRespDTO<?>> getInviteFromUser(@AuthenticationPrincipal CustomUserDetail me) {
+
+        List<FriendRequestDTO> res = communityService.getInviteFromUser(me.getUser().getUserId());
+
+        return ResponseEntity.ok()
+                .body(new ApiRespDTO<List<FriendRequestDTO>>(true, "GET_LIST_SUCCESSFULLY", "Get list success", res));
     }
 
     /**
@@ -399,9 +469,12 @@ public class UserController {
      */
     @GetMapping("/pendinginvite/receive")
     @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
-    public ResponseEntity<List<InviteDTO>> getInviteFromFriend(@AuthenticationPrincipal CustomUserDetail me) {
-        List<InviteDTO> res = communityService.getInviteFromFriend(me.getUser().getUserId());
-        return ResponseEntity.ok(res);
+    public ResponseEntity<ApiRespDTO<?>> getInviteFromFriend(@AuthenticationPrincipal CustomUserDetail me) {
+
+        List<FriendRequestDTO> res = communityService.getInviteFromFriend(me.getUser().getUserId());
+
+        return ResponseEntity.ok()
+                .body(new ApiRespDTO<List<FriendRequestDTO>>(true, "GET_LIST_SUCCESSFULLY", "Get list success", res));
     }
 
     /**
@@ -414,10 +487,14 @@ public class UserController {
      */
     @PostMapping("/sendinvite/{receiverId}")
     @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
-    public ResponseEntity<FriendshipDTO> sendInvite(@PathVariable(name = "receiverId") long receiverId,
+    public ResponseEntity<ApiRespDTO<?>> sendInvite(@PathVariable(name = "receiverId") long receiverId,
             @AuthenticationPrincipal CustomUserDetail me) {
-        FriendshipDTO result = communityService.sendInvite(me.getUser().getUserId(), receiverId);
-        return ResponseEntity.ok(result);
+
+        FriendRequestDTO result = communityService.sendInvite(me.getUser().getUserId(), receiverId);
+
+        return ResponseEntity.ok()
+                .body(new ApiRespDTO<FriendRequestDTO>(true, "REQUEST_SEND_SUCCESSFULLY", "Send request success",
+                        result));
     }
 
     /**
@@ -430,14 +507,49 @@ public class UserController {
      */
     @PatchMapping("/acceptinvite/{friendId}")
     @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
-    public ResponseEntity<FriendshipDTO> acceptInvite(@AuthenticationPrincipal CustomUserDetail me,
+    public ResponseEntity<ApiRespDTO<?>> acceptInvite(@AuthenticationPrincipal CustomUserDetail me,
             @PathVariable(name = "friendId") long friendId) {
         // Accept invite
-        FriendshipDTO resDto = communityService.acceptInvite(me.getUser().getUserId(), friendId);
-        // Create Converstaion in DB
-        communityService.createConversation(me.getUser().getUserId(), friendId);
+        FriendDTO resDto = communityService.acceptInvite(me.getUser().getUserId(), friendId);
 
-        return ResponseEntity.ok(resDto);
+        return ResponseEntity.ok()
+                .body(new ApiRespDTO<FriendDTO>(true, "ACCEPT_SUCCESSFULLY", "Accept request success", resDto));
+    }
+
+    /**
+     * @author Phan NT Son
+     * @since 16-07
+     *        Decline an Invite
+     * @param friendId
+     * @param me
+     * @return
+     */
+    @DeleteMapping({ "/declineinvite/{friendId}" })
+    @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
+    public ResponseEntity<ApiRespDTO<?>> declineInvite(@AuthenticationPrincipal CustomUserDetail me,
+            @PathVariable(name = "friendId") long friendId) {
+        // Decline invite
+        communityService.deleteInvite(friendId, me.getUser().getUserId());
+
+        User receiver = entityManager.getReference(User.class, friendId);
+        communityService.sendToChannelAcceptOrDecline(receiver.getUsername(), me.getUser().getUserId());
+
+        return ResponseEntity.ok()
+                .body(new ApiRespDTO<FriendDTO>(true, "DECLINE_SUCCESSFULLY", "Decline request success", null));
+    }
+
+    @DeleteMapping("/cancelinvite/{friendId}")
+    @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
+    public ResponseEntity<ApiRespDTO<?>> cancelInvite(@AuthenticationPrincipal CustomUserDetail me,
+            @PathVariable(name = "friendId") long friendId) {
+        // Cancel invite
+        communityService.deleteInvite(me.getUser().getUserId(), friendId);
+
+        User receiver = entityManager.getReference(User.class, friendId);
+        communityService.sendToChannelCancel(receiver.getUsername(), me.getUser().getUserId());
+
+        return ResponseEntity.ok()
+                .body(new ApiRespDTO<FriendDTO>(true, "CANCEL_SUCCESSFULLY", "Cancel request success", null));
     }
 
     /**
@@ -448,30 +560,31 @@ public class UserController {
      * @param me
      * @return
      */
-    @PatchMapping("/blockinvite/{targetId}")
+    @PatchMapping("/block/{targetId}")
     @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
-    public ResponseEntity<FriendshipDTO> blockInvite(@AuthenticationPrincipal CustomUserDetail me,
+    public ResponseEntity<ApiRespDTO<?>> blockUser(@AuthenticationPrincipal CustomUserDetail me,
             @PathVariable(name = "targetId") long tId) {
-        // Block invite
-        FriendshipDTO resDto = communityService.blockInvite(me.getUser().getUserId(), tId);
+        // Block
+        FriendDTO resDto = communityService.blockUser(me.getUser().getUserId(), tId);
 
-        return ResponseEntity.ok(resDto);
+        return ResponseEntity.ok()
+                .body(new ApiRespDTO<FriendDTO>(true, "BLOCK_USER_SUCCESSFULLY", "Block user success", resDto));
     }
 
     /**
      * @author Phan NT Son
      * @since 23-06-2025
-     *        Decline an Invite
+     *        Decline an Invite/ Friendship
      * @param friendId
      * @param me
      * @return
      */
-    @DeleteMapping({ "/declineinvite/{targetId}", "/unfriend/{targetId}" })
+    @DeleteMapping("/unfriend/{targetId}")
     @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
-    public ResponseEntity<String> declineInvite(@AuthenticationPrincipal CustomUserDetail me,
+    public ResponseEntity<String> unFriend(@AuthenticationPrincipal CustomUserDetail me,
             @PathVariable(name = "targetId") long tId) {
         // Delete invite
-        communityService.deleteFriendship(me.getUser().getUserId(), tId);
+        communityService.unfriend(me.getUser().getUserId(), tId);
 
         return ResponseEntity.ok("Success");
     }
@@ -520,6 +633,115 @@ public class UserController {
     public ResponseEntity<ConversationDTO> getConversationHistory(@PathVariable(name = "friendId") long fId,
             @AuthenticationPrincipal CustomUserDetail me) {
         return ResponseEntity.ok(communityService.getConversation(me.getUser().getUserId(), fId));
+    }
+
+    @GetMapping("/active")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<UserDetailDTO>> getActiveUser(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String name,
+            @AuthenticationPrincipal CustomUserDetail userDetails) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<UserDetailDTO> result = userService.getAllActiveUser(name, pageable);
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/banned")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<UserDetailDTO>> getBannedUser(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String name,
+            @AuthenticationPrincipal CustomUserDetail userDetails) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<UserDetailDTO> result = userService.getAllBannedUser(name, pageable);
+        return ResponseEntity.ok(result);
+    }
+
+    @PatchMapping("/ban/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, String>> banUser(@PathVariable(name = "userId") long userId) {
+        try {
+            userService.banUser(userId);
+            return ResponseEntity.ok(Map.of("message", "User has been banned successfully."));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PatchMapping("/unban/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, String>> unbanUser(@PathVariable(name = "userId") long userId) {
+        try {
+            userService.unbanUser(userId);
+            return ResponseEntity.ok(Map.of("message", "User has been unbanned successfully."));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/groupchat")
+    @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
+    public ResponseEntity<ApiRespDTO<?>> getGroupList(@AuthenticationPrincipal CustomUserDetail me) {
+        List<GroupDTO> resDTO = userService.getGroups(me.getUser().getUserId());
+
+        return ResponseEntity.ok().body(
+                new ApiRespDTO<List<GroupDTO>>(true, "GET_GROUP_CHAT_LIST_SUCCESSFULLY", "Get all done", resDTO));
+    }
+
+    @GetMapping("/groupchat/{groupchatId}")
+    @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
+    public ResponseEntity<ApiRespDTO<?>> getGroupChatHistory(@PathVariable(name = "groupchatId") Long gcId,
+            @AuthenticationPrincipal CustomUserDetail me) {
+
+        GroupChatDTO resDto = communityService.getGroupChat(gcId);
+
+        return ResponseEntity.ok().body(new ApiRespDTO<GroupChatDTO>(true, "", "", resDto));
+    }
+
+    @PostMapping("/groupchat/add")
+    @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
+    public ResponseEntity<ApiRespDTO<?>> createGroupChat(@RequestBody CreateGroupChatDTO dto,
+            @AuthenticationPrincipal CustomUserDetail me) {
+        GroupDTO resp = communityService.createGroupChat(dto, me.getUser().getUserId());
+        return ResponseEntity.ok()
+                .body(new ApiRespDTO<GroupDTO>(true, "CREATE_SUCCESS", "Create group chat success", resp));
+    }
+
+    @DeleteMapping("/groupchat/delete/{groupId}")
+    @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
+    public ResponseEntity<ApiRespDTO<?>> deleteGroupChat(@PathVariable(name = "groupId") Long groupId,
+            @AuthenticationPrincipal CustomUserDetail me) {
+        communityService.deleteGroupChat(groupId, me.getUser().getUserId());
+        return ResponseEntity.ok().body(new ApiRespDTO<>(true, "DELETE_SUCCESS", "Delete sucess", null));
+    }
+
+    @PostMapping("/groupchat/join/{groupId}")
+    @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
+    public ResponseEntity<ApiRespDTO<?>> joinGroup(@RequestBody List<GroupMemberDTO> newMember,
+            @PathVariable(name = "groupId") Long groupId) {
+        List<GroupMemberDTO> resp = communityService.joinGroup(groupId, newMember);
+        return ResponseEntity.ok()
+                .body(new ApiRespDTO<List<GroupMemberDTO>>(true, "JOIN_SUCCESS", "Join group success", resp));
+    }
+
+    @PostMapping("/groupchat/leave/{groupId}/{memberId}")
+    @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
+    public ResponseEntity<ApiRespDTO<?>> leaveGroup(@PathVariable(name = "memberId") Long memberId,
+            @PathVariable(name = "groupId") Long groupId) {
+        communityService.leaveGroup(groupId, memberId);
+        return ResponseEntity.ok()
+                .body(new ApiRespDTO<>(true, "LEAVE_SUCCESS", "Leave group success", null));
+    }
+
+    @PostMapping("/groupchat/kick/{groupId}")
+    @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
+    public ResponseEntity<ApiRespDTO<?>> kickMembersInGroup(@RequestBody List<Long> kickMemberIds,
+            @PathVariable(name = "groupId") Long groupId) {
+        communityService.kickMembersInGroup(groupId, kickMemberIds);
+        return ResponseEntity.ok()
+                .body(new ApiRespDTO<>(true, "LEAVE_SUCCESS", "Leave group success", null));
     }
 
 }

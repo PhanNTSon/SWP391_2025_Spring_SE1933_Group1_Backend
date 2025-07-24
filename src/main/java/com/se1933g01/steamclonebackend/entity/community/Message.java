@@ -17,7 +17,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "Messages")
+@Table(name = "Messages", schema = "public")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -35,12 +35,9 @@ public class Message {
     @JoinColumn(name = "SenderID", nullable = false)
     private User sender;
 
-    @Column(name = "MessageContent", columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "MessageContent")
     private String messageContent;
 
     @Column(name = "SentAt")
     private LocalDateTime sentAt;
-
-    @Column(name = "IsRead")
-    private boolean messageRead;
 }

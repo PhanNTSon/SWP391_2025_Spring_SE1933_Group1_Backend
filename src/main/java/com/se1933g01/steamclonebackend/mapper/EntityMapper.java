@@ -3,9 +3,8 @@ package com.se1933g01.steamclonebackend.mapper;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Component;
 
 import com.se1933g01.steamclonebackend.dto.*;
 import com.se1933g01.steamclonebackend.dto.user.UserDetailDTO;
@@ -34,7 +33,7 @@ public class EntityMapper {
     public static PublisherBasicDTO toPublisherBasicDTO(Publisher publisher) {
         if (publisher == null)
             return null;
-        return new PublisherBasicDTO(publisher.getPublisherId(), publisher.getPublisherName());
+        return new PublisherBasicDTO(publisher.getPublisherId(), publisher.getPublisherName(), publisher.getImageUrl());
     }
 
     // --- Media Mapper ---
@@ -75,6 +74,9 @@ public class EntityMapper {
         dto.setDiscountPrice(discountPrice);
         dto.setPrice(currentPrice); // price trong DTO là giá bán hiệu lực
         // --!!
+        dto.setTags(game.getTags().stream()
+                .map(Tag::getTagName)
+                .collect(Collectors.toSet()));
 
         // Added by Phan NT Son 17-06-2025
         dto.setReleaseDate(game.getReleaseDate());
@@ -101,6 +103,8 @@ public class EntityMapper {
         dto.setMemory(game.getMemory());
         dto.setAdditionalNotes(game.getAdditionalNotes());
         dto.setGraphics(game.getGraphics());
+        dto.setGameUrl(game.getGameUrl());
+        dto.setIconUrl(game.getIconUrl());
 
         // Ánh xạ Publisher (quan trọng: xử lý null hoặc lazy loading ở service nếu cần)
         if (game.getPublisher() != null) {

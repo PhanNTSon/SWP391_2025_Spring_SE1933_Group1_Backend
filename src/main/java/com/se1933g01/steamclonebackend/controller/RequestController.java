@@ -1,31 +1,31 @@
 package com.se1933g01.steamclonebackend.controller;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.se1933g01.steamclonebackend.dto.AddingGameRequestDTO;
-import com.se1933g01.steamclonebackend.dto.BannedUserDTO;
 import com.se1933g01.steamclonebackend.dto.FeedbackDTO;
 import com.se1933g01.steamclonebackend.dto.PublisherApplyRequestDTO;
 import com.se1933g01.steamclonebackend.entity.user.CustomUserDetail;
 import com.se1933g01.steamclonebackend.service.CloudinaryService;
-import com.se1933g01.steamclonebackend.service.GoogleDriveService;
+import com.se1933g01.steamclonebackend.service.R2StorageService;
 import com.se1933g01.steamclonebackend.service.RequestService;
 import com.se1933g01.steamclonebackend.service.UserService;
+import com.se1933g01.steamclonebackend.utils.UploadProgressTracker;
 
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -45,23 +45,24 @@ public class RequestController {
     private static final String RESPONSE_MESSAGE_KEY = "message";
     private static final String REQUEST_ID = "requestId";
     private final RequestService requestService;
-    private final GoogleDriveService googleDriveService;
     private final RequestService publisherService;
     private final CloudinaryService cloudinaryService;
     private final UserService userService;
-
+    private final UploadProgressTracker tracker;
+    private final R2StorageService r2StorageService;
     public RequestController(
     RequestService requestService,
-    GoogleDriveService googleDriveService,
     RequestService publisherService,
     CloudinaryService cloudinaryService,
-    UserService userService
+    UserService userService, UploadProgressTracker tracker,
+    R2StorageService r2StorageService
 ) {
     this.requestService = requestService;
-    this.googleDriveService = googleDriveService;
     this.publisherService = publisherService;
     this.cloudinaryService = cloudinaryService;
     this.userService = userService;
+    this.tracker = tracker;
+    this.r2StorageService = r2StorageService;
 }
     private ResponseEntity<Map<String, String>> handleAction(Runnable action, String successMsg, String failMsg) {
         Map<String, String> response = new HashMap<>();
@@ -85,8 +86,8 @@ public class RequestController {
 
     @PatchMapping("/game/reject/{requestID}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, String>> rejectGame(@PathVariable String requestID) {
-        return handleAction(() -> requestService.rejectGame(Long.parseLong(requestID)),
+    public ResponseEntity<Map<String, String>> rejectGame(@PathVariable String requestID,@RequestBody AddingGameRequestDTO addingGameRequestDTO) {
+        return handleAction(() -> requestService.rejectGame(Long.parseLong(requestID),addingGameRequestDTO.getDeclineMessage()),
                 "Game Rejected", "Game Reject Failed");
     }
 
@@ -147,7 +148,7 @@ public class RequestController {
     
 
     @GetMapping("/game/details/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','PUBLISHER')")
     public ResponseEntity<AddingGameRequestDTO> getGameRequest(@PathVariable Long id) {
         AddingGameRequestDTO details = requestService.getGameDetails(id);
         return details == null
@@ -199,12 +200,6 @@ public class RequestController {
         return ResponseEntity.ok(Map.of(RESPONSE_MESSAGE_KEY, "Feedback deleted successfully"));
     }
 
-    @GetMapping("/banned-users/{page}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Page<BannedUserDTO>> getAllBannedUser(@PathVariable("page") int pageNum) {
-        return ResponseEntity.ok(userService.getAllBannedUser(pageNum));
-    }
-
     @PostMapping("/game/add")
     @PreAuthorize("hasRole('PUBLISHER')")
     public ResponseEntity<Map<String, String>> addGame(
@@ -235,46 +230,56 @@ public class RequestController {
         }
     }
 
+    @PostMapping("/image/delete/{url}")
+    @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
+    public ResponseEntity<Map<String, String>> deleteImage(@PathVariable("url") String imageUrl) {
+        cloudinaryService.deleteImage(imageUrl);
+        return ResponseEntity.ok(Map.of(RESPONSE_MESSAGE_KEY, "Image deleted successfully"));
+    }
+    
+
     @PostMapping("/file/upload")
     @PreAuthorize("hasRole('PUBLISHER')")
-    public ResponseEntity<Map<String, String>> uploadFile(@RequestParam("file") MultipartFile file) throws IOException {
-        List<String> fileId = googleDriveService.uploadFile(file);
-        googleDriveService.makeFilePublic(fileId.get(0));
+    public ResponseEntity<Map<String, String>> generateUploadLink(
+        @RequestParam("fileName") String fileName,
+        @RequestParam("contentType") String contentType
+    ) {
+        String uploadUrl = r2StorageService.generatePresignedUploadUrl(fileName, contentType);
+        String fileId = uploadUrl.substring(
+            uploadUrl.lastIndexOf("/") + 1,
+            uploadUrl.indexOf("?")
+        );
+ // Extract key from URL
+
         return ResponseEntity.ok(Map.of(
-                RESPONSE_MESSAGE_KEY, "Upload Successful!",
-                "fileId", fileId.get(0),
-                "fileName", fileId.get(1)));
+            RESPONSE_MESSAGE_KEY, "Upload URL generated",
+            "fileId", fileId,
+            "fileName", fileName,
+            "uploadUrl", uploadUrl
+        ));
     }
 
-    @PostMapping("/file/upload/test")
-    @PreAuthorize("hasRole('PUBLISHER')")
-    public ResponseEntity<Map<String, String>> getUploadUrl(@RequestParam String fileName) throws IOException {
-        if (fileName == null || fileName.isBlank()) {
-    throw new IllegalArgumentException("fileName is missing");
-}
-
-    System.out.println(fileName);
-    String uploadUrl = googleDriveService.createResumableUploadSession(fileName,"application/zip");
-        System.out.println(uploadUrl);
-    Map<String, String> responseBody = new HashMap<>();
-    responseBody.put("uploadUrl", uploadUrl);
-
-    return ResponseEntity.ok(responseBody); // 200 OK with body
+    @GetMapping(value = "/progress", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter streamProgress() {
+        SseEmitter emitter = new SseEmitter(0L);
+        tracker.register(emitter);
+        return emitter;
     }
-
 
     @GetMapping("/file/download/{fileId}")
     @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
-    public ResponseEntity<String> downloadFile(@PathVariable("fileId") String fileId) throws IOException {
-        return ResponseEntity.ok(googleDriveService.generateDownloadUrl(fileId));
+    public ResponseEntity<String> downloadFile(@PathVariable("fileId") String fileId) {
+        String publicUrl = r2StorageService.generateDownloadUrl(fileId);
+        return ResponseEntity.ok(publicUrl);
     }
 
     @DeleteMapping("/file/delete/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, String>> deleteGame(@PathVariable("id") String fileId) throws IOException {
-        googleDriveService.deleteFile(fileId);
+    @PreAuthorize("hasAnyRole('ADMIN','PUBLISHER')")
+    public ResponseEntity<Map<String, String>> deleteFile(@PathVariable("id") String fileId) {
+        r2StorageService.deleteFile(fileId); // fileId is the object key in R2
         return ResponseEntity.ok(Map.of(RESPONSE_MESSAGE_KEY, "File deleted successfully"));
     }
+
 
     @PostMapping("/publisher/send")
     @PreAuthorize("hasRole('STANDARD')")
@@ -318,6 +323,16 @@ public class RequestController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(response);
+        }
+    }
+    @DeleteMapping("/game/delete/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','PUBLISHER')")
+    public ResponseEntity<Map<String, String>> deleteGameRequest(@PathVariable("id") Long requestId) {
+        try {
+            requestService.deleteGameRequest(requestId);
+            return ResponseEntity.ok(Map.of(RESPONSE_MESSAGE_KEY, "Game request deleted successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(RESPONSE_MESSAGE_KEY, e.getMessage()));
         }
     }
 

@@ -15,16 +15,13 @@ import com.se1933g01.steamclonebackend.entity.user.User;
 public interface UserRepo extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u LEFT JOIN FETCH u.cartGames WHERE u.userId = :userId")
     User findByIdWithCartGames(@Param("userId") Long userId);
-
-    @Query("SELECT u FROM User u LEFT JOIN FETCH u.games WHERE u.userId = :userId")
-    User findByIdWithLibraryGames(@Param("userId") Long userId);
-    
     
     boolean existsByUsername(String username); //added by Loc Phan
+
     boolean existsByEmail(String email);
+    
 
     Optional<User> findByEmail(String email);
-
     Optional<User> findByUsername(String username);
     Optional<User> findByUsernameAndEmail(String username, String email);
     /**
@@ -33,5 +30,15 @@ public interface UserRepo extends JpaRepository<User, Long> {
      * @since 13-06-2025
      */
     @Query("SELECT u FROM User u WHERE u.banStatus = true")
-    Page<User> findAllByBannedStatus(Pageable pageable);
+    Page<User> findAllByBannedStatusTrue(Pageable pageable);
+    @Query("SELECT u FROM User u WHERE u.banStatus = false")
+    Page<User> findAllByBannedStatusFalse(Pageable pageable);
+    @Query("SELECT u FROM User u WHERE u.username LIKE %:username% AND u.banStatus = false")
+    Page<User> findAllByUsernameContainingIgnoreCaseAndBannedStatusFalse(String username, Pageable pageable);
+    @Query("SELECT u FROM User u WHERE u.username LIKE %:username% AND u.banStatus = true")
+    Page<User> findAllByUsernameContainingIgnoreCaseAndBannedStatusTrue(String username, Pageable pageable);
+
+    @Query(value = "SELECT COUNT(*) FROM \"User\"", nativeQuery = true)
+    Long countAllUsers();
+
 }

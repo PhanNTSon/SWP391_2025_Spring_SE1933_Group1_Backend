@@ -79,19 +79,19 @@
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
-			<scope>runtime</scope>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
+		<!-- <dependency>
 			<groupId>com.microsoft.sqlserver</groupId>
 			<artifactId>mssql-jdbc</artifactId>
 			<version>12.10.0.jre11</version>
 			<scope>runtime</scope>
-		</dependency>
+		</dependency> -->
 		<!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
@@ -108,19 +108,6 @@
 			<artifactId>cloudinary-http44</artifactId>
 			<version>1.33.0</version>
 		</dependency>
-		
-		<!-- https://mvnrepository.com/artifact/com.google.api-client/google-api-client -->
-		<dependency>
-			<groupId>com.google.api-client</groupId>
-			<artifactId>google-api-client</artifactId>
-			<version>1.25.0</version>
-		</dependency>
-		<!-- https://mvnrepository.com/artifact/com.google.apis/google-api-services-drive -->
-		<dependency>
-			<groupId>com.google.apis</groupId>
-			<artifactId>google-api-services-drive</artifactId>
-			<version>v3-rev197-1.25.0</version>
-		</dependency>
 		<!-- https://mvnrepository.com/artifact/com.google.oauth-client/google-oauth-client-jetty -->
 		<dependency>
 			<groupId>com.google.oauth-client</groupId>
@@ -133,24 +120,23 @@
         <artifactId>google-api-client</artifactId>
         <version>2.2.0</version>
     </dependency>
-    <dependency>
-        <groupId>com.google.apis</groupId>
-        <artifactId>google-api-services-drive</artifactId>
-        <version>v3-rev20220815-2.0.0</version>
-    </dependency>
-
-    <dependency>
-        <groupId>com.google.http-client</groupId>
-        <artifactId>google-http-client-jackson2</artifactId>
-        <version>1.43.3</version>
-    </dependency>
 
     <dependency>
         <groupId>com.google.oauth-client</groupId>
         <artifactId>google-oauth-client-jetty</artifactId>
         <version>1.34.1</version>
     </dependency>
-
+	<dependency>
+		<groupId>software.amazon.awssdk</groupId>
+		<artifactId>s3</artifactId>
+		<version>2.20.137</version> 
+	</dependency>
+	<dependency>
+		<groupId>org.apache.httpcomponents</groupId>
+		<artifactId>httpclient</artifactId>
+		<version>4.5.14</version> <!-- Or latest compatible version -->
+	</dependency>
+	
 		<!-- Author: kerri - Dependencies for Google OAuth -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -179,10 +165,58 @@
 			<version>4.13.2</version>
 			<scope>test</scope>
 		</dependency>
+
+		<!-- POTSGRE DB -->
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
+		<!-- DOT ENV -->
+		<dependency>
+			<groupId>io.github.cdimascio</groupId>
+			<artifactId>dotenv-java</artifactId>
+			<version>3.0.0</version>
+		</dependency>
+
+		<dependency>
+    		<groupId>com.google.apis</groupId>
+    		<artifactId>google-api-services-youtube</artifactId>
+		    <version>v3-rev222-1.25.0</version>
+		</dependency>
+		<dependency>
+    		<groupId>com.google.http-client</groupId>
+    		<artifactId>google-http-client-jackson2</artifactId>
+    		<version>1.43.3</version>
+		</dependency>
+
+	<dependency>
+        <groupId>com.google.apis</groupId>
+        <artifactId>google-api-services-youtube</artifactId>
+        <version>v3-rev222-1.25.0</version>
+    </dependency>
+    <dependency>
+        <groupId>com.google.http-client</groupId>
+        <artifactId>google-http-client-jackson2</artifactId>
+        <version>1.43.3</version>
+    </dependency>
+
+
 	</dependencies>
+	
 
 	<build>
 		<plugins>
+			
+			<plugin>
+            	<groupId>org.apache.maven.plugins</groupId>
+            	<artifactId>maven-surefire-plugin</artifactId>
+            	<version>3.2.5</version> 
+            	<configuration>
+                	<argLine>--add-opens java.base/java.lang=ALL-UNNAMED</argLine>
+            	</configuration>
+        	</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -210,5 +244,5 @@
 		</plugins>
 	</build>
 
-	
+
 </project>

@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.se1933g01.steamclonebackend.entity.user.Library;
 import com.se1933g01.steamclonebackend.entity.user.Publisher;
 import com.se1933g01.steamclonebackend.entity.user.User;
 
@@ -32,14 +33,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "Game")
+@Table(name = "Game", schema = "public")
 public class Game {
     @Id
     @Column(name = "GameID")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long gameId;
 
-    @Column(name = "Name")
+    @Column(name = "Name", length = 100, nullable = false)
     private String name;
 
     @Column(name = "ReleaseDate")
@@ -48,30 +49,45 @@ public class Game {
     @Column(name = "State")
     private Boolean state;
 
-    @Column(name = "Price")
+    @Column(name = "Price", precision = 10, scale = 2)
     private BigDecimal price;
 
-    @Column(name = "ShortDescription", columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "ShortDescription", columnDefinition = "TEXT")
     private String shortDescription;
 
-    @Column(name = "FullDescription", columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "FullDescription", columnDefinition = "TEXT")
     private String fullDescription;
 
     @Column(name = "TotalPurchased")
-    private int totalPurchased;
+    private Integer totalPurchased;
 
-    @Column(name = "Os")
+    @Column(name = "OS", length = 50)
     private String os;
-    @Column(name = "Storage")
+
+    @Column(name = "Storage", length = 50)
     private String storage;
-    @Column(name = "Processor")
+
+    @Column(name = "Processor", length = 50)
     private String processor;
-    @Column(name = "Memory")
+
+    @Column(name = "Memory", length = 50)
     private String memory;
-    @Column(name = "AdditionalNotes")
+
+    @Column(name = "AdditionalNotes", columnDefinition = "TEXT")
     private String additionalNotes;
-    @Column(name = "Graphics")
+
+    @Column(name = "Graphics", length = 50)
     private String graphics;
+
+    @Column(name = "GameUrl")
+    private String gameUrl;
+
+    @Column(name = "IconUrl")
+    private String iconUrl;
+
+    @Column(name = "UpdateLog")
+    private String updateLog;
+
     // ================ Relationships =============
     @ManyToOne
     @JoinColumn(name = "PublisherID")
@@ -84,15 +100,18 @@ public class Game {
     // @OneToMany(mappedBy = "game")
     // private List<TransactionDetail> transactionDetails;
 
+    @OneToMany(mappedBy = "game")
+    private Set<Library> libraryGames = new HashSet<>();
+
     @ManyToMany(mappedBy = "cartGames")
     @JsonIgnore
     private Set<User> usersInCart = new HashSet<>();
 
-    @ManyToMany(mappedBy = "games")
-    private Set<User> users;
+    // @ManyToMany(mappedBy = "games")
+    // private Set<User> users;
 
-    // @OneToMany(mappedBy = "game")
-    // private List<Review> reviews;
+    @OneToMany(mappedBy = "game")
+    private List<Review> reviews;
 
     @OneToMany(mappedBy = "game")
     private List<Media> media;
@@ -100,8 +119,10 @@ public class Game {
     // ================ Getter & Setter =============
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         Game game = (Game) o;
         return gameId != null && gameId.equals(game.gameId);
     }

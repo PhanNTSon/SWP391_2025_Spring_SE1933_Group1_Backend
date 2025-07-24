@@ -12,20 +12,24 @@ import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
+
 @Data
 @Entity
-@Table(name = "Feedback")
+@Table(name = "Feedback", schema = "public")
 public class Feedback {
     @Id
     @Column(name = "RequestID")
     private long requestId;
 
-    @Column(name = "Subject",columnDefinition = "NVARCHAR(256)")
+    @Column(name = "Subject", length = 256)
     private String subject;
-    @Column(name = "Message",columnDefinition = "NVARCHAR(2048)")
+
+    @Column(name = "Message", columnDefinition = "TEXT")
     private String message;
-    @Column(name = "Response",columnDefinition = "NVARCHAR(2048)")
+    
+    @Column(name = "Response", columnDefinition = "TEXT")
     private String response;
+    
     @Column(name = "MediaUrls")
     @ElementCollection
     @CollectionTable(name = "Feedback_mediaUrls", joinColumns = @JoinColumn(name = "RequestID"))

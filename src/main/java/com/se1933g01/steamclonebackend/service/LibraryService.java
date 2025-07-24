@@ -1,5 +1,6 @@
 package com.se1933g01.steamclonebackend.service;
 
+import com.google.api.client.util.DateTime;
 import com.se1933g01.steamclonebackend.dto.GameDetailDTO;
 import com.se1933g01.steamclonebackend.dto.MediaDTO;
 import com.se1933g01.steamclonebackend.dto.PublisherBasicDTO;
@@ -8,12 +9,17 @@ import com.se1933g01.steamclonebackend.dto.user.LibraryGameDTO;
 import com.se1933g01.steamclonebackend.entity.user.Library;
 import com.se1933g01.steamclonebackend.entity.game.Game;
 import com.se1933g01.steamclonebackend.repository.LibraryRepository;
+
+import jakarta.persistence.EntityNotFoundException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.Month;
 import java.util.stream.Collectors;
 
 @Service
@@ -21,7 +27,6 @@ public class LibraryService {
 
     private final LibraryRepository libraryRepository;
 
-    @Autowired
     public LibraryService(LibraryRepository libraryRepository) {
         this.libraryRepository = libraryRepository;
     }
@@ -47,16 +52,15 @@ public class LibraryService {
      * Hàm helper để chuyển đổi một entity Library thành một LibraryGameDTO.
      * Phiên bản này sẽ tạo một GameDetailDTO hoàn chỉnh theo yêu cầu.
      */
-    private LibraryGameDTO mapLibraryEntryToDto(Library libraryEntry) {
+    public LibraryGameDTO mapLibraryEntryToDto(Library libraryEntry) {
         Game gameEntity = libraryEntry.getGame();
 
-        // Bước A: Tạo một đối tượng GameDetailDTO hoàn chỉnh từ Game Entity
         GameDetailDTO gameDetail = new GameDetailDTO();
         gameDetail.setGameId(gameEntity.getGameId());
 
         if (gameEntity.getPublisher() != null) {
             gameDetail.setPublisher(new PublisherBasicDTO(gameEntity.getPublisher().getPublisherId(),
-                    gameEntity.getPublisher().getPublisherName()));
+                    gameEntity.getPublisher().getPublisherName(), gameEntity.getPublisher().getImageUrl()));
         }
 
         gameDetail.setName(gameEntity.getName());
@@ -85,18 +89,50 @@ public class LibraryService {
         gameDetail.setMemory(gameEntity.getMemory());
         gameDetail.setAdditionalNotes(gameEntity.getAdditionalNotes());
         gameDetail.setGraphics(gameEntity.getGraphics());
+        gameDetail.setIconUrl(gameEntity.getIconUrl());
 
-        // Bước B: Tạo DTO chính cho game trong thư viện
+        gameDetail.setGameUrl(gameEntity.getGameUrl());
+
         LibraryGameDTO libraryGameDTO = new LibraryGameDTO();
-        libraryGameDTO.setGameDetail(gameDetail); // Gán đối tượng GameDetailDTO vừa tạo
-
-        // Chuyển đổi LocalDate thành LocalDateTime (nếu cần)
+        libraryGameDTO.setGameDetail(gameDetail);
         if (libraryEntry.getDateAdded() != null) {
             libraryGameDTO.setDateAdded(libraryEntry.getDateAdded());
         }
-
         libraryGameDTO.setPlaytimeInMillis(libraryEntry.getPlaytimeInMillis());
+        if (libraryEntry.getLastTimePlayed() != null) {
+            libraryGameDTO.setLastTimePlayed(libraryEntry.getLastTimePlayed());
+        } else {
+            libraryGameDTO.setLastTimePlayed(LocalDateTime.of(0, Month.JANUARY, 1, 01, 00, 00));
+        }
 
         return libraryGameDTO;
+    }
+
+    /**
+     * Lấy thông tin chi tiết của một game cụ thể trong thư viện của người dùng.
+     * 
+     * @param userId ID của người dùng.
+     * @param gameId ID của game.
+     * @return một đối tượng LibraryGameDTO.
+     * @throws EntityNotFoundException nếu người dùng không sở hữu game này.
+     */
+    @Transactional(readOnly = true)
+    public LibraryGameDTO getGameInLibrary(Long userId, Long gameId) {
+        Library libraryEntry = libraryRepository.findById_UserIdAndId_GameId(userId, gameId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Not found game " + gameId + " in library of user " + userId));
+        return this.mapLibraryEntryToDto(libraryEntry);
+    }
+
+    @Transactional
+    public void updatePlaytime(Long userId, Long gameId, Long PlaytimeInMillis) {
+        Library libraryEntry = libraryRepository.findById_UserIdAndId_GameId(userId, gameId)
+                .orElseThrow(() -> new EntityNotFoundException("Not found game " + gameId + " in library of user "));
+        long previousPlaytime = libraryEntry.getPlaytimeInMillis();
+        previousPlaytime += PlaytimeInMillis;
+        libraryEntry.setPlaytimeInMillis(previousPlaytime);
+        libraryEntry.setLastTimePlayed(LocalDateTime.now().plusHours(7));
+
+        libraryRepository.save(libraryEntry);
     }
 }

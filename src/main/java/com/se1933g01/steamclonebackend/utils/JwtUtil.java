@@ -7,6 +7,8 @@ import java.security.Key;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.se1933g01.steamclonebackend.entity.user.User;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -44,17 +46,35 @@ public class JwtUtil {
      * @param role
      * @return compact JWT string
      */
-    public String generateToken(String username, Long userId, String role, String avatarUrl) {
+    public String generateToken(String username, Long userId, String role, String avatarUrl, boolean banned) {
         return Jwts.builder()
                 .setSubject(username)
                 .claim("userId", userId)
                 .claim("role", role)
                 .claim("avatarUrl", avatarUrl)
+                .claim("banned", banned)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expirationMs))
                 .signWith(getSignedKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
+
+    /**
+     * Generate a JWT Token for a User object.
+     * @author Loc Phan
+     * @param user
+     * @return compact JWT string
+     */
+    // public String generateToken(User user) {
+    //     return Jwts.builder()
+    //         .setSubject(user.getUsername())
+    //         .claim("name", user.getUsername())
+    //         .claim("id", user.getUserId())
+    //         .setIssuedAt(new Date())
+    //         .setExpiration(new Date(System.currentTimeMillis() + expirationMs))
+    //         .signWith(getSignedKey(), SignatureAlgorithm.HS256)
+    //         .compact();
+    // }
 
     /**
      * Validate a Token.
@@ -92,5 +112,4 @@ public class JwtUtil {
     public String extractUsername(String token) {
         return parseClaims(token).getSubject();
     }
-
 }
