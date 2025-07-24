@@ -21,4 +21,16 @@ public interface TransactionRepo extends JpaRepository<Transaction, Long> {
     WHERE DATE("CreatedAt") >= DATE_TRUNC('month', CURRENT_DATE)
     """, nativeQuery = true)
     Double getMonthlyRevenue();
+    @Query(value = """
+        SELECT 
+        ROUND(
+            (COUNT(*) FILTER (WHERE "Type" = 'Refund Subtract')::decimal
+            / COUNT(*) FILTER (WHERE "Type" IN ('Refund Subtract', 'Subtract'))) * 100,
+            2
+        ) AS refund_percent
+        FROM "Transaction"
+        """, nativeQuery = true)
+    Double getMonthlyRefund();
+
+
 }

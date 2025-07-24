@@ -46,4 +46,9 @@ public class DashboardController {
         long pendingRequests = dashboardService.getTotalPendingRequests();
         return ResponseEntity.ok(new DashboardDTO("Total Pending Requests", pendingRequests));
     }
+    @GetMapping("/transactions/refund/count")
+    public ResponseEntity<DashboardDTO> getMonthlyRefund() {
+        double refund = dashboardService.getCurrentMonthRefund();
+        return ResponseEntity.ok(new DashboardDTO("Refund rate", refund));
+    }
 }

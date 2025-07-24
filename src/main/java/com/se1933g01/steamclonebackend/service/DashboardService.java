@@ -63,5 +63,10 @@ public class DashboardService {
     public long getTotalPendingRequests() {
         return requestRepo.countAllPendingRequests();
     }
+    public double getCurrentMonthRefund() {
+        return transactionRepo.getMonthlyRefund() != null
+            ? transactionRepo.getMonthlyRefund()
+            : 0.0;
+    }
 }
 
