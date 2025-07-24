@@ -147,6 +147,7 @@ public class UserService {
         userRepo.save(user);
         return user.getWalletBalance();
     }
+    
 
     /**
      * Get an User by username.

@@ -41,6 +41,9 @@ public class Transaction {
     @Column(name = "CreatedAt")
     private LocalDate createdAt;
 
+    @Column(name = "Type")
+    private String type;
+
     // ================ Relationships =============
     @ManyToOne
     @JoinColumn(name = "UserID")

@@ -17,10 +17,11 @@ public interface UserRepo extends JpaRepository<User, Long> {
     User findByIdWithCartGames(@Param("userId") Long userId);
     
     boolean existsByUsername(String username); //added by Loc Phan
+
     boolean existsByEmail(String email);
+    
 
     Optional<User> findByEmail(String email);
-
     Optional<User> findByUsername(String username);
     Optional<User> findByUsernameAndEmail(String username, String email);
     /**

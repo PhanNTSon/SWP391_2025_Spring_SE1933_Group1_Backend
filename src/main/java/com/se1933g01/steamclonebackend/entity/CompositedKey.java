@@ -6,24 +6,24 @@ import jakarta.persistence.Embeddable;
 
 @Embeddable
 public class CompositedKey implements Serializable {
-    private long key1;
-    private long key2;
+    private Long key1;
+    private Long key2;
     public CompositedKey() {
     }
-    public CompositedKey(long key1, long key2) {
+    public CompositedKey(Long key1, Long key2) {
         this.key1 = key1;
         this.key2 = key2;
     }
-    public long getKey1() {
+    public Long getKey1() {
         return key1;
     }
-    public void setKey1(long key1) {
+    public void setKey1(Long key1) {
         this.key1 = key1;
     }
-    public long getKey2() {
+    public Long getKey2() {
         return key2;
     }
-    public void setKey2(long key2) {
+    public void setKey2(Long key2) {
         this.key2 = key2;
     }
 

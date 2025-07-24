@@ -181,6 +181,21 @@ public class UserController {
     }
 
     /**
+     * Author: kerri
+     */
+    // Refund transaction
+    @PostMapping("/transaction/refund/{transactionId}")
+    @PreAuthorize("hasAnyRole('STANDARD','PUBLISHER','ADMIN')")
+    public ResponseEntity<Map<String, Object>> refundTransaction(@PathVariable Long transactionId) {
+        Map<String, Object> response = new HashMap<>();
+        cartService.refund(transactionId);
+        response.put("success", true);
+        response.put("message", "Refund successfully.");
+        return ResponseEntity.ok(response);
+
+    }
+
+    /**
      * @author phan nt son
      * @param me
      * @return total number of games in cart
@@ -207,6 +222,7 @@ public class UserController {
                 Map<String, Object> map = new HashMap<>();
                 map.put("transactionId", tran.getTransactionId());
                 map.put("dateCreated", tran.getCreatedAt());
+                map.put("type", tran.getType());
                 // Get game info from the first TransactionDetail (each transaction has one
                 // game)
                 if (tran.getTransactionDetail() != null && !tran.getTransactionDetail().isEmpty()) {
@@ -287,6 +303,7 @@ public class UserController {
     }
 
     @GetMapping("/library/{userId}/{gameId}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<LibraryGameDTO> getSpecificGameInLibrary(
             @PathVariable Long userId,
             @PathVariable Long gameId) {
@@ -362,6 +379,7 @@ public class UserController {
             @RequestParam BigDecimal amount) {
         Long userId = me.getUser().getUserId();
         BigDecimal newBalance = userService.subtractUserBalance(userId, amount);
+        userService.addUserBalance((long) 10, amount);
         return ResponseEntity.ok(newBalance);
     }
 

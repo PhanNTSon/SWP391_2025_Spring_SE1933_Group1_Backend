@@ -20,6 +20,7 @@ import com.se1933g01.steamclonebackend.repository.GameRepo;
 import com.se1933g01.steamclonebackend.repository.LibraryRepository;
 import com.se1933g01.steamclonebackend.repository.TransactionRepo;
 import com.se1933g01.steamclonebackend.repository.UserRepo;
+import com.se1933g01.steamclonebackend.entity.user.Publisher;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -27,6 +28,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class CartService {
@@ -191,11 +193,38 @@ public class CartService {
 
         for (int i = 0; i < gamesToBuy.size(); i++) {
             Game game = gamesToBuy.get(i);
+            Publisher pub = game.getPublisher();
+            User pubUser = pub.getUser();
+            pubUser.setWalletBalance(pubUser.getWalletBalance().add(game.getPrice()));
+            pub.setUser(pubUser);
+            Transaction transactionpub = new Transaction();
+            transactionpub.setUser(pubUser);
+            transactionpub.setTotalAmount(game.getPrice());
+            transactionpub.setCreatedAt(LocalDate.now());
+            transactionpub.setType("Add");
+            transactionRepo.save(transactionpub);
+
+            TransactionDetail detailpub = new TransactionDetail();
+            CompositedKey keypub = new CompositedKey();
+            keypub.setKey1(transactionpub.getTransactionId());
+            keypub.setKey2(game.getGameId());
+            detailpub.setId(keypub);
+            detailpub.setTransaction(transactionpub);
+            detailpub.setGame(game);
+            detailpub.setPrice(game.getPrice());
+
+            List<TransactionDetail> detailspub = new ArrayList<>();
+            detailspub.add(detailpub);
+            transactionpub.setTransactionDetail(detailspub);
+            transactionRepo.save(transactionpub);
+
+            game.setTotalPurchased(game.getTotalPurchased() + 1);
 
             Transaction transaction = new Transaction();
             transaction.setUser(user);
             transaction.setTotalAmount(game.getPrice());
             transaction.setCreatedAt(LocalDate.now());
+            transaction.setType("Subtract");
 
             // Save transaction first to get transactionId
             transaction = transactionRepo.save(transaction);
@@ -250,4 +279,94 @@ public class CartService {
 
         return result;
     }
+
+    @Transactional
+    public void refund(Long transactionId) {
+        Transaction transaction = transactionRepo.findById(transactionId).orElse(null);
+        if (transaction == null)
+            throw new EntityNotFoundException("Transaction not found");
+
+        User user = transaction.getUser();
+        if (user == null)
+            throw new EntityNotFoundException("Transaction has no user");
+
+        List<TransactionDetail> details = transaction.getTransactionDetail();
+        if (details == null || details.isEmpty())
+            throw new RuntimeException("Transaction has no details to refund");
+
+        for (TransactionDetail detail : details) {
+            Game game = detail.getGame();
+            if (game == null)
+                continue;
+
+            BigDecimal refundAmount = detail.getPrice();
+
+            // Hoàn tiền cho user
+            user.setWalletBalance(user.getWalletBalance().add(refundAmount));
+
+            // Trừ tiền của publisher
+            Publisher publisher = game.getPublisher();
+            if (publisher != null && publisher.getUser() != null) {
+                User publisherUser = publisher.getUser();
+                publisherUser.setWalletBalance(publisherUser.getWalletBalance().subtract(refundAmount));
+                userRepo.save(publisherUser);
+
+                // Giao dịch refund cho publisher
+                Transaction pubRefund = new Transaction();
+                pubRefund.setUser(publisherUser);
+                pubRefund.setTotalAmount(refundAmount);
+                pubRefund.setCreatedAt(LocalDate.now());
+                pubRefund.setType("Refund Subtract");
+
+                TransactionDetail pubDetail = new TransactionDetail();
+                CompositedKey pubKey = new CompositedKey();
+                pubKey.setKey1(pubRefund.getTransactionId());
+                pubKey.setKey2(game.getGameId());
+                pubDetail.setId(pubKey);
+                pubDetail.setTransaction(pubRefund);
+                pubDetail.setGame(game);
+                pubDetail.setPrice(refundAmount);
+
+                // pubRefund.getTransactionDetail().add(pubDetail);
+                pubRefund.setTransactionDetail(new ArrayList<>(List.of(pubDetail)));
+
+                transactionRepo.save(pubRefund);
+            }
+
+            // Giao dịch hoàn tiền cho user
+            Transaction userRefund = new Transaction();
+            userRefund.setUser(user);
+            userRefund.setTotalAmount(refundAmount);
+            userRefund.setCreatedAt(LocalDate.now());
+            userRefund.setType("Refund Add");
+
+            TransactionDetail userDetail = new TransactionDetail();
+            CompositedKey userKey = new CompositedKey();
+            userKey.setKey1(userRefund.getTransactionId());
+            userKey.setKey2(game.getGameId());
+            userDetail.setId(userKey);
+            userDetail.setTransaction(userRefund);
+            userDetail.setGame(game);
+            userDetail.setPrice(refundAmount);
+
+            // userRefund.getTransactionDetail().add(userDetail);
+            userRefund.setTransactionDetail(new ArrayList<>(List.of(userDetail)));
+            transactionRepo.save(userRefund);
+
+            // Xóa khỏi thư viện
+            LibraryId libId = new LibraryId();
+            libId.setGameId(game.getGameId());
+            libId.setUserId(user.getUserId());
+            libraryRepo.deleteById(libId);
+
+            // Giảm số lượt mua
+            game.setTotalPurchased(game.getTotalPurchased() - 1);
+        }
+
+        userRepo.save(user);
+
+        simp.convertAndSendToUser(user.getUsername(), SOCKET_WALLET_BALANCE_CHANNEL, user.getWalletBalance());
+        simp.convertAndSendToUser(user.getUsername(), SOCKET_LIBRARY_CHANNEL, "REFUND_DONE");
+    }
+
 }
