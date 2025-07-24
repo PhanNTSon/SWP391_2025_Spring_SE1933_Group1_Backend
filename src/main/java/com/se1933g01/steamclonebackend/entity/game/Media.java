@@ -1,5 +1,7 @@
 package com.se1933g01.steamclonebackend.entity.game;
 
+import com.se1933g01.steamclonebackend.entity.news.News;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -35,5 +37,9 @@ public class Media {
     @ManyToOne
     @JoinColumn(name = "GameID")
     private Game game;
+    
+    // @ManyToOne
+    // @JoinColumn(name = "NewsID")
+    // private News news;
 
 }

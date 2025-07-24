@@ -7,6 +7,7 @@ import jakarta.persistence.EntityNotFoundException; // Hoặc exception tùy ch�
 import org.hibernate.Hibernate; // Để khởi tạo các collection lazy
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
+import org.modelmapper.spi.MatchingStrategy;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional; // QUAN TRỌNG cho lazy loading
@@ -16,9 +17,11 @@ import com.se1933g01.steamclonebackend.dto.GameBasicDTO;
 import com.se1933g01.steamclonebackend.dto.GameDetailDTO;
 import com.se1933g01.steamclonebackend.dto.GamePresentDTO;
 import com.se1933g01.steamclonebackend.dto.MediaDTO;
+import com.se1933g01.steamclonebackend.dto.NewsDTO;
 import com.se1933g01.steamclonebackend.dto.TagDTO;
 import com.se1933g01.steamclonebackend.entity.game.Game;
 import com.se1933g01.steamclonebackend.entity.game.Tag;
+import com.se1933g01.steamclonebackend.entity.news.News;
 import com.se1933g01.steamclonebackend.entity.request.AddingGameRequest;
 import com.se1933g01.steamclonebackend.entity.user.Library;
 import com.se1933g01.steamclonebackend.entity.user.Publisher;
@@ -26,8 +29,10 @@ import com.se1933g01.steamclonebackend.mapper.EntityMapper;
 import com.se1933g01.steamclonebackend.repository.AddingGameRequestRepo;
 import com.se1933g01.steamclonebackend.repository.GameRepository;
 import com.se1933g01.steamclonebackend.repository.LibraryRepository;
+import com.se1933g01.steamclonebackend.repository.NewsRepo;
 import com.se1933g01.steamclonebackend.specification.GameSpecification;
-
+import org.commonmark.parser.Parser;
+import org.commonmark.renderer.html.HtmlRenderer;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
@@ -35,7 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
+import org.commonmark.node.Node;
 /**
  * @author kerri
  */
@@ -46,11 +51,17 @@ public class GameService {
     private final ModelMapper modelMapper;
     private final AddingGameRequestRepo addingGameRequestRepo;
     private final LibraryRepository libraryRepo;
-    public GameService(GameRepository gameRepository, ModelMapper modelMapper, AddingGameRequestRepo addingGameRequestRepo, LibraryRepository libraryRepo) {
+    private final NewsRepo newsRepo;
+    private final Parser parser;
+    private final HtmlRenderer renderer;
+    public GameService(GameRepository gameRepository, ModelMapper modelMapper, AddingGameRequestRepo addingGameRequestRepo, LibraryRepository libraryRepo, NewsRepo newsRepo, Parser parser, HtmlRenderer renderer) {
+        this.newsRepo = newsRepo;
         this.libraryRepo = libraryRepo;
         this.addingGameRequestRepo = addingGameRequestRepo;
         this.gameRepository = gameRepository;
         this.modelMapper = modelMapper;
+        this.parser = parser;
+        this.renderer = renderer;
     }
 
     public List<GamePresentDTO> getGamesUnder5() {
@@ -346,5 +357,53 @@ public class GameService {
                 );
             })
             .toList();
+    }
+    public List<NewsDTO> getNewsByGameId(Long gameId) {
+        modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+        return newsRepo.findByGame_GameId(gameId).stream()
+            .map(news -> modelMapper.map(news, NewsDTO.class))
+            .toList();
+    }
+
+    public NewsDTO createNews(Long gameId, NewsDTO newsDTO) {
+        modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+
+        Game game = gameRepository.findById(gameId)
+            .orElseThrow(() -> new RuntimeException("Game not found"));
+
+        News news = modelMapper.map(newsDTO, News.class);
+        news.setGame(game); // link the news to the game
+        news.setCreatedAt(LocalDate.now());
+        News saved = newsRepo.save(news);
+        return modelMapper.map(saved, NewsDTO.class);
+    }
+
+    public NewsDTO getNewsDetails(Long id) {
+        News news = newsRepo.findById(id)
+                      .orElseThrow(() -> new RuntimeException("News not found"));
+
+        // Convert Markdown to HTML
+        Node document = parser.parse(news.getMarkdown());
+        String html = renderer.render(document);
+
+        // Map News to NewsDto
+        NewsDTO dto = modelMapper.map(news, NewsDTO.class);
+        dto.setHtmlContent(html); // Inject converted HTML manually
+
+        return dto;
+    }
+
+    public News updateNews(Long newsId, NewsDTO dto) {
+        News news = newsRepo.findById(newsId)
+                .orElseThrow(() -> new RuntimeException("News not found"));
+        news.setTitle(dto.getTitle());
+        news.setSummary(dto.getSummary());
+        news.setMarkdown(dto.getMarkdown());
+        return newsRepo.save(news);
+    }
+    public void deleteNewsById(Long id) {
+        News news = newsRepo.findById(id)
+            .orElseThrow(() -> new RuntimeException("News not found"));
+        newsRepo.delete(news);
     }
 }

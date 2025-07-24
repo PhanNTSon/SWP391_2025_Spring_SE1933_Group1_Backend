@@ -74,7 +74,7 @@ public class AddingGameRequest {
     @Column(name = "IconUrl", length = 255)
     private String iconUrl;
 
-    @Column(name = "DeclineMessage", length = 255)
+    @Column(name = "DeclineMessage")
     private String declineMessage;
 
     @Column(name = "UpdateLog")

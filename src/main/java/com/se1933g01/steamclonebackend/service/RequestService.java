@@ -149,7 +149,7 @@ public class RequestService {
         game.setGameUrl(addingGameRequest.getGameUrl());
         game.setIconUrl(addingGameRequest.getIconUrl());
         game.setUpdateLog(addingGameRequest.getUpdateLog());
-        // gameRepo.save(game); disable for called onced
+        gameRepo.save(game); 
 
         List<String> mediaUrls = addingGameRequest.getMediaUrls();
         List<Media> mediaList = mediaUrls.stream()
