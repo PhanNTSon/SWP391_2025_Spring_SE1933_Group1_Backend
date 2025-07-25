@@ -9,6 +9,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.se1933g01.steamclonebackend.dto.community.BlockDTO;
 import com.se1933g01.steamclonebackend.dto.community.ConversationDTO;
 import com.se1933g01.steamclonebackend.dto.community.CreateGroupChatDTO;
 import com.se1933g01.steamclonebackend.dto.community.FriendRequestDTO;
@@ -21,6 +22,7 @@ import com.se1933g01.steamclonebackend.dto.community.PrivateChatMessageDTO;
 import com.se1933g01.steamclonebackend.dto.community.SearchResult;
 import com.se1933g01.steamclonebackend.dto.user.FriendDTO;
 import com.se1933g01.steamclonebackend.entity.community.Block;
+import com.se1933g01.steamclonebackend.entity.community.BlockId;
 import com.se1933g01.steamclonebackend.entity.community.Conversation;
 import com.se1933g01.steamclonebackend.entity.community.FriendRequest;
 import com.se1933g01.steamclonebackend.entity.community.Friendship;
@@ -73,6 +75,9 @@ public class CommunityService {
     private static final String FRIEND_ADDED_CHANNEL = "/topic/friends.%d.added";
     private static final String FRIEND_REMOVED_CHANNEL = "/topic/friends.%d.removed";
 
+    private static final String BLOCKED_ADDED_CHANNEL = "/topic/blocks.%d.added";
+    private static final String BLOCKED_REMOVED_CHANNEL = "/topic/blocks.%d.removed";
+
     private static final String GROUP_ADDED_CHANNEL = "/topic/groups.%d.added";
     private static final String GROUP_REMOVED_CHANNEL = "/topic/groups.%d.removed";
 
@@ -114,6 +119,23 @@ public class CommunityService {
         simp.convertAndSend(dest, removedFriendId);
     }
 
+    private void sendBlockedAdded(Long receiverId, BlockDTO blockDTO) {
+        String dest = String.format(BLOCKED_ADDED_CHANNEL, receiverId);
+        simp.convertAndSend(dest, blockDTO);
+    }
+
+    /**
+     * Send to Current User the ID of User they unban
+     * Or Send to Other User the ID of the Person that have unbaned them.
+     * 
+     * @param receiverId
+     * @param removedFriendId
+     */
+    private void sendBlockedRemoved(Long receiverId, Long removeId) {
+        String dest = String.format(BLOCKED_REMOVED_CHANNEL, receiverId);
+        simp.convertAndSend(dest, removeId);
+    }
+
     private void sendGroupAdded(Long receiverId, GroupDTO groupDTO) {
         String dest = String.format(GROUP_ADDED_CHANNEL, receiverId);
         simp.convertAndSend(dest, groupDTO);
@@ -145,11 +167,11 @@ public class CommunityService {
     @Transactional
     public FriendRequestDTO sendInvite(long senderId, long receiverId) {
 
-        Block checkBlock = blockRepo.findByBlockedId(senderId).orElse(null);
+        Block checkBlock = blockRepo.findByBlockerIdAndBlockedId(senderId, receiverId).orElse(null);
 
         // If sender is being blocked by receiver
         if (checkBlock != null) {
-            throw new IllegalStateException("Sender is being blocked by receiver");
+            throw new IllegalStateException("Sender is being blocked by receiver or reverse");
         }
 
         FriendRequest check = friendRequestRepo.findBySenderIdAndReceiverId(receiverId, senderId).orElse(null);
@@ -330,7 +352,7 @@ public class CommunityService {
      * @return
      */
     @Transactional
-    public FriendDTO blockUser(Long curUserId, Long blockedId) {
+    public BlockDTO blockUser(Long curUserId, Long blockedId) {
         if (curUserId == null) {
             throw new IllegalArgumentException("CurUserID must not null");
         }
@@ -338,18 +360,55 @@ public class CommunityService {
             throw new IllegalArgumentException("CurUserID must not null");
         }
 
+        Friendship checkFriendship = friendshipRepo.findByUser1AndUser2(curUserId < blockedId ? curUserId : blockedId,
+                curUserId < blockedId ? blockedId : curUserId)
+                .orElse(null);
+
+        if (checkFriendship != null)
+            throw new IllegalStateException("Current User is friend of the other User");
+
+        Block checkBlock = blockRepo.findByBlockerIdAndBlockedId(curUserId, blockedId).orElse(null);
+        if (checkBlock != null) {
+            throw new IllegalStateException("Current User are already being blocked by other User");
+        }
+
         User blocker = entityManager.getReference(User.class, curUserId);
         User blocked = entityManager.getReference(User.class, blockedId);
 
         Block newB = new Block();
+        BlockId newId = new BlockId(curUserId, blockedId);
+        newB.setBlockId(newId);
         newB.setBlocker(blocker);
         newB.setBlocked(blocked);
         newB.setCreatedAt(LocalDate.now());
 
         blockRepo.save(newB);
 
-        return new FriendDTO(blockedId, blocked.getUsername(), blocked.getAvatarUrl(),
-                blocked.getGroupChatList().size() + blocked.getGroupMemberships().size());
+        BlockDTO dto = new BlockDTO(curUserId, blocker.getUsername(), blocker.getAvatarUrl(), blocked.getUserId(),
+                blocked.getUsername(), blocked.getAvatarUrl());
+
+        this.sendBlockedAdded(curUserId, dto);
+        this.sendBlockedAdded(blockedId, dto);
+
+        return dto;
+    }
+
+    /**
+     * Unblock somebody, only made by the blocker side
+     * 
+     * @param curUserId
+     * @param otherId
+     */
+    @Transactional
+    public void unBlocked(Long curUserId, Long otherId) {
+        BlockId curBlockId = new BlockId(curUserId, otherId);
+        Block curBlock = entityManager.getReference(Block.class, curBlockId);
+
+        blockRepo.delete(curBlock);
+
+        this.sendBlockedRemoved(curUserId, otherId);
+        this.sendBlockedRemoved(otherId, curUserId);
+
     }
 
     /**
@@ -362,7 +421,8 @@ public class CommunityService {
     @Transactional
     public void unfriend(Long userId, Long friendId) {
         Friendship friendship = friendshipRepo.findByUser1AndUser2(
-                (userId < friendId) ? userId : friendId, (userId < friendId) ? friendId : userId).orElse(null);
+                (userId < friendId) ? userId : friendId, (userId < friendId) ? friendId : userId)
+                .orElseThrow(() -> new IllegalStateException("No friendships between Current User and other user"));
 
         friendshipRepo.delete(friendship);
         this.sendFriendRemoved(userId, friendId);
