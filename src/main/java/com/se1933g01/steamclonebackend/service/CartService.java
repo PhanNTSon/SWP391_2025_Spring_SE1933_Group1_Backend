@@ -28,7 +28,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Service
 public class CartService {
@@ -38,18 +37,19 @@ public class CartService {
     private final SimpMessagingTemplate simp; // Added by Phan Son 28-06
     private final LibraryRepository libraryRepo;
     private final LibraryService libraryService;
-
+    private final EmailService emailService;
     private final String SOCKET_CART_COUNT_CHANNEL = "/queue/cart.count";
     private final String SOCKET_WALLET_BALANCE_CHANNEL = "/queue/wallet.balance";
     private final String SOCKET_LIBRARY_CHANNEL = "/queue/libraryItem.added";
 
     public CartService(UserRepo userRepo, GameRepo gameRepo, TransactionRepo transactionRepo,
-            SimpMessagingTemplate simp, LibraryRepository libraryRepo, LibraryService libraryService) {
+            SimpMessagingTemplate simp, LibraryRepository libraryRepo, LibraryService libraryService, EmailService emailService) {
         this.userRepo = userRepo;
         this.gameRepo = gameRepo;
         this.transactionRepo = transactionRepo;
         this.simp = simp;
         this.libraryRepo = libraryRepo;
+        this.emailService = emailService;
         this.libraryService = libraryService;
     }
 
@@ -267,6 +267,17 @@ public class CartService {
             simp.convertAndSendToUser(user.getUsername(), SOCKET_LIBRARY_CHANNEL, newGame);
             // --!!
         }
+        if (gamesToBuy.size() == 1) {
+            // Send email for single game purchase
+            Game purchasedGame = gamesToBuy.get(0);
+            emailService.sendPurchaseInvoiceEmail(user.getEmail(), user.getUserId().toString(), user.getUsername(),
+                    purchasedGame.getName(), purchasedGame.getPrice());
+        } else {
+            // Send email for multiple game purchase
+            emailService.sendMultiGameInvoiceEmail(user.getEmail(), user.getUserId().toString(), user.getUsername(),
+                    gamesToBuy);
+            
+        }
         // Remove only the games that were just bought from cart
         user.getCartGames().removeAll(gamesToBuy);
         userRepo.save(user);
@@ -276,6 +287,8 @@ public class CartService {
         simp.convertAndSendToUser(user.getUsername(), SOCKET_CART_COUNT_CHANNEL, result.getListCart().size());
         simp.convertAndSendToUser(user.getUsername(), SOCKET_WALLET_BALANCE_CHANNEL, user.getWalletBalance());
         // --!!
+
+
 
         return result;
     }

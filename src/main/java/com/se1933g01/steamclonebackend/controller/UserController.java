@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.se1933g01.steamclonebackend.dto.ApiRespDTO;
 import com.se1933g01.steamclonebackend.dto.GameBasicDTO;
+import com.se1933g01.steamclonebackend.dto.community.BlockDTO;
 import com.se1933g01.steamclonebackend.dto.community.ConversationDTO;
 import com.se1933g01.steamclonebackend.dto.community.CreateGroupChatDTO;
 import com.se1933g01.steamclonebackend.dto.community.FriendRequestDTO;
@@ -33,6 +34,7 @@ import com.se1933g01.steamclonebackend.dto.user.LibraryGameDTO;
 import com.se1933g01.steamclonebackend.dto.user.UserDetailDTO;
 import com.se1933g01.steamclonebackend.dto.user.UserUpdateDTO;
 import com.se1933g01.steamclonebackend.entity.CompositedKey;
+import com.se1933g01.steamclonebackend.entity.game.Game;
 import com.se1933g01.steamclonebackend.entity.transaction.Transaction;
 import com.se1933g01.steamclonebackend.entity.transaction.TransactionDetail;
 import com.se1933g01.steamclonebackend.entity.user.CustomUserDetail;
@@ -40,9 +42,11 @@ import com.se1933g01.steamclonebackend.entity.user.User;
 import com.se1933g01.steamclonebackend.repository.TransactionRepo;
 import com.se1933g01.steamclonebackend.service.CartService;
 import com.se1933g01.steamclonebackend.service.CommunityService;
+import com.se1933g01.steamclonebackend.service.EmailService;
 import com.se1933g01.steamclonebackend.service.LibraryService;
 import com.se1933g01.steamclonebackend.service.TransactionService;
 import com.se1933g01.steamclonebackend.service.UserService;
+import com.se1933g01.steamclonebackend.repository.TransactionRepo;
 
 import jakarta.persistence.EntityManager;
 
@@ -69,18 +73,19 @@ public class UserController {
     private final LibraryService libraryService;
     private final CommunityService communityService;
     private final EntityManager entityManager;
+    private final EmailService emailService;
     private final TransactionRepo transactionRepo;
 
     public UserController(UserService userService, CartService cartService, TransactionService transactionService,
-            LibraryService libraryService, CommunityService communityService, EntityManager entityManager,
-            TransactionRepo transactionRepo) {
+            LibraryService libraryService, CommunityService communityService, EntityManager entityManager, EmailService emailService, TransactionRepo transactionRepo) {
         this.userService = userService;
         this.cartService = cartService;
         this.transactionService = transactionService;
         this.libraryService = libraryService;
         this.communityService = communityService;
-        this.entityManager = entityManager;
         this.transactionRepo = transactionRepo;
+        this.entityManager = entityManager;
+        this.emailService = emailService;
     }
 
     /**
@@ -172,8 +177,10 @@ public class UserController {
         try {
             Long userId = me.getUser().getUserId();
             cartService.checkout(userId);
+            
             response.put("success", true);
             response.put("message", "Checkout successfully.");
+            
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             response.put("success", false);
@@ -195,8 +202,13 @@ public class UserController {
     public ResponseEntity<Map<String, Object>> refundTransaction(@PathVariable Long transactionId) {
         Map<String, Object> response = new HashMap<>();
         cartService.refund(transactionId);
+        User user = transactionRepo.findById(transactionId)
+                .orElseThrow(() -> new RuntimeException("Transaction not found")).getUser();
+        Game game = transactionRepo.findById(transactionId)
+                .orElseThrow(() -> new RuntimeException("Transaction not found")).getTransactionDetail().get(0).getGame();    
         response.put("success", true);
         response.put("message", "Refund successfully.");
+        emailService.sendRefundInvoiceEmail(user.getEmail(), user.getUserId().toString(), user.getUsername(), game.getName(), game.getPrice());
         return ResponseEntity.ok(response);
 
     }
@@ -457,8 +469,14 @@ public class UserController {
         return ResponseEntity.ok().body(userService.getFriends(me.getUser().getUserId()));
     }
 
+    /**
+     * Get list of BLock Relationship, including Current User banning Other
+     * and Other banning current User
+     * @param me
+     * @return
+     */
     @GetMapping("/blocked")
-    public ResponseEntity<List<FriendDTO>> getListBlocked(@AuthenticationPrincipal CustomUserDetail me) {
+    public ResponseEntity<List<BlockDTO>> getListBlocked(@AuthenticationPrincipal CustomUserDetail me) {
         return ResponseEntity.ok().body(userService.getBlocked(me.getUser().getUserId()));
     }
 
@@ -582,13 +600,24 @@ public class UserController {
     @PatchMapping("/block/{targetId}")
     @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
     public ResponseEntity<ApiRespDTO<?>> blockUser(@AuthenticationPrincipal CustomUserDetail me,
-            @PathVariable(name = "targetId") long tId) {
+            @PathVariable(name = "targetId") Long tId) {
         // Block
-        FriendDTO resDto = communityService.blockUser(me.getUser().getUserId(), tId);
+        BlockDTO resDto = communityService.blockUser(me.getUser().getUserId(), tId);
 
         return ResponseEntity.ok()
-                .body(new ApiRespDTO<FriendDTO>(true, "BLOCK_USER_SUCCESSFULLY", "Block user success", resDto));
+                .body(new ApiRespDTO<BlockDTO>(true, "BLOCK_USER_SUCCESSFULLY", "Block user success", resDto));
     }
+
+    @DeleteMapping("/unblock/{targetId}")
+    @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
+    public ResponseEntity<String> unBlock(@AuthenticationPrincipal CustomUserDetail me,
+            @PathVariable(name = "targetId") long tId) {
+        // Delete block
+        communityService.unBlocked(me.getUser().getUserId(), tId);
+
+        return ResponseEntity.ok("Success");
+    }
+
 
     /**
      * @author Phan NT Son

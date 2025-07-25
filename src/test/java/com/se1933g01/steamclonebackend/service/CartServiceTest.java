@@ -37,6 +37,7 @@ public class CartServiceTest {
     private LibraryRepository libraryRepo;
     private SimpMessagingTemplate simp;
     private LibraryService libraryService;
+    private EmailService emailService;
 
     private CartService cartService;
 
@@ -48,53 +49,56 @@ public class CartServiceTest {
         libraryRepo = mock(LibraryRepository.class);
         simp = mock(SimpMessagingTemplate.class);
         libraryService = mock(LibraryService.class);
+        emailService = mock(EmailService.class);
 
-        cartService = new CartService(userRepo, gameRepo, transactionRepo, simp, libraryRepo, libraryService);
+        cartService = new CartService(userRepo, gameRepo, transactionRepo, simp, libraryRepo, libraryService,
+                emailService);
+
     }
 
     // ==================== getTotalGamesInCart Tests ====================
-    
+
     @Test
     public void getTotalGamesInCart_validUserId_returnsCorrectCount() {
         // Arrange
         Long userId = 1L;
-        
+
         Game game1 = new Game();
         game1.setGameId(100L);
         Game game2 = new Game();
         game2.setGameId(101L);
-        
+
         HashSet<Game> cartGames = new HashSet<>();
         cartGames.add(game1);
         cartGames.add(game2);
-        
+
         User mockUser = new User();
         mockUser.setUserId(userId);
         mockUser.setCartGames(cartGames);
-        
+
         when(userRepo.findByIdWithCartGames(userId)).thenReturn(mockUser);
-        
+
         // Act
         long result = cartService.getTotalGamesInCart(userId);
-        
+
         // Assert
         assertEquals(2L, result);
     }
-    
+
     @Test
     public void getTotalGamesInCart_emptyCart_returnsZero() {
         // Arrange
         Long userId = 1L;
-        
+
         User mockUser = new User();
         mockUser.setUserId(userId);
         mockUser.setCartGames(new HashSet<>());
-        
+
         when(userRepo.findByIdWithCartGames(userId)).thenReturn(mockUser);
-        
+
         // Act
         long result = cartService.getTotalGamesInCart(userId);
-        
+
         // Assert
         assertEquals(0L, result);
     }
