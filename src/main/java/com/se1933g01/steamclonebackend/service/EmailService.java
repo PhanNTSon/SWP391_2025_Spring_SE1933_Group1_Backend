@@ -410,7 +410,7 @@ public class EmailService {
                                     Game đã được thêm vào thư viện của bạn
                                 </p>
                                 <div style="margin: 20px 0;">
-                                    <a href="#" style="background-color: #f57f17; color: white; padding: 12px 25px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+                                    <a href="https://centurionstore.pages.dev/library" style="background-color: #f57f17; color: white; padding: 12px 25px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
                                         🎮 Vào thư viện game
                                     </a>
                                 </div>
