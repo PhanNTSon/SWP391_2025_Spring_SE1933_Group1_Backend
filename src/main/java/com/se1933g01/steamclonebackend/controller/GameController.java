@@ -98,7 +98,7 @@ public class GameController {
     @PreAuthorize("permitAll()")
     public ResponseEntity<Page<GameBasicDTO>> getFilteredGames(
             @RequestParam(required = false) String searchTerm,
-            @RequestParam(required = false) BigDecimal maxPrice, // Changed by Phan Son 21-06
+            @RequestParam(required = false) BigDecimal maxPrice, 
             @RequestParam(required = false) List<Integer> tags,
             @RequestParam(required = false) List<Long> publishers,
             @RequestParam(defaultValue = "0") int page,
