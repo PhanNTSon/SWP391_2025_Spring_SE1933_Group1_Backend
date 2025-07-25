@@ -135,6 +135,7 @@ public class UserService {
         User user = userRepo.findById(userId).orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_MSG));
         user.setWalletBalance(user.getWalletBalance().add(amount)); // Changed by Phan Son 21-06
         userRepo.save(user);
+        emailService.sendBalanceTopupEmail(user.getEmail(), user.getUsername(), user.getUserId().toString(), amount);
         return user.getWalletBalance();
     }
 

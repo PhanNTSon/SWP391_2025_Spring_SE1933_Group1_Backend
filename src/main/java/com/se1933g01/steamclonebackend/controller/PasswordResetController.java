@@ -54,12 +54,12 @@ public class PasswordResetController {
 
     @PostMapping("/change/confirm")
     public ResponseEntity<?> confirmChange(@RequestBody Map<String, String> req) {
-        String username = req.get("username");
+        String email = req.get("email");
         String otp = req.get("otp");
         String newPassword = req.get("newPassword");
         String confirmPassword = req.get("confirmPassword");
 
-        passwordResetService.resetPassword(username, otp, newPassword, confirmPassword);
+        passwordResetService.resetPassword(email, otp, newPassword, confirmPassword);
         return ResponseEntity.ok("Password updated successfully.");
     }
 

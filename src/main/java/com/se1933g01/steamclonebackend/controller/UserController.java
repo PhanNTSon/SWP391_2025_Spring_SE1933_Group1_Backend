@@ -33,15 +33,18 @@ import com.se1933g01.steamclonebackend.dto.user.FriendDTO;
 import com.se1933g01.steamclonebackend.dto.user.LibraryGameDTO;
 import com.se1933g01.steamclonebackend.dto.user.UserDetailDTO;
 import com.se1933g01.steamclonebackend.dto.user.UserUpdateDTO;
+import com.se1933g01.steamclonebackend.entity.game.Game;
 import com.se1933g01.steamclonebackend.entity.transaction.Transaction;
 import com.se1933g01.steamclonebackend.entity.transaction.TransactionDetail;
 import com.se1933g01.steamclonebackend.entity.user.CustomUserDetail;
 import com.se1933g01.steamclonebackend.entity.user.User;
 import com.se1933g01.steamclonebackend.service.CartService;
 import com.se1933g01.steamclonebackend.service.CommunityService;
+import com.se1933g01.steamclonebackend.service.EmailService;
 import com.se1933g01.steamclonebackend.service.LibraryService;
 import com.se1933g01.steamclonebackend.service.TransactionService;
 import com.se1933g01.steamclonebackend.service.UserService;
+import com.se1933g01.steamclonebackend.repository.TransactionRepo;
 
 import jakarta.persistence.EntityManager;
 
@@ -67,15 +70,19 @@ public class UserController {
     private final LibraryService libraryService;
     private final CommunityService communityService;
     private final EntityManager entityManager;
+    private final EmailService emailService;
+    private final TransactionRepo transactionRepo;
 
     public UserController(UserService userService, CartService cartService, TransactionService transactionService,
-            LibraryService libraryService, CommunityService communityService, EntityManager entityManager) {
+            LibraryService libraryService, CommunityService communityService, EntityManager entityManager, EmailService emailService, TransactionRepo transactionRepo) {
         this.userService = userService;
         this.cartService = cartService;
         this.transactionService = transactionService;
         this.libraryService = libraryService;
         this.communityService = communityService;
+        this.transactionRepo = transactionRepo;
         this.entityManager = entityManager;
+        this.emailService = emailService;
     }
 
     /**
@@ -167,8 +174,10 @@ public class UserController {
         try {
             Long userId = me.getUser().getUserId();
             cartService.checkout(userId);
+            
             response.put("success", true);
             response.put("message", "Checkout successfully.");
+            
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             response.put("success", false);
@@ -190,8 +199,13 @@ public class UserController {
     public ResponseEntity<Map<String, Object>> refundTransaction(@PathVariable Long transactionId) {
         Map<String, Object> response = new HashMap<>();
         cartService.refund(transactionId);
+        User user = transactionRepo.findById(transactionId)
+                .orElseThrow(() -> new RuntimeException("Transaction not found")).getUser();
+        Game game = transactionRepo.findById(transactionId)
+                .orElseThrow(() -> new RuntimeException("Transaction not found")).getTransactionDetail().get(0).getGame();    
         response.put("success", true);
         response.put("message", "Refund successfully.");
+        emailService.sendRefundInvoiceEmail(user.getEmail(), user.getUserId().toString(), user.getUsername(), game.getName(), game.getPrice());
         return ResponseEntity.ok(response);
 
     }
