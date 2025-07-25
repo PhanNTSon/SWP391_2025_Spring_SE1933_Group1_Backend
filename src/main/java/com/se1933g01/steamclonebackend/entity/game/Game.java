@@ -85,7 +85,7 @@ public class Game {
     @Column(name = "IconUrl")
     private String iconUrl;
 
-    @Column(name = "UpdateLog")
+    @Column(name = "UpdateLog", columnDefinition = "TEXT")
     private String updateLog;
 
     // ================ Relationships =============

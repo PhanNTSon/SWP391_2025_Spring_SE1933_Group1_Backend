@@ -17,6 +17,8 @@ import com.se1933g01.steamclonebackend.dto.ApiRespDTO;
 import com.se1933g01.steamclonebackend.dto.GameBasicDTO;
 import com.se1933g01.steamclonebackend.dto.GameDetailDTO;
 import com.se1933g01.steamclonebackend.dto.GamePresentDTO;
+import com.se1933g01.steamclonebackend.dto.NewsDTO;
+import com.se1933g01.steamclonebackend.entity.news.News;
 import com.se1933g01.steamclonebackend.entity.user.CustomUserDetail;
 import com.se1933g01.steamclonebackend.entity.user.Publisher;
 import com.se1933g01.steamclonebackend.service.GameService;
@@ -169,14 +171,14 @@ public class GameController {
     }
 
     @PatchMapping("/hide/{gameId}")
-    @PreAuthorize("hasRole('PUBLISHER')")
+    @PreAuthorize("hasAnyRole('PUBLISHER','ADMIN')")
     public ResponseEntity<Void> hideGame(@PathVariable Long gameId) {
         gameService.hideGame(gameId);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/unhide/{gameId}")
-    @PreAuthorize("hasRole('PUBLISHER')")
+    @PreAuthorize("hasAnyRole('PUBLISHER','ADMIN')")
     public ResponseEntity<Void> unhideGame(@PathVariable Long gameId) {
         gameService.unhideGame(gameId);
         return ResponseEntity.noContent().build();
@@ -194,4 +196,67 @@ public class GameController {
         return ResponseEntity.ok(recommendedGames);
     }
 
+    @GetMapping("/news/{gameId}")
+    public ResponseEntity<Page<NewsDTO>> getPagedNewsByGameId(
+            @PathVariable Long gameId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Page<NewsDTO> newsPage = gameService.getPagedNewsByGameId(gameId, page, size);
+        return ResponseEntity.ok(newsPage);
+    }
+
+    @PostMapping("/news/{gameId}/create")
+    public ResponseEntity<NewsDTO> createNews(
+        @PathVariable Long gameId,
+        @RequestBody NewsDTO newsDTO) {
+
+        NewsDTO created = gameService.createNews(gameId, newsDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @GetMapping("/news/view/{id}")
+    public ResponseEntity<NewsDTO> getNewsDetails(@PathVariable Long id) {
+        NewsDTO news = gameService.getNewsDetails(id);
+        return ResponseEntity.ok(news);
+    }
+    @PutMapping("/news/edit/{newsId}")
+    public ResponseEntity<?> editNews(
+            @PathVariable Long newsId,
+            @RequestBody NewsDTO newsDto) {
+
+        try {
+            News updatedNews = gameService.updateNews(newsId, newsDto);
+            return ResponseEntity.ok(updatedNews);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("News not found");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to update news");
+        }
+    }
+    @DeleteMapping("/news/delete/{id}")
+    public ResponseEntity<Void> deleteNews(@PathVariable Long id) {
+        gameService.deleteNewsById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/listed")
+    public ResponseEntity<Page<GameBasicDTO>> getListedGames(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String name) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<GameBasicDTO> gamePage = gameService.getListedGame(name, pageable);
+        return ResponseEntity.ok(gamePage);
+    }    
+    @GetMapping("/hidden")
+    public ResponseEntity<Page<GameBasicDTO>> getHiddenGames(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String name) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<GameBasicDTO> gamePage = gameService.getHiddenGame(name, pageable);
+        return ResponseEntity.ok(gamePage);
+    }
 }

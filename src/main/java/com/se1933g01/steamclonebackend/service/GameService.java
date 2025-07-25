@@ -3,10 +3,19 @@ package com.se1933g01.steamclonebackend.service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import com.vladsch.flexmark.parser.Parser;
+import com.vladsch.flexmark.html.HtmlRenderer;
+import com.vladsch.flexmark.util.ast.Node;
+import com.vladsch.flexmark.util.data.MutableDataSet;
+import com.vladsch.flexmark.ext.tables.TablesExtension;
+
+
 import jakarta.persistence.EntityNotFoundException; // Hoặc exception tùy chỉnh
 import org.hibernate.Hibernate; // Để khởi tạo các collection lazy
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
+import org.modelmapper.spi.MatchingStrategy;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional; // QUAN TRỌNG cho lazy loading
@@ -16,9 +25,11 @@ import com.se1933g01.steamclonebackend.dto.GameBasicDTO;
 import com.se1933g01.steamclonebackend.dto.GameDetailDTO;
 import com.se1933g01.steamclonebackend.dto.GamePresentDTO;
 import com.se1933g01.steamclonebackend.dto.MediaDTO;
+import com.se1933g01.steamclonebackend.dto.NewsDTO;
 import com.se1933g01.steamclonebackend.dto.TagDTO;
 import com.se1933g01.steamclonebackend.entity.game.Game;
 import com.se1933g01.steamclonebackend.entity.game.Tag;
+import com.se1933g01.steamclonebackend.entity.news.News;
 import com.se1933g01.steamclonebackend.entity.request.AddingGameRequest;
 import com.se1933g01.steamclonebackend.entity.user.Library;
 import com.se1933g01.steamclonebackend.entity.user.Publisher;
@@ -26,16 +37,16 @@ import com.se1933g01.steamclonebackend.mapper.EntityMapper;
 import com.se1933g01.steamclonebackend.repository.AddingGameRequestRepo;
 import com.se1933g01.steamclonebackend.repository.GameRepository;
 import com.se1933g01.steamclonebackend.repository.LibraryRepository;
+import com.se1933g01.steamclonebackend.repository.NewsRepo;
 import com.se1933g01.steamclonebackend.specification.GameSpecification;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 /**
  * @author kerri
  */
@@ -46,13 +57,17 @@ public class GameService {
     private final ModelMapper modelMapper;
     private final AddingGameRequestRepo addingGameRequestRepo;
     private final LibraryRepository libraryRepo;
-
-    public GameService(GameRepository gameRepository, ModelMapper modelMapper,
-            AddingGameRequestRepo addingGameRequestRepo, LibraryRepository libraryRepo) {
+    private final NewsRepo newsRepo;
+    private final Parser parser;
+    private final HtmlRenderer renderer;
+    public GameService(GameRepository gameRepository, ModelMapper modelMapper, AddingGameRequestRepo addingGameRequestRepo, LibraryRepository libraryRepo, NewsRepo newsRepo, Parser parser, HtmlRenderer renderer) {
+        this.newsRepo = newsRepo;
         this.libraryRepo = libraryRepo;
         this.addingGameRequestRepo = addingGameRequestRepo;
         this.gameRepository = gameRepository;
         this.modelMapper = modelMapper;
+        this.parser = parser;
+        this.renderer = renderer;
     }
 
     public List<GamePresentDTO> getGamesUnder5() {
@@ -288,47 +303,38 @@ public class GameService {
                             .map(Tag::getTagName)
                             .collect(Collectors.toSet());
 
-                    return new GameBasicDTO(
-                            game.getGameId(),
-                            game.getName(),
-                            imageUrl,
-                            game.getPrice(),
-                            null, // discountPrice logic can be added here
-                            game.getPrice(), // fallback to originalPrice
-                            true, // already filtered for active games
-                            game.getReleaseDate(),
-                            tagNames // ✅ Inject tag set here
-                    );
-                })
-                .collect(Collectors.toList());
+                return new GameBasicDTO(
+                    game.getGameId(),
+                    game.getName(),
+                    imageUrl,
+                    game.getPrice(),
+                    null,                      
+                    game.getPrice(),          
+                    true,     
+                    null,                
+                    game.getReleaseDate(),
+                    tagNames                   
+                );
+            })
+            .collect(Collectors.toList());
     }
 
     public List<GameBasicDTO> recommendSimilarToLibrary(Long userId) {
-        // 🧱 Step 1: Fetch user's purchased games
         List<Library> library = libraryRepo.findByUser_UserId(userId);
-
         Set<Long> ownedGameIds = library.stream()
                 .map(lib -> lib.getGame().getGameId())
                 .collect(Collectors.toSet());
-
-        // 🧠 Step 2: Collect user's preferred tags from owned games
         Set<Tag> preferredTags = library.stream()
                 .flatMap(lib -> lib.getGame().getTags().stream())
                 .collect(Collectors.toSet());
-
-        // 🔍 Step 3: Find candidate games sharing those tags (excluding owned)
         List<Game> candidates = gameRepository.findDistinctByTagsInAndGameIdNotInAndStateTrue(preferredTags,
                 ownedGameIds);
-
-        // 📊 Step 4: Score games by tag overlap
         Map<Game, Long> similarityMap = candidates.stream()
                 .collect(Collectors.toMap(
                         game -> game,
                         game -> game.getTags().stream()
                                 .filter(preferredTags::contains)
                                 .count()));
-
-        // 🎁 Step 5: Sort by similarity and convert to enriched DTO
         return similarityMap.entrySet().stream()
                 .sorted(Map.Entry.<Game, Long>comparingByValue().reversed())
                 .limit(10)
@@ -339,18 +345,118 @@ public class GameService {
                             .map(Tag::getTagName)
                             .collect(Collectors.toSet());
 
-                    return new GameBasicDTO(
-                            game.getGameId(),
-                            game.getName(),
-                            imageUrl,
-                            game.getPrice(),
-                            null, // Optional: discount logic later
-                            game.getPrice(), // Fallback to original price
-                            Boolean.TRUE.equals(game.getState()),
-                            game.getReleaseDate(),
-                            tagNames // ✅ Inject tags here
-                    );
-                })
-                .toList();
+                return new GameBasicDTO(
+                    game.getGameId(),
+                    game.getName(),
+                    imageUrl,
+                    game.getPrice(),
+                    null,                           
+                    game.getPrice(),             
+                    Boolean.TRUE.equals(game.getState()),
+                    null,
+                    game.getReleaseDate(),
+                    tagNames                 
+                );
+            })
+            .toList();
     }
+    public Page<NewsDTO> getPagedNewsByGameId(Long gameId, int page, int size) {
+        modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        return newsRepo.findByGame_GameId(gameId, pageable)
+            .map(news -> modelMapper.map(news, NewsDTO.class));
+    }
+
+    public NewsDTO createNews(Long gameId, NewsDTO newsDTO) {
+        modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+
+        Game game = gameRepository.findById(gameId)
+            .orElseThrow(() -> new RuntimeException("Game not found"));
+
+        News news = modelMapper.map(newsDTO, News.class);
+        news.setGame(game); // link the news to the game
+        news.setCreatedAt(LocalDate.now());
+        News saved = newsRepo.save(news);
+        return modelMapper.map(saved, NewsDTO.class);
+    }
+
+    public NewsDTO getNewsDetails(Long id) {
+        News news = newsRepo.findById(id)
+                    .orElseThrow(() -> new RuntimeException("News not found"));
+
+        // ✅ Flexmark setup with table support
+        MutableDataSet options = new MutableDataSet();
+        options.set(Parser.EXTENSIONS, Arrays.asList(TablesExtension.create()));
+
+        Parser parser = Parser.builder(options).build();
+        HtmlRenderer renderer = HtmlRenderer.builder(options).build();
+
+        Node document = parser.parse(news.getMarkdown());
+        String html = renderer.render(document);
+
+        // ✅ Map News to DTO
+        NewsDTO dto = modelMapper.map(news, NewsDTO.class);
+        dto.setHtmlContent(html);
+
+        return dto;
+    }
+
+
+
+    public News updateNews(Long newsId, NewsDTO dto) {
+        News news = newsRepo.findById(newsId)
+                .orElseThrow(() -> new RuntimeException("News not found"));
+        news.setTitle(dto.getTitle());
+        news.setSummary(dto.getSummary());
+        news.setMarkdown(dto.getMarkdown());
+        return newsRepo.save(news);
+    }
+    public void deleteNewsById(Long id) {
+        News news = newsRepo.findById(id)
+            .orElseThrow(() -> new RuntimeException("News not found"));
+        newsRepo.delete(news);
+    }
+    public Page<GameBasicDTO> getListedGame(String name, Pageable pageable) {
+        Page<Game> gamePage;
+
+        if (name != null && !name.trim().isEmpty()) {
+            gamePage = gameRepository.findByNameContainingIgnoreCaseAndStateTrue(name, pageable);
+        } else {
+            gamePage = gameRepository.findByStateTrue(pageable);
+        }
+
+        return gamePage.map(game -> {
+            modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+            GameBasicDTO dto = modelMapper.map(game, GameBasicDTO.class);
+            dto.setTitle(game.getName());
+            dto.setImageUrl(game.getMedia().get(0).getUrl());
+            dto.setId(game.getGameId());
+            dto.setState(game.getState());
+            dto.setPublisherId(game.getPublisher().getPublisherId());
+            return dto;
+        });
+    }
+
+    public Page<GameBasicDTO> getHiddenGame(String name, Pageable pageable) {
+        Page<Game> gamePage;
+
+        if (name != null && !name.trim().isEmpty()) {
+            gamePage = gameRepository.findByNameContainingIgnoreCaseAndStateFalse(name, pageable);
+        } else {
+            gamePage = gameRepository.findByStateFalse(pageable);
+        }
+
+        return gamePage.map(game -> {
+            modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+            GameBasicDTO dto = modelMapper.map(game, GameBasicDTO.class);
+            dto.setTitle(game.getName());
+            dto.setImageUrl(game.getMedia().get(0).getUrl());
+            dto.setId(game.getGameId());
+            dto.setState(game.getState());
+            dto.setPublisherId(game.getPublisher().getPublisherId());
+            return dto;
+        });
+    }
+    
 }
