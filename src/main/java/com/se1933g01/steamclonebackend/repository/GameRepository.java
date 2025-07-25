@@ -6,6 +6,7 @@ import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -19,6 +20,9 @@ import com.se1933g01.steamclonebackend.entity.user.Publisher;
 @Repository
 public interface GameRepository extends JpaRepository<Game, Long>, JpaSpecificationExecutor<Game> {
     List<Game> findAll();
+
+    @Query("SELECT g FROM Game g WHERE g.state = true")
+    Page<Game> findAllByStateTrue(Specification<Game> spec, Pageable pageable);
 
     Game findById(long id);
 

@@ -32,10 +32,12 @@ import com.se1933g01.steamclonebackend.dto.user.FriendDTO;
 import com.se1933g01.steamclonebackend.dto.user.LibraryGameDTO;
 import com.se1933g01.steamclonebackend.dto.user.UserDetailDTO;
 import com.se1933g01.steamclonebackend.dto.user.UserUpdateDTO;
+import com.se1933g01.steamclonebackend.entity.CompositedKey;
 import com.se1933g01.steamclonebackend.entity.transaction.Transaction;
 import com.se1933g01.steamclonebackend.entity.transaction.TransactionDetail;
 import com.se1933g01.steamclonebackend.entity.user.CustomUserDetail;
 import com.se1933g01.steamclonebackend.entity.user.User;
+import com.se1933g01.steamclonebackend.repository.TransactionRepo;
 import com.se1933g01.steamclonebackend.service.CartService;
 import com.se1933g01.steamclonebackend.service.CommunityService;
 import com.se1933g01.steamclonebackend.service.LibraryService;
@@ -49,6 +51,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,15 +69,18 @@ public class UserController {
     private final LibraryService libraryService;
     private final CommunityService communityService;
     private final EntityManager entityManager;
+    private final TransactionRepo transactionRepo;
 
     public UserController(UserService userService, CartService cartService, TransactionService transactionService,
-            LibraryService libraryService, CommunityService communityService, EntityManager entityManager) {
+            LibraryService libraryService, CommunityService communityService, EntityManager entityManager,
+            TransactionRepo transactionRepo) {
         this.userService = userService;
         this.cartService = cartService;
         this.transactionService = transactionService;
         this.libraryService = libraryService;
         this.communityService = communityService;
         this.entityManager = entityManager;
+        this.transactionRepo = transactionRepo;
     }
 
     /**
@@ -368,6 +374,19 @@ public class UserController {
             @RequestParam BigDecimal amount) {
         Long userId = me.getUser().getUserId();
         BigDecimal newBalance = userService.addUserBalance(userId, amount);
+        Transaction transaction = new Transaction();
+        transaction.setCreatedAt(LocalDate.now());
+        transaction.setTotalAmount(amount);
+        transaction.setType("Add");
+        TransactionDetail userDetail = new TransactionDetail();
+        CompositedKey userKey = new CompositedKey();
+        userKey.setKey1(transaction.getTransactionId());
+        userDetail.setId(userKey);
+        userDetail.setTransaction(transaction);
+        userDetail.setPrice(amount);
+
+        transaction.setTransactionDetail(new ArrayList<>(List.of(userDetail)));
+        transactionRepo.save(transaction);
         return ResponseEntity.ok(newBalance);
     }
 

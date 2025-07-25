@@ -19,9 +19,8 @@ public class GameSpecification {
      * @param maxPrice Giá tối đa.
      * @return Specification hoặc null nếu maxPrice không hợp lệ.
      */
-    public static Specification<Game> hasMaxPrice(BigDecimal maxPrice) { // Changed by Phan Son
+    public static Specification<Game> hasMaxPrice(BigDecimal maxPrice) { 
         return (root, query, criteriaBuilder) -> {
-            // Changed by Phan Son
             if (maxPrice == null || maxPrice.compareTo(BigDecimal.valueOf(60)) > 0) { // Giả sử 60 là giá trị "Any"
                 return null; // Trả về null để không áp dụng điều kiện lọc này
             }
@@ -29,6 +28,13 @@ public class GameSpecification {
             return criteriaBuilder.lessThanOrEqualTo(root.get("price"), maxPrice);
         };
     }
+
+    public static Specification<Game> hasStateTrue() {
+        return (root, query, criteriaBuilder) -> {
+            return criteriaBuilder.isTrue(root.get("state"));
+        };
+            
+        }
 
     /**
      * Tạo một Specification để lọc game có chứa BẤT KỲ tag nào trong danh sách

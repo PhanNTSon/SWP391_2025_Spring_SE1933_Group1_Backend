@@ -46,7 +46,9 @@ public class GameService {
     private final ModelMapper modelMapper;
     private final AddingGameRequestRepo addingGameRequestRepo;
     private final LibraryRepository libraryRepo;
-    public GameService(GameRepository gameRepository, ModelMapper modelMapper, AddingGameRequestRepo addingGameRequestRepo, LibraryRepository libraryRepo) {
+
+    public GameService(GameRepository gameRepository, ModelMapper modelMapper,
+            AddingGameRequestRepo addingGameRequestRepo, LibraryRepository libraryRepo) {
         this.libraryRepo = libraryRepo;
         this.addingGameRequestRepo = addingGameRequestRepo;
         this.gameRepository = gameRepository;
@@ -138,6 +140,7 @@ public class GameService {
 
         if (searchTerm != null) {
             spec = GameSpecification.hasSearchTerm(searchTerm);
+
         }
 
         if (maxPrice != null) {
@@ -155,12 +158,13 @@ public class GameService {
                     : spec.and(GameSpecification.hasPublishers(publisherIds));
         }
 
-        Page<Game> gamePage = gameRepository.findAll(spec, pageable);
+        Page<Game> gamePage = gameRepository.findAllByStateTrue(spec, pageable);
 
         return gamePage.map(game -> {
             Hibernate.initialize(game.getMedia());
             return EntityMapper.toGameBasicDTO(game);
         });
+
     }
 
     @Transactional(readOnly = true)
@@ -186,6 +190,9 @@ public class GameService {
     public GameDetailDTO getGameDetailsById(Long gameId) {
         Game game = gameRepository.findById(gameId)
                 .orElseThrow(() -> new EntityNotFoundException("Game not found with id: " + gameId));
+        if(!game.getState()) {
+            throw new EntityNotFoundException("Game is not available.");
+        }
 
         Hibernate.initialize(game.getPublisher()); // Nếu publisher là LAZY
         Hibernate.initialize(game.getTags());
@@ -268,83 +275,82 @@ public class GameService {
     public List<GameBasicDTO> getTagBasedRecommendations(Long gameId) {
         // Step 1: Get related game IDs based on tag overlap
         List<Long> relatedGameIds = gameRepository.findRelatedGameIdsByTag(gameId);
-        
+
         // Step 2: Fetch full game entities
         List<Game> games = gameRepository.findAllById(relatedGameIds);
 
         // Step 3: Map to DTO including tags
         return games.stream()
-            .filter(game -> Boolean.TRUE.equals(game.getState()))
-            .map(game -> {
-                String imageUrl = game.getMedia().isEmpty() ? null : game.getMedia().get(0).getUrl();
-                Set<String> tagNames = game.getTags().stream()
-                    .map(Tag::getTagName)
-                    .collect(Collectors.toSet());
+                .filter(game -> Boolean.TRUE.equals(game.getState()))
+                .map(game -> {
+                    String imageUrl = game.getMedia().isEmpty() ? null : game.getMedia().get(0).getUrl();
+                    Set<String> tagNames = game.getTags().stream()
+                            .map(Tag::getTagName)
+                            .collect(Collectors.toSet());
 
-                return new GameBasicDTO(
-                    game.getGameId(),
-                    game.getName(),
-                    imageUrl,
-                    game.getPrice(),
-                    null,                      // discountPrice logic can be added here
-                    game.getPrice(),           // fallback to originalPrice
-                    true,                      // already filtered for active games
-                    game.getReleaseDate(),
-                    tagNames                   // ✅ Inject tag set here
-                );
-            })
-            .collect(Collectors.toList());
+                    return new GameBasicDTO(
+                            game.getGameId(),
+                            game.getName(),
+                            imageUrl,
+                            game.getPrice(),
+                            null, // discountPrice logic can be added here
+                            game.getPrice(), // fallback to originalPrice
+                            true, // already filtered for active games
+                            game.getReleaseDate(),
+                            tagNames // ✅ Inject tag set here
+                    );
+                })
+                .collect(Collectors.toList());
     }
-
 
     public List<GameBasicDTO> recommendSimilarToLibrary(Long userId) {
         // 🧱 Step 1: Fetch user's purchased games
         List<Library> library = libraryRepo.findByUser_UserId(userId);
 
         Set<Long> ownedGameIds = library.stream()
-            .map(lib -> lib.getGame().getGameId())
-            .collect(Collectors.toSet());
+                .map(lib -> lib.getGame().getGameId())
+                .collect(Collectors.toSet());
 
         // 🧠 Step 2: Collect user's preferred tags from owned games
         Set<Tag> preferredTags = library.stream()
-            .flatMap(lib -> lib.getGame().getTags().stream())
-            .collect(Collectors.toSet());
+                .flatMap(lib -> lib.getGame().getTags().stream())
+                .collect(Collectors.toSet());
 
         // 🔍 Step 3: Find candidate games sharing those tags (excluding owned)
-        List<Game> candidates = gameRepository.findDistinctByTagsInAndGameIdNotInAndStateTrue(preferredTags, ownedGameIds);
+        List<Game> candidates = gameRepository.findDistinctByTagsInAndGameIdNotInAndStateTrue(preferredTags,
+                ownedGameIds);
 
         // 📊 Step 4: Score games by tag overlap
         Map<Game, Long> similarityMap = candidates.stream()
-            .collect(Collectors.toMap(
-                game -> game,
-                game -> game.getTags().stream()
-                    .filter(preferredTags::contains)
-                    .count()
-            ));
+                .collect(Collectors.toMap(
+                        game -> game,
+                        game -> game.getTags().stream()
+                                .filter(preferredTags::contains)
+                                .count()));
 
         // 🎁 Step 5: Sort by similarity and convert to enriched DTO
         return similarityMap.entrySet().stream()
-            .sorted(Map.Entry.<Game, Long>comparingByValue().reversed())
-            .limit(10)
-            .map(entry -> {
-                Game game = entry.getKey();
-                String imageUrl = game.getMedia().isEmpty() ? null : game.getMedia().get(0).getUrl();
-                Set<String> tagNames = game.getTags().stream()
-                    .map(Tag::getTagName)
-                    .collect(Collectors.toSet());
+                .sorted(Map.Entry.<Game, Long>comparingByValue().reversed())
+                .limit(10)
+                .map(entry -> {
+                    Game game = entry.getKey();
+                    String imageUrl = game.getMedia().isEmpty() ? null : game.getMedia().get(0).getUrl();
+                    Set<String> tagNames = game.getTags().stream()
+                            .map(Tag::getTagName)
+                            .collect(Collectors.toSet());
 
-                return new GameBasicDTO(
-                    game.getGameId(),
-                    game.getName(),
-                    imageUrl,
-                    game.getPrice(),
-                    null,                           // Optional: discount logic later
-                    game.getPrice(),               // Fallback to original price
-                    Boolean.TRUE.equals(game.getState()),
-                    game.getReleaseDate(),
-                    tagNames                  // ✅ Inject tags here
-                );
-            })
-            .toList();
+                    return new GameBasicDTO(
+                            game.getGameId(),
+                            game.getName(),
+                            imageUrl,
+                            game.getPrice(),
+                            null, // Optional: discount logic later
+                            game.getPrice(), // Fallback to original price
+                            Boolean.TRUE.equals(game.getState()),
+                            game.getReleaseDate(),
+                            tagNames // ✅ Inject tags here
+                    );
+                })
+                .toList();
     }
 }
