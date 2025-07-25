@@ -4,6 +4,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import com.vladsch.flexmark.parser.Parser;
+import com.vladsch.flexmark.html.HtmlRenderer;
+import com.vladsch.flexmark.util.ast.Node;
+import com.vladsch.flexmark.util.data.MutableDataSet;
+import com.vladsch.flexmark.ext.tables.TablesExtension;
+
 
 import jakarta.persistence.EntityNotFoundException; // Hoặc exception tùy chỉnh
 import org.hibernate.Hibernate; // Để khởi tạo các collection lazy
@@ -33,16 +39,14 @@ import com.se1933g01.steamclonebackend.repository.GameRepository;
 import com.se1933g01.steamclonebackend.repository.LibraryRepository;
 import com.se1933g01.steamclonebackend.repository.NewsRepo;
 import com.se1933g01.steamclonebackend.specification.GameSpecification;
-import org.commonmark.parser.Parser;
-import org.commonmark.renderer.html.HtmlRenderer;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.commonmark.node.Node;
 /**
  * @author kerri
  */
@@ -379,18 +383,26 @@ public class GameService {
 
     public NewsDTO getNewsDetails(Long id) {
         News news = newsRepo.findById(id)
-                      .orElseThrow(() -> new RuntimeException("News not found"));
+                    .orElseThrow(() -> new RuntimeException("News not found"));
 
-        // Convert Markdown to HTML
+        // ✅ Flexmark setup with table support
+        MutableDataSet options = new MutableDataSet();
+        options.set(Parser.EXTENSIONS, Arrays.asList(TablesExtension.create()));
+
+        Parser parser = Parser.builder(options).build();
+        HtmlRenderer renderer = HtmlRenderer.builder(options).build();
+
         Node document = parser.parse(news.getMarkdown());
         String html = renderer.render(document);
 
-        // Map News to NewsDto
+        // ✅ Map News to DTO
         NewsDTO dto = modelMapper.map(news, NewsDTO.class);
-        dto.setHtmlContent(html); // Inject converted HTML manually
+        dto.setHtmlContent(html);
 
         return dto;
     }
+
+
 
     public News updateNews(Long newsId, NewsDTO dto) {
         News news = newsRepo.findById(newsId)
