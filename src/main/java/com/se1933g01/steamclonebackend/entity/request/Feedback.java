@@ -21,7 +21,7 @@ public class Feedback {
     @Column(name = "RequestID")
     private long requestId;
 
-    @Column(name = "Subject")
+    @Column(name = "Subject", columnDefinition = "TEXT")
     private String subject;
 
     @Column(name = "Message", columnDefinition = "TEXT")

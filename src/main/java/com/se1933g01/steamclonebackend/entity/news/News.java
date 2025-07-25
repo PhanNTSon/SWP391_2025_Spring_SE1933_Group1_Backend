@@ -33,13 +33,13 @@ public class News {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long newsId;
 
-    @Column(name = "Title", nullable = false)
+    @Column(name = "Title", nullable = false, columnDefinition = "TEXT")
     private String title;
 
-    @Column(name = "Summary", nullable = false)
+    @Column(name = "Summary", nullable = false, columnDefinition = "TEXT")
     private String summary;
 
-    @Column(name = "Markdown")
+    @Column(name = "Markdown", columnDefinition = "TEXT")
     private String markdown;  // Markdown format
 
     @Column(name = "CreatedAt")

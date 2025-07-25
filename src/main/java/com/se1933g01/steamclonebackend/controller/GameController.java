@@ -171,14 +171,14 @@ public class GameController {
     }
 
     @PatchMapping("/hide/{gameId}")
-    @PreAuthorize("hasRole('PUBLISHER')")
+    @PreAuthorize("hasAnyRole('PUBLISHER','ADMIN')")
     public ResponseEntity<Void> hideGame(@PathVariable Long gameId) {
         gameService.hideGame(gameId);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/unhide/{gameId}")
-    @PreAuthorize("hasRole('PUBLISHER')")
+    @PreAuthorize("hasAnyRole('PUBLISHER','ADMIN')")
     public ResponseEntity<Void> unhideGame(@PathVariable Long gameId) {
         gameService.unhideGame(gameId);
         return ResponseEntity.noContent().build();
@@ -197,9 +197,12 @@ public class GameController {
     }
 
     @GetMapping("/news/{gameId}")
-    public ResponseEntity<List<NewsDTO>> getNewsByGameId(@PathVariable Long gameId) {
-        List<NewsDTO> newsList = gameService.getNewsByGameId(gameId);
-        return ResponseEntity.ok(newsList);
+    public ResponseEntity<Page<NewsDTO>> getPagedNewsByGameId(
+            @PathVariable Long gameId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Page<NewsDTO> newsPage = gameService.getPagedNewsByGameId(gameId, page, size);
+        return ResponseEntity.ok(newsPage);
     }
 
     @PostMapping("/news/{gameId}/create")
@@ -236,5 +239,24 @@ public class GameController {
     public ResponseEntity<Void> deleteNews(@PathVariable Long id) {
         gameService.deleteNewsById(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/listed")
+    public ResponseEntity<Page<GameBasicDTO>> getListedGames(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String name) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<GameBasicDTO> gamePage = gameService.getListedGame(name, pageable);
+        return ResponseEntity.ok(gamePage);
+    }    
+    @GetMapping("/hidden")
+    public ResponseEntity<Page<GameBasicDTO>> getHiddenGames(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String name) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<GameBasicDTO> gamePage = gameService.getHiddenGame(name, pageable);
+        return ResponseEntity.ok(gamePage);
     }
 }

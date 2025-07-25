@@ -74,10 +74,10 @@ public class AddingGameRequest {
     @Column(name = "IconUrl", length = 255)
     private String iconUrl;
 
-    @Column(name = "DeclineMessage")
+    @Column(name = "DeclineMessage", columnDefinition = "TEXT")
     private String declineMessage;
 
-    @Column(name = "UpdateLog")
+    @Column(name = "UpdateLog", columnDefinition = "TEXT")
     private String updateLog;
 
     @Column(name = "MediaUrls")

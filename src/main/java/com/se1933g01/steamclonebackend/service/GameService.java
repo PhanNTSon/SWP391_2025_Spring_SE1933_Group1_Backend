@@ -3,6 +3,8 @@ package com.se1933g01.steamclonebackend.service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+
 import jakarta.persistence.EntityNotFoundException; // Hoặc exception tùy chỉnh
 import org.hibernate.Hibernate; // Để khởi tạo các collection lazy
 import org.modelmapper.ModelMapper;
@@ -299,7 +301,8 @@ public class GameService {
                     game.getPrice(),
                     null,                      // discountPrice logic can be added here
                     game.getPrice(),           // fallback to originalPrice
-                    true,                      // already filtered for active games
+                    true,     
+                    null,                 // already filtered for active games
                     game.getReleaseDate(),
                     tagNames                   // ✅ Inject tag set here
                 );
@@ -352,17 +355,19 @@ public class GameService {
                     null,                           // Optional: discount logic later
                     game.getPrice(),               // Fallback to original price
                     Boolean.TRUE.equals(game.getState()),
+                    null,
                     game.getReleaseDate(),
                     tagNames                  // ✅ Inject tags here
                 );
             })
             .toList();
     }
-    public List<NewsDTO> getNewsByGameId(Long gameId) {
+    public Page<NewsDTO> getPagedNewsByGameId(Long gameId, int page, int size) {
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
-        return newsRepo.findByGame_GameId(gameId).stream()
-            .map(news -> modelMapper.map(news, NewsDTO.class))
-            .toList();
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        return newsRepo.findByGame_GameId(gameId, pageable)
+            .map(news -> modelMapper.map(news, NewsDTO.class));
     }
 
     public NewsDTO createNews(Long gameId, NewsDTO newsDTO) {
@@ -406,4 +411,46 @@ public class GameService {
             .orElseThrow(() -> new RuntimeException("News not found"));
         newsRepo.delete(news);
     }
+    public Page<GameBasicDTO> getListedGame(String name, Pageable pageable) {
+        Page<Game> gamePage;
+
+        if (name != null && !name.trim().isEmpty()) {
+            gamePage = gameRepository.findByNameContainingIgnoreCaseAndStateTrue(name, pageable);
+        } else {
+            gamePage = gameRepository.findByStateTrue(pageable);
+        }
+
+        return gamePage.map(game -> {
+            modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+            GameBasicDTO dto = modelMapper.map(game, GameBasicDTO.class);
+            dto.setTitle(game.getName());
+            dto.setImageUrl(game.getMedia().get(0).getUrl());
+            dto.setId(game.getGameId());
+            dto.setState(game.getState());
+            dto.setPublisherId(game.getPublisher().getPublisherId());
+            return dto;
+        });
+    }
+
+    public Page<GameBasicDTO> getHiddenGame(String name, Pageable pageable) {
+        Page<Game> gamePage;
+
+        if (name != null && !name.trim().isEmpty()) {
+            gamePage = gameRepository.findByNameContainingIgnoreCaseAndStateFalse(name, pageable);
+        } else {
+            gamePage = gameRepository.findByStateFalse(pageable);
+        }
+
+        return gamePage.map(game -> {
+            modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+            GameBasicDTO dto = modelMapper.map(game, GameBasicDTO.class);
+            dto.setTitle(game.getName());
+            dto.setImageUrl(game.getMedia().get(0).getUrl());
+            dto.setId(game.getGameId());
+            dto.setState(game.getState());
+            dto.setPublisherId(game.getPublisher().getPublisherId());
+            return dto;
+        });
+    }
+    
 }
