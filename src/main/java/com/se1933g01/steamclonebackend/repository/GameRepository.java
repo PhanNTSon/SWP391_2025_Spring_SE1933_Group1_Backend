@@ -26,7 +26,7 @@ public interface GameRepository extends JpaRepository<Game, Long>, JpaSpecificat
 
     Game findById(long id);
 
-    @Query("SELECT g FROM Game g WHERE LOWER(g.name) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
+    @Query("SELECT g FROM Game g WHERE LOWER(g.name) LIKE LOWER(CONCAT('%', :searchTerm, '%')) AND g.state = true")
     Page<Game> findByNameContainingIgnoreCase(@Param("searchTerm") String searchTerm, Pageable pageable);
 
     Page<Game> findByPublisher(Publisher publisher, Pageable pageable);

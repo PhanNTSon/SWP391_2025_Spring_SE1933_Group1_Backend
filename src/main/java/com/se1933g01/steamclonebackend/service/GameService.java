@@ -172,17 +172,17 @@ public class GameService {
         if (term == null || term.trim().isEmpty()) {
             return Collections.emptyList();
         }
-        Pageable pageable = PageRequest.of(0, 5); // Luôn chỉ lấy 5 gợi ý
+        Pageable pageable = PageRequest.of(0, 5); 
         Page<Game> gamePage = gameRepository.findByNameContainingIgnoreCase(term, pageable);
         return gamePage.getContent().stream()
                 .map(EntityMapper::toGameBasicDTO)
                 .toList();
     }
 
-    @Transactional(readOnly = true) // Đảm bảo session còn mở để load lazy associations
+    @Transactional(readOnly = true)
     public List<GameBasicDTO> getAllGamesBasic() {
         return gameRepository.findAll().stream()
-                .map(EntityMapper::toGameBasicDTO) // Sử dụng method reference của mapper
+                .map(EntityMapper::toGameBasicDTO)
                 .toList();
     }
 
