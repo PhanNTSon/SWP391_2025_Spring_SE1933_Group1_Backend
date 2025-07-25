@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.se1933g01.steamclonebackend.dto.ApiRespDTO;
 import com.se1933g01.steamclonebackend.dto.GameBasicDTO;
+import com.se1933g01.steamclonebackend.dto.community.BlockDTO;
 import com.se1933g01.steamclonebackend.dto.community.ConversationDTO;
 import com.se1933g01.steamclonebackend.dto.community.CreateGroupChatDTO;
 import com.se1933g01.steamclonebackend.dto.community.FriendRequestDTO;
@@ -438,8 +439,14 @@ public class UserController {
         return ResponseEntity.ok().body(userService.getFriends(me.getUser().getUserId()));
     }
 
+    /**
+     * Get list of BLock Relationship, including Current User banning Other
+     * and Other banning current User
+     * @param me
+     * @return
+     */
     @GetMapping("/blocked")
-    public ResponseEntity<List<FriendDTO>> getListBlocked(@AuthenticationPrincipal CustomUserDetail me) {
+    public ResponseEntity<List<BlockDTO>> getListBlocked(@AuthenticationPrincipal CustomUserDetail me) {
         return ResponseEntity.ok().body(userService.getBlocked(me.getUser().getUserId()));
     }
 
@@ -563,13 +570,24 @@ public class UserController {
     @PatchMapping("/block/{targetId}")
     @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
     public ResponseEntity<ApiRespDTO<?>> blockUser(@AuthenticationPrincipal CustomUserDetail me,
-            @PathVariable(name = "targetId") long tId) {
+            @PathVariable(name = "targetId") Long tId) {
         // Block
-        FriendDTO resDto = communityService.blockUser(me.getUser().getUserId(), tId);
+        BlockDTO resDto = communityService.blockUser(me.getUser().getUserId(), tId);
 
         return ResponseEntity.ok()
-                .body(new ApiRespDTO<FriendDTO>(true, "BLOCK_USER_SUCCESSFULLY", "Block user success", resDto));
+                .body(new ApiRespDTO<BlockDTO>(true, "BLOCK_USER_SUCCESSFULLY", "Block user success", resDto));
     }
+
+    @DeleteMapping("/unblock/{targetId}")
+    @PreAuthorize("hasAnyRole('STANDARD', 'PUBLISHER','ADMIN')")
+    public ResponseEntity<String> unBlock(@AuthenticationPrincipal CustomUserDetail me,
+            @PathVariable(name = "targetId") long tId) {
+        // Delete block
+        communityService.unBlocked(me.getUser().getUserId(), tId);
+
+        return ResponseEntity.ok("Success");
+    }
+
 
     /**
      * @author Phan NT Son

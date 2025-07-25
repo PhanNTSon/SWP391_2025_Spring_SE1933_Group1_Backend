@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.se1933g01.steamclonebackend.dto.BannedUserDTO;
+import com.se1933g01.steamclonebackend.dto.community.BlockDTO;
 import com.se1933g01.steamclonebackend.dto.community.GroupDTO;
 import com.se1933g01.steamclonebackend.dto.user.FriendDTO;
 import com.se1933g01.steamclonebackend.dto.user.UserDetailDTO;
@@ -35,10 +36,13 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
@@ -148,7 +152,6 @@ public class UserService {
         userRepo.save(user);
         return user.getWalletBalance();
     }
-    
 
     /**
      * Get an User by username.
@@ -340,22 +343,36 @@ public class UserService {
      * @author Phan NT Son
      * @since 24-06-2025
      * 
-     *        Get list of Blocked users
+     *        Get list of Block Relationships
      * 
      * @param userId
      * @return
      */
-    public List<FriendDTO> getBlocked(Long userId) {
-        List<Block> queryResultList = blockRepo.findAllByBlockerId(userId).orElse(null);
+    public List<BlockDTO> getBlocked(Long userId) {
+        List<Block> rs1 = blockRepo.findAllByBlockerId(userId).orElse(Collections.emptyList());
+        List<Block> rs2 = blockRepo.findAllByBlockedId(userId).orElse(Collections.emptyList());
 
-        List<FriendDTO> mappingResult = queryResultList.stream()
-                .map(blocked -> new FriendDTO(
-                        blocked.getBlocked().getUserId(),
-                        blocked.getBlocked().getUsername(),
-                        blocked.getBlocked().getAvatarUrl(),
-                        blocked.getBlocked().getGroupChatList().size()
-                                + blocked.getBlocked().getGroupMemberships().size()))
-                .toList();
+        List<BlockDTO> mappingResult = rs1.stream()
+                .map(blockRelation -> new BlockDTO(
+                        blockRelation.getBlocker().getUserId(),
+                        blockRelation.getBlocker().getUsername(),
+                        blockRelation.getBlocker().getAvatarUrl(),
+
+                        blockRelation.getBlocked().getUserId(),
+                        blockRelation.getBlocked().getUsername(),
+                        blockRelation.getBlocked().getAvatarUrl()))
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        rs2.stream().forEach(blockRelation -> {
+            mappingResult.add(new BlockDTO(
+                    blockRelation.getBlocker().getUserId(),
+                    blockRelation.getBlocker().getUsername(),
+                    blockRelation.getBlocker().getAvatarUrl(),
+
+                    blockRelation.getBlocked().getUserId(),
+                    blockRelation.getBlocked().getUsername(),
+                    blockRelation.getBlocked().getAvatarUrl()));
+        });
 
         return mappingResult;
     }
