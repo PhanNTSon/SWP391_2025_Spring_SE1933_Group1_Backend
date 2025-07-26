@@ -150,7 +150,7 @@ public class GameService {
 
     @Transactional(readOnly = true)
     public Page<GameBasicDTO> findGamesByCriteria(String searchTerm, BigDecimal maxPrice, List<Integer> tagIds,
-            List<Long> publisherIds, Pageable pageable) {
+            List<Long> publisherIds, Pageable pageable, Boolean state) {
         Specification<Game> spec = null;
 
         if (searchTerm != null) {
@@ -173,8 +173,13 @@ public class GameService {
                     : spec.and(GameSpecification.hasPublishers(publisherIds));
         }
 
-        Page<Game> gamePage = gameRepository.findAllByStateTrue(spec, pageable);
+        if (state!= null) {
+            spec = spec == null? GameSpecification.hasStateTrue(state)
+                    : spec.and(GameSpecification.hasStateTrue(state));
+        }
 
+        Page<Game> gamePage = gameRepository.findAll(spec, pageable);
+        
         return gamePage.map(game -> {
             Hibernate.initialize(game.getMedia());
             return EntityMapper.toGameBasicDTO(game);

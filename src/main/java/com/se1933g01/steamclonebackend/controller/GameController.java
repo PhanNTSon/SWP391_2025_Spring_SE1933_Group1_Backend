@@ -94,11 +94,41 @@ public class GameController {
         return ResponseEntity.ok(games);
     }
 
+    @GetMapping("/tag/{tagId}")
+    @PreAuthorize("permitAll()")
+    public ResponseEntity<Page<GameBasicDTO>> getGamesByTagId(@PathVariable Integer tagId, @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+        List<Integer> tagIds = List.of(tagId);
+        String searchterm = null;
+        BigDecimal maxPrice = null;
+        List<Long> publishers = null;
+        Boolean state = true;
+        Pageable pageable = PageRequest.of(page, size);
+        Page<GameBasicDTO> games = gameService.findGamesByCriteria(searchterm, maxPrice, tagIds, publishers, pageable, state);
+        return ResponseEntity.ok(games);
+    }
+
+    @GetMapping("/publisher/{publisherId}")
+    @PreAuthorize("permitAll()")
+    public ResponseEntity<Page<GameBasicDTO>> getGamesByPublisherId(@PathVariable Integer publisherId, @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+                Long publisherIdLong = Long.valueOf(publisherId);
+        List<Long> publisherIds = List.of(publisherIdLong);
+        String searchterm = null;
+        BigDecimal maxPrice = null;
+        List<Integer> tags = null;
+        Boolean state = true;
+        Pageable pageable = PageRequest.of(page, size);
+        Page<GameBasicDTO> games = gameService.findGamesByCriteria(searchterm, maxPrice, tags, publisherIds, pageable, state);
+        return ResponseEntity.ok(games);
+    }
+    
+
     @GetMapping
     @PreAuthorize("permitAll()")
     public ResponseEntity<Page<GameBasicDTO>> getFilteredGames(
             @RequestParam(required = false) String searchTerm,
-            @RequestParam(required = false) BigDecimal maxPrice, 
+            @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(required = false) List<Integer> tags,
             @RequestParam(required = false) List<Long> publishers,
             @RequestParam(defaultValue = "0") int page,
@@ -107,10 +137,11 @@ public class GameController {
             @RequestParam(defaultValue = "asc") String dir) {
         Sort.Direction direction = "asc".equalsIgnoreCase(dir) ? Sort.Direction.ASC : Sort.Direction.DESC;
         Sort sortOrder = Sort.by(direction, sort);
+        Boolean state = true;
 
         Pageable pageable = PageRequest.of(page, size, sortOrder);
 
-        Page<GameBasicDTO> gamePage = gameService.findGamesByCriteria(searchTerm, maxPrice, tags, publishers, pageable);
+        Page<GameBasicDTO> gamePage = gameService.findGamesByCriteria(searchTerm, maxPrice, tags, publishers, pageable, state);
         return ResponseEntity.ok(gamePage);
     }
 
@@ -207,8 +238,8 @@ public class GameController {
 
     @PostMapping("/news/{gameId}/create")
     public ResponseEntity<NewsDTO> createNews(
-        @PathVariable Long gameId,
-        @RequestBody NewsDTO newsDTO) {
+            @PathVariable Long gameId,
+            @RequestBody NewsDTO newsDTO) {
 
         NewsDTO created = gameService.createNews(gameId, newsDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
@@ -219,6 +250,7 @@ public class GameController {
         NewsDTO news = gameService.getNewsDetails(id);
         return ResponseEntity.ok(news);
     }
+
     @PutMapping("/news/edit/{newsId}")
     public ResponseEntity<?> editNews(
             @PathVariable Long newsId,
@@ -235,6 +267,7 @@ public class GameController {
                     .body("Failed to update news");
         }
     }
+
     @DeleteMapping("/news/delete/{id}")
     public ResponseEntity<Void> deleteNews(@PathVariable Long id) {
         gameService.deleteNewsById(id);
@@ -249,7 +282,8 @@ public class GameController {
         Pageable pageable = PageRequest.of(page, size);
         Page<GameBasicDTO> gamePage = gameService.getListedGame(name, pageable);
         return ResponseEntity.ok(gamePage);
-    }    
+    }
+
     @GetMapping("/hidden")
     public ResponseEntity<Page<GameBasicDTO>> getHiddenGames(
             @RequestParam(defaultValue = "0") int page,

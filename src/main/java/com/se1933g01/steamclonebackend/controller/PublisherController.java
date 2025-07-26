@@ -11,6 +11,9 @@ import com.se1933g01.steamclonebackend.dto.PublisherBasicDTO;
 import com.se1933g01.steamclonebackend.service.PublisherService;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 /**
  * @author TS Huy
@@ -34,5 +37,15 @@ public class PublisherController {
         }
         return new ResponseEntity<>(publishers, HttpStatus.OK);
     }
+
+    @GetMapping("/{publisherId}")
+    @PreAuthorize("permitAll()")
+    public ResponseEntity<PublisherBasicDTO> getPublisherById(@PathVariable Long publisherId) {
+        if (publisherId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(publisherService.getPublisherBasicDTOById(publisherId));
+    }
+    
 
 }

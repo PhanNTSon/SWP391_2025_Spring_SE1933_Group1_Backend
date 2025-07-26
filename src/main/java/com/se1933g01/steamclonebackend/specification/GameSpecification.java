@@ -29,7 +29,7 @@ public class GameSpecification {
         };
     }
 
-    public static Specification<Game> hasStateTrue() {
+    public static Specification<Game> hasStateTrue(Boolean state) {
         return (root, query, criteriaBuilder) -> {
             return criteriaBuilder.isTrue(root.get("state"));
         };

@@ -31,4 +31,10 @@ public class PublisherService {
     public Publisher findById(Long id){
         return publisherRepo.findById(id).orElseThrow();
     }
+
+@Transactional(readOnly = true)
+public PublisherBasicDTO getPublisherBasicDTOById(Long id) {
+    Publisher publisher = publisherRepo.findById(id).orElseThrow();
+    return EntityMapper.toPublisherBasicDTO(publisher);
+}
 }
