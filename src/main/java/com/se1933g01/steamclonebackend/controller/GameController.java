@@ -102,8 +102,9 @@ public class GameController {
         String searchterm = null;
         BigDecimal maxPrice = null;
         List<Long> publishers = null;
+        Boolean state = true;
         Pageable pageable = PageRequest.of(page, size);
-        Page<GameBasicDTO> games = gameService.findGamesByCriteria(searchterm, maxPrice, tagIds, publishers, pageable);
+        Page<GameBasicDTO> games = gameService.findGamesByCriteria(searchterm, maxPrice, tagIds, publishers, pageable, state);
         return ResponseEntity.ok(games);
     }
 
@@ -116,8 +117,9 @@ public class GameController {
         String searchterm = null;
         BigDecimal maxPrice = null;
         List<Integer> tags = null;
+        Boolean state = true;
         Pageable pageable = PageRequest.of(page, size);
-        Page<GameBasicDTO> games = gameService.findGamesByCriteria(searchterm, maxPrice, tags, publisherIds, pageable);
+        Page<GameBasicDTO> games = gameService.findGamesByCriteria(searchterm, maxPrice, tags, publisherIds, pageable, state);
         return ResponseEntity.ok(games);
     }
     
@@ -135,10 +137,11 @@ public class GameController {
             @RequestParam(defaultValue = "asc") String dir) {
         Sort.Direction direction = "asc".equalsIgnoreCase(dir) ? Sort.Direction.ASC : Sort.Direction.DESC;
         Sort sortOrder = Sort.by(direction, sort);
+        Boolean state = true;
 
         Pageable pageable = PageRequest.of(page, size, sortOrder);
 
-        Page<GameBasicDTO> gamePage = gameService.findGamesByCriteria(searchTerm, maxPrice, tags, publishers, pageable);
+        Page<GameBasicDTO> gamePage = gameService.findGamesByCriteria(searchTerm, maxPrice, tags, publishers, pageable, state);
         return ResponseEntity.ok(gamePage);
     }
 
