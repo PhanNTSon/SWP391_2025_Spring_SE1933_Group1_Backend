@@ -131,4 +131,9 @@ public class Game {
     public int hashCode() {
         return java.util.Objects.hash(gameId);
     }
+
+    public Game orElseThrow(Object object) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'orElseThrow'");
+    }
 }

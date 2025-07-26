@@ -173,8 +173,8 @@ public class GameService {
                     : spec.and(GameSpecification.hasPublishers(publisherIds));
         }
 
-        Page<Game> gamePage = gameRepository.findAllByStateTrue(spec, pageable);
-
+        Page<Game> gamePage = gameRepository.findAll(spec, pageable);
+        
         return gamePage.map(game -> {
             Hibernate.initialize(game.getMedia());
             return EntityMapper.toGameBasicDTO(game);

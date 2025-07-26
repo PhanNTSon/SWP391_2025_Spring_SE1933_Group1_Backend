@@ -27,4 +27,8 @@ public class TagService {
                 .map(EntityMapper::toTagDTO)
                 .collect(Collectors.toList());
     }
+    public TagDTO getTagById(Integer id) {
+        Tag tag = tagRepository.findById(id).orElse(null);
+        return EntityMapper.toTagDTO(tag);
+    }
 }

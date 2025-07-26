@@ -28,7 +28,9 @@ public interface GameRepository extends JpaRepository<Game, Long>, JpaSpecificat
     Page<Game> findByStateTrue(Pageable pageable);
     Page<Game> findByStateFalse(Pageable pageable);
     Page<Game> findByNameContainingIgnoreCaseAndStateTrue(String name, Pageable pageable);
+
     Page<Game> findByNameContainingIgnoreCaseAndStateFalse(String name, Pageable pageable);
+    
 
     @Query("SELECT g FROM Game g WHERE LOWER(g.name) LIKE LOWER(CONCAT('%', :searchTerm, '%')) AND g.state = true")
     Page<Game> findByNameContainingIgnoreCase(@Param("searchTerm") String searchTerm, Pageable pageable);
