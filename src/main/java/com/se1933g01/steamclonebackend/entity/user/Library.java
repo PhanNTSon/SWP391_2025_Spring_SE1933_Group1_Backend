@@ -1,10 +1,11 @@
 package com.se1933g01.steamclonebackend.entity.user; // Hoặc package entity của bạn
 
-import com.se1933g01.steamclonebackend.entity.game.Game;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import java.time.LocalDateTime;
+
+import com.se1933g01.steamclonebackend.entity.game.Game;
 
 @Entity
 @Table(name = "Library", schema = "public")

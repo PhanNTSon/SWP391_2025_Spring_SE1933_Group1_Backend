@@ -1,10 +1,11 @@
 package com.se1933g01.steamclonebackend.service;
 
-import com.se1933g01.steamclonebackend.entity.user.EmailVerificationToken;
-import com.se1933g01.steamclonebackend.repository.EmailVerificationTokenRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.se1933g01.steamclonebackend.entity.user.EmailVerificationToken;
+import com.se1933g01.steamclonebackend.repository.EmailVerificationTokenRepo;
 
 import java.time.LocalDateTime;
 

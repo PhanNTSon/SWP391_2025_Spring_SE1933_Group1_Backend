@@ -26,9 +26,9 @@ import com.se1933g01.steamclonebackend.dto.community.FriendRequestDTO;
 import com.se1933g01.steamclonebackend.dto.community.GroupChatDTO;
 import com.se1933g01.steamclonebackend.dto.community.GroupDTO;
 import com.se1933g01.steamclonebackend.dto.community.GroupMemberDTO;
+import com.se1933g01.steamclonebackend.dto.community.SearchResult;
 import com.se1933g01.steamclonebackend.dto.user.EmailChangeConfirmDTO;
 import com.se1933g01.steamclonebackend.dto.user.EmailChangeRequestDTO;
-import com.se1933g01.steamclonebackend.dto.community.SearchResult;
 import com.se1933g01.steamclonebackend.dto.user.FriendDTO;
 import com.se1933g01.steamclonebackend.dto.user.LibraryGameDTO;
 import com.se1933g01.steamclonebackend.dto.user.UserDetailDTO;
@@ -46,7 +46,6 @@ import com.se1933g01.steamclonebackend.service.EmailService;
 import com.se1933g01.steamclonebackend.service.LibraryService;
 import com.se1933g01.steamclonebackend.service.TransactionService;
 import com.se1933g01.steamclonebackend.service.UserService;
-import com.se1933g01.steamclonebackend.repository.TransactionRepo;
 
 import jakarta.persistence.EntityManager;
 

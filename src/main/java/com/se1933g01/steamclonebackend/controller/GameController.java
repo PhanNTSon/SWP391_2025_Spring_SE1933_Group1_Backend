@@ -12,6 +12,13 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.logging.Logger;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 import com.se1933g01.steamclonebackend.dto.AddingGameRequestDTO;
 import com.se1933g01.steamclonebackend.dto.ApiRespDTO;
 import com.se1933g01.steamclonebackend.dto.GameBasicDTO;
@@ -23,13 +30,6 @@ import com.se1933g01.steamclonebackend.entity.user.CustomUserDetail;
 import com.se1933g01.steamclonebackend.entity.user.Publisher;
 import com.se1933g01.steamclonebackend.service.GameService;
 import com.se1933g01.steamclonebackend.service.PublisherService;
-
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.logging.Logger;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequestMapping("/game")

@@ -58,6 +58,9 @@ import com.se1933g01.steamclonebackend.repository.RequestRepo;
 import com.se1933g01.steamclonebackend.repository.RoleRepo;
 import com.se1933g01.steamclonebackend.repository.TagRepository;
 import com.se1933g01.steamclonebackend.repository.UserRepo;
+import com.se1933g01.steamclonebackend.service.CloudinaryService;
+import com.se1933g01.steamclonebackend.service.R2StorageService;
+import com.se1933g01.steamclonebackend.service.RequestService;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;

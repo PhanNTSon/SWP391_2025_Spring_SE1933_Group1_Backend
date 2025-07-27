@@ -6,8 +6,8 @@ import com.se1933g01.steamclonebackend.dto.MediaDTO;
 import com.se1933g01.steamclonebackend.dto.PublisherBasicDTO;
 import com.se1933g01.steamclonebackend.dto.TagDTO;
 import com.se1933g01.steamclonebackend.dto.user.LibraryGameDTO;
-import com.se1933g01.steamclonebackend.entity.user.Library;
 import com.se1933g01.steamclonebackend.entity.game.Game;
+import com.se1933g01.steamclonebackend.entity.user.Library;
 import com.se1933g01.steamclonebackend.repository.LibraryRepository;
 
 import jakarta.persistence.EntityNotFoundException;
