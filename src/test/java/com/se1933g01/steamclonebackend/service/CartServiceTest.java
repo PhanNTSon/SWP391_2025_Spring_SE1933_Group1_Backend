@@ -4,8 +4,6 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -22,12 +20,15 @@ import com.se1933g01.steamclonebackend.entity.game.Game;
 import com.se1933g01.steamclonebackend.entity.game.Media;
 import com.se1933g01.steamclonebackend.entity.transaction.Transaction;
 import com.se1933g01.steamclonebackend.entity.user.Library;
-import com.se1933g01.steamclonebackend.entity.user.LibraryId;
+import com.se1933g01.steamclonebackend.entity.user.Publisher;
 import com.se1933g01.steamclonebackend.entity.user.User;
 import com.se1933g01.steamclonebackend.repository.GameRepo;
 import com.se1933g01.steamclonebackend.repository.LibraryRepository;
 import com.se1933g01.steamclonebackend.repository.TransactionRepo;
 import com.se1933g01.steamclonebackend.repository.UserRepo;
+import com.se1933g01.steamclonebackend.service.CartService;
+import com.se1933g01.steamclonebackend.service.EmailService;
+import com.se1933g01.steamclonebackend.service.LibraryService;
 
 public class CartServiceTest {
 
@@ -37,6 +38,7 @@ public class CartServiceTest {
     private LibraryRepository libraryRepo;
     private SimpMessagingTemplate simp;
     private LibraryService libraryService;
+    private EmailService emailService;
 
     private CartService cartService;
 
@@ -48,8 +50,9 @@ public class CartServiceTest {
         libraryRepo = mock(LibraryRepository.class);
         simp = mock(SimpMessagingTemplate.class);
         libraryService = mock(LibraryService.class);
-
-        cartService = new CartService(userRepo, gameRepo, transactionRepo, simp, libraryRepo, libraryService);
+        emailService = mock(EmailService.class);
+        
+        cartService = new CartService(userRepo, gameRepo, transactionRepo, simp, libraryRepo, libraryService, emailService);
     }
 
     // ==================== getTotalGamesInCart Tests ====================
@@ -459,11 +462,22 @@ public class CartServiceTest {
     public void checkout_validUserWithSufficientBalance_successfulCheckout() {
         // Arrange
         Long userId = 1L;
+        Long publisherId = 2L;
+
+        // Create publisher user
+        User publisherUser = new User();
+        publisherUser.setUserId(publisherId);
+        publisherUser.setWalletBalance(new BigDecimal("0.00"));
+
+        // Create publisher
+        Publisher publisher = new Publisher();
+        publisher.setUser(publisherUser);
 
         Game game1 = new Game();
         game1.setGameId(100L);
         game1.setPrice(new BigDecimal("19.99"));
         game1.setTotalPurchased(0);
+        game1.setPublisher(publisher);
 
         HashSet<Game> cartGames = new HashSet<>();
         cartGames.add(game1);
@@ -471,6 +485,7 @@ public class CartServiceTest {
         User mockUser = new User();
         mockUser.setUserId(userId);
         mockUser.setUsername("testuser");
+        mockUser.setEmail("test@example.com");
         mockUser.setCartGames(cartGames);
         mockUser.setLibraryGames(new HashSet<>());
         mockUser.setWalletBalance(new BigDecimal("50.00"));
@@ -482,7 +497,7 @@ public class CartServiceTest {
 
         when(userRepo.findByIdWithCartGames(userId)).thenReturn(mockUser);
         when(transactionRepo.save(any(Transaction.class))).thenReturn(mockTransaction);
-        when(userRepo.save(mockUser)).thenReturn(mockUser);
+        when(userRepo.save(any(User.class))).thenReturn(mockUser);
         when(libraryService.mapLibraryEntryToDto(any(Library.class))).thenReturn(mockLibraryGameDTO);
 
         // Act
@@ -492,8 +507,9 @@ public class CartServiceTest {
         assertNotNull(result);
         assertEquals(new BigDecimal("30.01"), mockUser.getWalletBalance());
         assertEquals(Integer.valueOf(1), game1.getTotalPurchased());
-        verify(transactionRepo, times(1)).save(any(Transaction.class));
+        verify(transactionRepo, atLeast(1)).save(any(Transaction.class));
         verify(libraryRepo).save(any(Library.class));
+        verify(emailService).sendPurchaseInvoiceEmail(eq("test@example.com"), eq("1"), eq("testuser"), eq("Test Game"), eq(new BigDecimal("19.99")));
         verify(simp).convertAndSendToUser(eq("testuser"), eq("/queue/cart.count"), eq(0));
         verify(simp).convertAndSendToUser(eq("testuser"), eq("/queue/wallet.balance"), eq(new BigDecimal("30.01")));
         verify(simp).convertAndSendToUser(eq("testuser"), eq("/queue/libraryItem.added"), eq(mockLibraryGameDTO));
@@ -590,6 +606,16 @@ public class CartServiceTest {
     public void checkout_partiallyOwnedGames_onlyBuysNewGames() {
         // Arrange
         Long userId = 1L;
+        Long publisherId = 2L;
+
+        // Create publisher user
+        User publisherUser = new User();
+        publisherUser.setUserId(publisherId);
+        publisherUser.setWalletBalance(new BigDecimal("0.00"));
+
+        // Create publisher
+        Publisher publisher = new Publisher();
+        publisher.setUser(publisherUser);
 
         Game ownedGame = new Game();
         ownedGame.setGameId(100L);
@@ -598,6 +624,7 @@ public class CartServiceTest {
         newGame.setGameId(101L);
         newGame.setPrice(new BigDecimal("19.99"));
         newGame.setTotalPurchased(0);
+        newGame.setPublisher(publisher);
 
         HashSet<Game> cartGames = new HashSet<>();
         cartGames.add(ownedGame);
@@ -612,6 +639,7 @@ public class CartServiceTest {
         User mockUser = new User();
         mockUser.setUserId(userId);
         mockUser.setUsername("testuser");
+        mockUser.setEmail("test@example.com");
         mockUser.setCartGames(cartGames);
         mockUser.setLibraryGames(libraryGames);
         mockUser.setWalletBalance(new BigDecimal("50.00"));
@@ -623,7 +651,7 @@ public class CartServiceTest {
 
         when(userRepo.findByIdWithCartGames(userId)).thenReturn(mockUser);
         when(transactionRepo.save(any(Transaction.class))).thenReturn(mockTransaction);
-        when(userRepo.save(mockUser)).thenReturn(mockUser);
+        when(userRepo.save(any(User.class))).thenReturn(mockUser);
         when(libraryService.mapLibraryEntryToDto(any(Library.class))).thenReturn(mockLibraryGameDTO);
 
         // Act
@@ -633,7 +661,63 @@ public class CartServiceTest {
         assertNotNull(result);
         assertEquals(new BigDecimal("30.01"), mockUser.getWalletBalance());
         assertEquals(Integer.valueOf(1), newGame.getTotalPurchased());
-        verify(transactionRepo, times(1)).save(any(Transaction.class));
+        verify(transactionRepo, atLeast(1)).save(any(Transaction.class));
         verify(libraryRepo, times(1)).save(any(Library.class));
+    }
+
+    @Test
+    public void checkout_multipleGames_sendsMultiGameEmail() {
+        // Arrange
+        Long userId = 1L;
+        Long publisherId = 2L;
+
+        // Create publisher user
+        User publisherUser = new User();
+        publisherUser.setUserId(publisherId);
+        publisherUser.setWalletBalance(new BigDecimal("0.00"));
+
+        // Create publisher
+        Publisher publisher = new Publisher();
+        publisher.setUser(publisherUser);
+
+        Game game1 = new Game();
+        game1.setGameId(100L);
+        game1.setPrice(new BigDecimal("19.99"));
+        game1.setTotalPurchased(0);
+        game1.setPublisher(publisher);
+
+        Game game2 = new Game();
+        game2.setGameId(101L);
+        game2.setPrice(new BigDecimal("29.99"));
+        game2.setTotalPurchased(0);
+        game2.setPublisher(publisher);
+
+        HashSet<Game> cartGames = new HashSet<>();
+        cartGames.add(game1);
+        cartGames.add(game2);
+
+        User mockUser = new User();
+        mockUser.setUserId(userId);
+        mockUser.setUsername("testuser");
+        mockUser.setEmail("test@example.com");
+        mockUser.setCartGames(cartGames);
+        mockUser.setLibraryGames(new HashSet<>());
+        mockUser.setWalletBalance(new BigDecimal("100.00"));
+
+        Transaction mockTransaction = new Transaction();
+        mockTransaction.setTransactionId(1L);
+
+        LibraryGameDTO mockLibraryGameDTO = new LibraryGameDTO();
+
+        when(userRepo.findByIdWithCartGames(userId)).thenReturn(mockUser);
+        when(transactionRepo.save(any(Transaction.class))).thenReturn(mockTransaction);
+        when(userRepo.save(any(User.class))).thenReturn(mockUser);
+        when(libraryService.mapLibraryEntryToDto(any(Library.class))).thenReturn(mockLibraryGameDTO);
+
+        // Act
+        CartDTO result = cartService.checkout(userId);
+
+        // Assert
+        verify(emailService).sendMultiGameInvoiceEmail(eq("test@example.com"), eq("1"), eq("testuser"), anyList());
     }
 }
