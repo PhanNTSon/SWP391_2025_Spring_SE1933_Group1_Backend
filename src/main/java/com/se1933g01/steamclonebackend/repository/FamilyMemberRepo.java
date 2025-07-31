@@ -19,4 +19,7 @@ public interface FamilyMemberRepo extends JpaRepository<FamilyMember, FamilyMemb
 
     @Query("SELECT fm FROM FamilyMember fm WHERE fm.user.userId = :userId")
     Optional<FamilyMember> findByUserId(@Param("userId") Long userId);
+
+    @Query("SELECT fm FROM FamilyMember fm WHERE fm.family.familyId = :familyId AND fm.user.userId = :userId")
+    Optional<FamilyMember> findByFamilyAndUser(@Param("familyId")Long familyId, @Param("userId") Long userId);
 }

@@ -7,15 +7,18 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import com.se1933g01.steamclonebackend.dto.MediaDTO;
 import com.se1933g01.steamclonebackend.dto.family.FamilyGameDTO;
 import com.se1933g01.steamclonebackend.dto.family.FamilyInfoDTO;
+import com.se1933g01.steamclonebackend.dto.family.FamilyInvitationDTO;
 import com.se1933g01.steamclonebackend.dto.family.FamilyMemberDTO;
 import com.se1933g01.steamclonebackend.dto.family.ShareGamesDTO;
 import com.se1933g01.steamclonebackend.dto.family.SubscriptionPlanDTO;
 import com.se1933g01.steamclonebackend.entity.community.family.Family;
+import com.se1933g01.steamclonebackend.entity.community.family.FamilyInvitation;
 import com.se1933g01.steamclonebackend.entity.community.family.FamilyLibrary;
 import com.se1933g01.steamclonebackend.entity.community.family.FamilyLibraryId;
 import com.se1933g01.steamclonebackend.entity.community.family.FamilyMember;
@@ -39,14 +42,23 @@ public class FamilyService {
     private final FamilyMemberRepo familyMemberRepo;
     private final FamilyLibraryRepo familyLibraryRepo;
     private final EntityManager entityManager;
+    private final SimpMessagingTemplate simp;
+
+    private final String FAMILY_INVITATION_CHANNEL = "/queue/family/invitation";
 
     public FamilyService(FamilyRepo familyRepo, FamilyInvitationRepo familyInvitationRepo,
-            FamilyMemberRepo familyMemberRepo, FamilyLibraryRepo familyLibraryRepo, EntityManager entityManager) {
+            FamilyMemberRepo familyMemberRepo, FamilyLibraryRepo familyLibraryRepo, EntityManager entityManager,
+            SimpMessagingTemplate simp) {
         this.familyRepo = familyRepo;
         this.familyInvitationRepo = familyInvitationRepo;
         this.familyMemberRepo = familyMemberRepo;
         this.familyLibraryRepo = familyLibraryRepo;
         this.entityManager = entityManager;
+        this.simp = simp;
+    }
+
+    private void sendToUser(String username, Object message) {
+        simp.convertAndSendToUser(username, FAMILY_INVITATION_CHANNEL, message);
     }
 
     public FamilyInfoDTO getFamily(Long userId) {
@@ -203,7 +215,7 @@ public class FamilyService {
     }
 
     @Transactional
-    public FamilyInfoDTO removeGameFromLibrary(ShareGamesDTO dto, Long userId){
+    public FamilyInfoDTO removeGameFromLibrary(ShareGamesDTO dto, Long userId) {
         Optional<Family> optOwned = familyRepo.findByOwner(userId);
         Family family;
 
@@ -224,5 +236,268 @@ public class FamilyService {
 
         // 4. Trả về thông tin gia đình đã cập nhật
         return getFamily(userId);
+    }
+
+    public List<FamilyInvitationDTO> getInvitations(Long userId) {
+        // 1. Lấy danh sách lời mời của người dùng
+        List<FamilyInvitation> invitations = familyInvitationRepo.findAll().stream()
+                .filter(inv -> inv.getReceiver().getUserId().equals(userId))
+                .collect(Collectors.toList());
+
+        // 2. Chuyển đổi sang DTO
+        return invitations.stream()
+                .map(inv -> FamilyInvitationDTO.builder()
+                        .inviteId(inv.getInviteID())
+                        .senderId(inv.getInvitor().getUserId())
+                        .receiverId(inv.getReceiver().getUserId())
+                        .senderName(inv.getInvitor().getUsername())
+                        .receiverName(inv.getReceiver().getUsername())
+                        .senderAvatar(inv.getInvitor().getAvatarUrl())
+                        .receiverAvatar(inv.getReceiver().getAvatarUrl())
+                        .createdAt(inv.getCreatedAt())
+                        .expiresAt(inv.getExpiresAt())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    public List<FamilyInvitationDTO> getSentInvitations(Long userId) {
+        // 1. Lấy danh sách lời mời đã gửi của người dùng
+        List<FamilyInvitation> sentInvitations = familyInvitationRepo.findAll().stream()
+                .filter(inv -> inv.getInvitor().getUserId().equals(userId))
+                .collect(Collectors.toList());
+        // 2. Chuyển đổi sang DTO
+        return sentInvitations.stream()
+                .map(inv -> FamilyInvitationDTO.builder()
+                        .inviteId(inv.getInviteID())
+                        .senderId(inv.getInvitor().getUserId())
+                        .receiverId(inv.getReceiver().getUserId())
+                        .senderName(inv.getInvitor().getUsername())
+                        .receiverName(inv.getReceiver().getUsername())
+                        .senderAvatar(inv.getInvitor().getAvatarUrl())
+                        .receiverAvatar(inv.getReceiver().getAvatarUrl())
+                        .createdAt(inv.getCreatedAt())
+                        .expiresAt(inv.getExpiresAt())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public FamilyInvitationDTO sendInvite(Long friendId, Long userId) {
+        Optional<Family> optOwned = familyRepo.findByOwner(userId);
+        Family family;
+
+        if (optOwned.isPresent()) {
+            family = optOwned.get();
+        } else {
+            throw new IllegalStateException("User is not the owner of any family.");
+        }
+
+        // 2. Kiểm tra xem đã có lời mời nào chưa
+        familyInvitationRepo.findByFamilyAndFriend(family.getFamilyId(), friendId)
+                .ifPresent(invitation -> {
+                    throw new IllegalStateException("Invitation already exists for this family and friend.");
+                });
+
+        // 3. Check if friend is already a member of other family
+        Optional<FamilyMember> existingMember = familyMemberRepo.findByUserId(friendId);
+        if (existingMember.isPresent()) {
+            throw new IllegalStateException("Friend is already a member of another family.");
+        }
+
+        // 4. Tạo lời mời mới
+        User invitor = entityManager.getReference(User.class, userId);
+        User receiver = entityManager.getReference(User.class, friendId);
+        FamilyInvitation invitation = new FamilyInvitation();
+        invitation.setFamily(family);
+        invitation.setInvitor(invitor);
+        invitation.setReceiver(receiver);
+        invitation.setCreatedAt(LocalDate.now());
+        invitation.setExpiresAt(LocalDate.now().plusDays(7)); // Lời mời có hiệu lực trong 7 ngày
+        entityManager.persist(invitation);
+
+        return FamilyInvitationDTO.builder()
+                .inviteId(invitation.getInviteID())
+                .senderId(invitor.getUserId())
+                .receiverId(receiver.getUserId())
+                .createdAt(invitation.getCreatedAt())
+                .expiresAt(invitation.getExpiresAt())
+                .build();
+    }
+
+    @Transactional
+    public List<FamilyInvitationDTO> sendInvites(List<Long> friendIds, Long userId) {
+        Optional<Family> optOwned = familyRepo.findByOwner(userId);
+        Family family;
+
+        if (optOwned.isPresent()) {
+            family = optOwned.get();
+        } else {
+            throw new IllegalStateException("User is not the owner of any family.");
+        }
+
+        List<FamilyInvitationDTO> sentInvitations = new ArrayList<>();
+
+        for (Long friendId : friendIds) {
+            // 2. Kiểm tra xem đã có lời mời nào chưa
+            familyInvitationRepo.findByFamilyAndFriend(family.getFamilyId(), friendId)
+                    .ifPresent(invitation -> {
+                        throw new IllegalStateException("Invitation already exists for this family and friend.");
+                    });
+            // 3. Check if friend is already a member of other family
+            Optional<FamilyMember> existingMember = familyMemberRepo.findByUserId(friendId);
+            if (existingMember.isPresent()) {
+                throw new IllegalStateException("Friend is already a member of another family.");
+            }
+            // 4. Tạo lời mời mới
+            User invitor = entityManager.getReference(User.class, userId);
+            User receiver = entityManager.getReference(User.class, friendId);
+            FamilyInvitation invitation = new FamilyInvitation();
+            invitation.setFamily(family);
+            invitation.setInvitor(invitor);
+            invitation.setReceiver(receiver);
+            invitation.setCreatedAt(LocalDate.now());
+            invitation.setExpiresAt(LocalDate.now().plusDays(7));
+            entityManager.persist(invitation);
+
+            // 5. Chuyển đổi sang DTO
+            FamilyInvitationDTO dto = FamilyInvitationDTO.builder()
+                    .inviteId(invitation.getInviteID())
+                    .senderId(invitor.getUserId())
+                    .receiverId(receiver.getUserId())
+                    .createdAt(invitation.getCreatedAt())
+                    .expiresAt(invitation.getExpiresAt())
+                    .build();
+            sentInvitations.add(dto);
+        }
+
+        return sentInvitations;
+    }
+
+    public FamilyInvitationDTO acceptInvitation(Long inviteId, Long userId) {
+        // 1. Lấy lời mời
+        FamilyInvitation invitation = familyInvitationRepo.findById(inviteId)
+                .orElseThrow(() -> new IllegalStateException("Invitation not found."));
+
+        // 2. Kiểm tra xem người dùng có phải là người nhận không
+        if (!invitation.getReceiver().getUserId().equals(userId)) {
+            throw new IllegalStateException("You are not the receiver of this invitation.");
+        }
+
+        // 3. Thêm người dùng vào gia đình
+        Family family = invitation.getFamily();
+        FamilyMemberId memberId = new FamilyMemberId(family.getFamilyId(), userId);
+        FamilyMember newMember = new FamilyMember();
+        newMember.setId(memberId);
+        newMember.setFamily(family);
+        newMember.setUser(entityManager.getReference(User.class, userId));
+        newMember.setOwner(false); // Mặc định là thành viên, không phải chủ sở hữu
+        newMember.setJoinedAt(LocalDate.now());
+        entityManager.persist(newMember);
+        // 4. Xoá lời mời
+        familyInvitationRepo.delete(invitation);
+        // 5. Trả về thông tin lời mời đã chấp nhận
+        return FamilyInvitationDTO.builder()
+                .inviteId(invitation.getInviteID())
+                .senderId(invitation.getInvitor().getUserId())
+                .receiverId(invitation.getReceiver().getUserId())
+                .createdAt(invitation.getCreatedAt())
+                .expiresAt(invitation.getExpiresAt())
+                .build();
+
+    }
+
+    @Transactional
+    public void deleteInvitation(Long inviteId, Long userId) {
+        // 1. Lấy lời mời
+        FamilyInvitation invitation = familyInvitationRepo.findById(inviteId)
+                .orElseThrow(() -> new IllegalStateException("Invitation not found."));
+
+        // 2. Xoá lời mời
+        familyInvitationRepo.delete(invitation);
+    }
+
+    @Transactional
+    public void rejectInvitation(Long inviteId, Long userId) {
+        // 1. Lấy lời mời
+        FamilyInvitation invitation = familyInvitationRepo.findById(inviteId)
+                .orElseThrow(() -> new IllegalStateException("Invitation not found."));
+
+        // 2. Kiểm tra xem người dùng có phải là người nhận không
+        if (!invitation.getReceiver().getUserId().equals(userId)) {
+            throw new IllegalStateException("You are not the receiver of this invitation.");
+        }
+
+        // 3. Xoá lời mời
+        familyInvitationRepo.delete(invitation);
+    }
+
+    @Transactional
+    public void leaveFamily(Long userId) {
+        // 1. Tìm FamilyMember của người dùng
+        Optional<FamilyMember> memberOpt = familyMemberRepo.findByUserId(userId);
+        if (memberOpt.isEmpty()) {
+            throw new IllegalStateException("You are not a member of any family.");
+        }
+
+        FamilyMember member = memberOpt.get();
+
+        // 2. Nếu là chủ sở hữu, không thể rời khỏi gia đình
+        if (member.isOwner()) {
+            throw new IllegalStateException("You cannot leave the family as you are the owner.");
+        }
+
+        // 3. Xoá FamilyMember
+        familyMemberRepo.delete(member);
+
+    }
+
+    public List<Long> getAvailableFriends(List<Long> friendIds, Long userId) {
+
+        // 1. Check if friends are already in a family
+        List<Long> availableFriends = friendIds.stream()
+                .filter(friendId -> !familyMemberRepo.findByUserId(friendId).isPresent())
+                .collect(Collectors.toList());
+
+        // 2. Check if friends have already been invited to the family
+        List<Long> alreadyInvitedFriends = familyInvitationRepo.findAll().stream()
+                .filter(inv -> inv.getFamily().getOwner().getUserId().equals(userId))
+                .map(inv -> inv.getReceiver().getUserId())
+                .collect(Collectors.toList());
+
+        // 3. Loại bỏ những người đã được mời
+        availableFriends = availableFriends.stream()
+                .filter(friendId -> !alreadyInvitedFriends.contains(friendId))
+                .collect(Collectors.toList());
+
+        return availableFriends;
+    }
+
+    @Transactional
+    public void removeFamilyMember(Long memberId, Long userId) {
+        // 1. Tìm FamilyMember của người dùng
+        Optional<FamilyMember> memberOpt = familyMemberRepo.findByUserId(memberId);
+        if (memberOpt.isEmpty()) {
+            throw new IllegalStateException("Member not found in any family.");
+        }
+        FamilyMember member = memberOpt.get();
+
+        // 2. Kiểm tra xem người dùng có quyền xoá thành viên này không
+        Optional<Family> familyOpt = familyRepo.findByOwner(userId);
+        if (familyOpt.isEmpty() || !familyOpt.get().getFamilyId().equals(member.getFamily().getFamilyId())) {
+            throw new IllegalStateException("You do not have permission to remove this member.");
+        }
+
+        // 3. Nếu là chủ sở hữu, không thể xoá
+        if (member.isOwner()) {
+            throw new IllegalStateException("You cannot remove the owner of the family.");
+        }
+
+        // 4. Kiểm tra xem có phải là thành viên của gia đình không
+        if (!familyMemberRepo.findByFamilyAndUser(member.getFamily().getFamilyId(), memberId).isPresent()) {
+            throw new IllegalStateException("Member is not part of the family.");
+        }
+
+        // 5. Xoá FamilyMember
+        familyMemberRepo.delete(member);
     }
 }
