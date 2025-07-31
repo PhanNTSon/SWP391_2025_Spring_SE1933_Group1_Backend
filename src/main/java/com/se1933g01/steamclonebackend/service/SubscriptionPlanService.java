@@ -104,4 +104,15 @@ public class SubscriptionPlanService {
 
     }
 
+    public SubscriptionPlanDTO getLatestPlan(Long familyId) {
+        SubscriptionPlan latestPlan = sPlanRepo.findLastestByFamilyId(familyId)
+                .orElseThrow(() -> new IllegalStateException("No subscription plan found for family ID: " + familyId));
+        return SubscriptionPlanDTO.builder()
+                .planId(latestPlan.getPlanId())
+                .planName(latestPlan.getPlanName())
+                .startAt(latestPlan.getStartAt())
+                .endAt(latestPlan.getEndAt())
+                .price(latestPlan.getPrice())
+                .build();
+    }
 }

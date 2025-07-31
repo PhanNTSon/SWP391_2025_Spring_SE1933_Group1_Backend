@@ -109,7 +109,7 @@ public class FamilyController {
         public ResponseEntity<ApiRespDTO<?>> acceptInvitation(@PathVariable Long inviteId,
                         @AuthenticationPrincipal CustomUserDetail me) {
                 return ResponseEntity.ok()
-                                .body(new ApiRespDTO<>(true, "INVITATION_ACCEPTED",
+                                .body(new ApiRespDTO<FamilyInvitationDTO>(true, "INVITATION_ACCEPTED",
                                                 "Invitation accepted successfully",
                                                 familyService.acceptInvitation(inviteId, me.getUser().getUserId())));
         }

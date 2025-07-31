@@ -30,6 +30,7 @@ import com.se1933g01.steamclonebackend.repository.FamilyInvitationRepo;
 import com.se1933g01.steamclonebackend.repository.FamilyLibraryRepo;
 import com.se1933g01.steamclonebackend.repository.FamilyMemberRepo;
 import com.se1933g01.steamclonebackend.repository.FamilyRepo;
+import com.se1933g01.steamclonebackend.repository.SubscriptionPlanRepo;
 
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
@@ -42,18 +43,20 @@ public class FamilyService {
     private final FamilyMemberRepo familyMemberRepo;
     private final FamilyLibraryRepo familyLibraryRepo;
     private final EntityManager entityManager;
+    private final SubscriptionPlanRepo subscriptionPlanRepo;
     private final SimpMessagingTemplate simp;
 
     private final String FAMILY_INVITATION_CHANNEL = "/queue/family/invitation";
 
     public FamilyService(FamilyRepo familyRepo, FamilyInvitationRepo familyInvitationRepo,
             FamilyMemberRepo familyMemberRepo, FamilyLibraryRepo familyLibraryRepo, EntityManager entityManager,
-            SimpMessagingTemplate simp) {
+            SubscriptionPlanRepo subscriptionPlanRepo, SimpMessagingTemplate simp) {
         this.familyRepo = familyRepo;
         this.familyInvitationRepo = familyInvitationRepo;
         this.familyMemberRepo = familyMemberRepo;
         this.familyLibraryRepo = familyLibraryRepo;
         this.entityManager = entityManager;
+        this.subscriptionPlanRepo = subscriptionPlanRepo;
         this.simp = simp;
     }
 
@@ -107,6 +110,21 @@ public class FamilyService {
             games.add(gameDTO);
         }
 
+        // 4.1. Get latest subscription plan
+        Optional<SubscriptionPlan> latestPlanOpt = subscriptionPlanRepo.findLastestByFamilyId(family.getFamilyId());
+        SubscriptionPlanDTO subscriptionPlan = null;
+        if (latestPlanOpt.isPresent()) {
+            SubscriptionPlan latestPlan = latestPlanOpt.get();
+            subscriptionPlan = SubscriptionPlanDTO.builder()
+                    .planName(latestPlan.getPlanName())
+                    .planId(latestPlan.getPlanId())
+                    .duration(latestPlan.getDurationInDays())
+                    .price(latestPlan.getPrice())
+                    .startAt(latestPlan.getStartAt())
+                    .endAt(latestPlan.getEndAt())
+                    .build();
+        }
+
         // 5. Trả về
         return FamilyInfoDTO.builder()
                 .familyId(family.getFamilyId())
@@ -115,6 +133,7 @@ public class FamilyService {
                 .isOwner(isOwner)
                 .members(members)
                 .games(games)
+                .subscriptionPlan(subscriptionPlan)
                 .build();
 
     }
@@ -373,6 +392,7 @@ public class FamilyService {
         return sentInvitations;
     }
 
+    @Transactional
     public FamilyInvitationDTO acceptInvitation(Long inviteId, Long userId) {
         // 1. Lấy lời mời
         FamilyInvitation invitation = familyInvitationRepo.findById(inviteId)
@@ -395,6 +415,12 @@ public class FamilyService {
         entityManager.persist(newMember);
         // 4. Xoá lời mời
         familyInvitationRepo.delete(invitation);
+
+        // 4.5: xóa những invitation khác đã gửi đến người dùng này
+        familyInvitationRepo.deleteAll(familyInvitationRepo.findAll().stream()
+                .filter(inv -> inv.getReceiver().getUserId().equals(userId))
+                .collect(Collectors.toList()));
+
         // 5. Trả về thông tin lời mời đã chấp nhận
         return FamilyInvitationDTO.builder()
                 .inviteId(invitation.getInviteID())

@@ -18,5 +18,6 @@ public class FamilyInfoDTO {
     private Boolean isOwner;
     private List<FamilyMemberDTO> members;
     private List<FamilyGameDTO> games;
+    private SubscriptionPlanDTO subscriptionPlan;
     private LocalDate expDate;
 }
