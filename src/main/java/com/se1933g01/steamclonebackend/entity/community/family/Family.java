@@ -1,6 +1,7 @@
 package com.se1933g01.steamclonebackend.entity.community.family;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.se1933g01.steamclonebackend.entity.user.User;
@@ -39,7 +40,7 @@ public class Family {
     private LocalDate createdAt;
 
     @Column(name = "ExpDate", nullable = false)
-    private LocalDate expDate;
+    private LocalDateTime expDate;
 
     @OneToMany(mappedBy = "family", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<FamilyMember> members;

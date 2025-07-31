@@ -2,6 +2,7 @@ package com.se1933g01.steamclonebackend.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -95,11 +96,39 @@ public class FamilyService {
             members.add(new FamilyMemberDTO(u.getUserId(), u.getUsername(), u.getAvatarUrl(), m.isOwner()));
         }
 
-        boolean isPlayable = family.getExpDate().isAfter(LocalDate.now());
+        // 4.1. Get latest subscription plan
+        Optional<SubscriptionPlan> latestPlanOpt = subscriptionPlanRepo
+                .findTopByFamilyIdOrderByStartAtDesc(family.getFamilyId());
+        SubscriptionPlanDTO subscriptionPlan = null;
+        if (latestPlanOpt.isPresent() && latestPlanOpt.get().getEndAt().isAfter(LocalDateTime.now())) {
+            SubscriptionPlan latestPlan = latestPlanOpt.get();
+            subscriptionPlan = SubscriptionPlanDTO.builder()
+                    .planName(latestPlan.getPlanName())
+                    .planId(latestPlan.getPlanId())
+                    .duration(latestPlan.getDurationInDays())
+                    .price(latestPlan.getPrice())
+                    .startAt(latestPlan.getStartAt())
+                    .endAt(latestPlan.getEndAt())
+                    .build();
+        }
 
+        String planName = subscriptionPlan != null ? subscriptionPlan.getPlanName().toLowerCase() : "None";
+
+        BigDecimal maxAllowedPrice = switch (planName) {
+            case "bronze" -> new BigDecimal("5");
+            case "silver" -> new BigDecimal("10");
+            case "gold" -> new BigDecimal("15");
+            case "platinum" -> null; // unlimited
+            default -> BigDecimal.ZERO; // fallback an toàn
+        };
         List<FamilyGameDTO> games = new ArrayList<>();
         for (FamilyLibrary lib : family.getSharedGames()) {
             Game game = lib.getGame();
+
+            BigDecimal gamePrice = game.getPrice(); // cần đảm bảo field này tồn tại
+
+            boolean isPlayable = (maxAllowedPrice == null) || (gamePrice.compareTo(maxAllowedPrice) <= 0);
+
             FamilyGameDTO gameDTO = FamilyGameDTO.builder()
                     .id(game.getGameId())
                     .name(game.getName())
@@ -112,26 +141,11 @@ public class FamilyService {
             games.add(gameDTO);
         }
 
-        // 4.1. Get latest subscription plan
-        Optional<SubscriptionPlan> latestPlanOpt = subscriptionPlanRepo.findLastestByFamilyId(family.getFamilyId());
-        SubscriptionPlanDTO subscriptionPlan = null;
-        if (latestPlanOpt.isPresent()) {
-            SubscriptionPlan latestPlan = latestPlanOpt.get();
-            subscriptionPlan = SubscriptionPlanDTO.builder()
-                    .planName(latestPlan.getPlanName())
-                    .planId(latestPlan.getPlanId())
-                    .duration(latestPlan.getDurationInDays())
-                    .price(latestPlan.getPrice())
-                    .startAt(latestPlan.getStartAt())
-                    .endAt(latestPlan.getEndAt())
-                    .build();
-        }
-
         // 5. Trả về
         return FamilyInfoDTO.builder()
                 .familyId(family.getFamilyId())
                 .ownerId(family.getOwner().getUserId())
-                .expDate(family.getExpDate())
+                .expDate(family.getExpDate().toLocalDate())
                 .isOwner(isOwner)
                 .members(members)
                 .games(games)
@@ -142,6 +156,9 @@ public class FamilyService {
 
     @Transactional
     public FamilyInfoDTO subscribePlan(SubscriptionPlanDTO plan, Long userId) {
+
+        LocalDateTime today = LocalDateTime.now();
+
         Optional<Family> optOwned = familyRepo.findByOwner(userId);
         Family family;
 
@@ -151,7 +168,7 @@ public class FamilyService {
             family = new Family();
             family.setOwner(entityManager.getReference(User.class, userId));
             family.setCreatedAt(LocalDate.now());
-            family.setExpDate(LocalDate.now().plusDays(plan.getDuration()));
+            family.setExpDate(LocalDateTime.now().plusDays(plan.getDuration()));
             entityManager.persist(family);
 
             // Thêm user vào bảng FamilyMember luôn (với role là OWNER)
@@ -165,59 +182,69 @@ public class FamilyService {
             entityManager.persist(ownerMember);
         }
 
-        // Tính lại expDate nếu đã có family
-        if (optOwned.isPresent()) {
-            LocalDate newExpDate = family.getExpDate().isAfter(LocalDate.now())
-                    ? family.getExpDate().plusDays(plan.getDuration())
-                    : LocalDate.now().plusDays(plan.getDuration());
-            family.setExpDate(newExpDate);
-            // Không cần persist lại nếu family đã managed
+        // 1. Check current plan
+        Optional<SubscriptionPlan> currentPlanOpt = subscriptionPlanRepo
+                .findTopByFamilyIdOrderByEndAtDesc(family.getFamilyId());
+        BigDecimal chargeAmount = plan.getPrice();
+
+        // If we have an active plan, we need to check if we can upgrade or not
+        // and how much to charge
+        if (currentPlanOpt.isPresent() && currentPlanOpt.get().getEndAt().isAfter(today)) {
+            SubscriptionPlan current = currentPlanOpt.get();
+
+            if (plan.getPrice().compareTo(current.getPrice()) <= 0) {
+                // downgrade or same price while still active → reject
+                throw new IllegalStateException(
+                        "Cannot subscribe to a cheaper (or equal-priced) plan until your current plan expires on "
+                                + current.getEndAt());
+            }
+            // else: upgrade → only charge the difference
+            chargeAmount = plan.getPrice().subtract(current.getPrice());
+            // reset family expiry to a fresh period
+            family.setExpDate(today.plusDays(plan.getDuration()));
         }
 
-        // 4. Lưu SubscriptionPlan
-        SubscriptionPlan subEntity = new SubscriptionPlan();
-        subEntity.setFamilyId(family.getFamilyId());
-        subEntity.setPlanName(plan.getPlanName());
-        subEntity.setPrice(plan.getPrice());
-        subEntity.setDurationInDays(plan.getDuration());
+        // 2. persist new SubscriptionPlan
+        SubscriptionPlan sub = new SubscriptionPlan();
+        sub.setFamilyId(family.getFamilyId());
+        sub.setPlanName(plan.getPlanName());
+        sub.setPrice(plan.getPrice());
+        sub.setDurationInDays(plan.getDuration());
+        sub.setCreatedAt(today.toLocalDate());
 
-        // Thiết lập ngày bắt đầu & kết thúc
-        LocalDate now = LocalDate.now();
-        LocalDate startAt = family.getExpDate().isAfter(now)
-                ? family.getExpDate().minusDays(plan.getDuration()) // nếu đang còn hạn, thì startAt = ngày nối tiếp
-                : now;
-        LocalDate endAt = startAt.plusDays(plan.getDuration());
+        LocalDateTime endAt = today.plusDays(plan.getDuration());
 
-        subEntity.setStartAt(startAt);
-        subEntity.setEndAt(endAt);
-        subEntity.setCreatedAt(now);
+        sub.setStartAt(today);
+        sub.setEndAt(endAt);
+        entityManager.persist(sub);
 
-        entityManager.persist(subEntity);
-
-        // Subtract owner money
+        // 3. charge the user only the delta (or full price if no active plan)
         User owner = entityManager.getReference(User.class, userId);
-        if (owner.getWalletBalance().compareTo(subEntity.getPrice()) <= 0) {
+        if (owner.getWalletBalance().compareTo(chargeAmount) < 0) {
             throw new IllegalStateException("Not enough money to subscribe to this plan.");
         }
-        owner.setWalletBalance(owner.getWalletBalance().subtract(subEntity.getPrice()));
+        owner.setWalletBalance(owner.getWalletBalance().subtract(chargeAmount));
         entityManager.persist(owner);
-        simp.convertAndSendToUser(owner.getUsername(), SOCKET_WALLET_BALANCE_CHANNEL, owner.getWalletBalance());
+        simp.convertAndSendToUser(
+                owner.getUsername(),
+                SOCKET_WALLET_BALANCE_CHANNEL,
+                owner.getWalletBalance());
 
-
+        // 4. return DTO (same as before)
         return FamilyInfoDTO.builder()
                 .familyId(family.getFamilyId())
                 .ownerId(family.getOwner().getUserId())
-                .expDate(family.getExpDate())
+                .expDate(family.getExpDate().toLocalDate())
                 .isOwner(true)
                 .members(Collections.emptyList())
                 .games(Collections.emptyList())
                 .subscriptionPlan(SubscriptionPlanDTO.builder()
-                        .planId(subEntity.getPlanId())
-                        .planName(subEntity.getPlanName())
-                        .duration(subEntity.getDurationInDays())
-                        .price(subEntity.getPrice())
-                        .startAt(subEntity.getStartAt())
-                        .endAt(subEntity.getEndAt())
+                        .planId(sub.getPlanId())
+                        .planName(sub.getPlanName())
+                        .duration(sub.getDurationInDays())
+                        .price(sub.getPrice())
+                        .startAt(sub.getStartAt())
+                        .endAt(sub.getEndAt())
                         .build())
                 .build();
     }

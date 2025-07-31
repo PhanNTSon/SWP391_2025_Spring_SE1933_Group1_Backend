@@ -2,6 +2,7 @@ package com.se1933g01.steamclonebackend.entity.community.family;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -38,10 +39,10 @@ public class SubscriptionPlan {
     private BigDecimal price;
 
     @Column(name = "StartAt", nullable = false)
-    private LocalDate startAt;
+    private LocalDateTime startAt;
 
     @Column(name = "EndAt", nullable = false)
-    private LocalDate endAt;
+    private LocalDateTime endAt;
 
     @Column(name = "Note", columnDefinition = "TEXT")
     private String note;
