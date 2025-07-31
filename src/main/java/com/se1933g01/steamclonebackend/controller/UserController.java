@@ -387,6 +387,7 @@ public class UserController {
         BigDecimal newBalance = userService.addUserBalance(userId, amount);
         Transaction transaction = new Transaction();
         transaction.setCreatedAt(LocalDate.now());
+        transaction.setUser(me.getUser());
         transaction.setTotalAmount(amount);
         transaction.setType("Add");
         TransactionDetail userDetail = new TransactionDetail();
