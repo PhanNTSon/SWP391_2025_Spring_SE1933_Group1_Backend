@@ -27,7 +27,6 @@ import com.se1933g01.steamclonebackend.entity.user.LibraryId;
 import com.se1933g01.steamclonebackend.entity.user.Publisher;
 import com.se1933g01.steamclonebackend.entity.user.User;
 import com.se1933g01.steamclonebackend.repository.LibraryRepository;
-import com.se1933g01.steamclonebackend.service.LibraryService;
 
 public class LibraryServiceTest {
 

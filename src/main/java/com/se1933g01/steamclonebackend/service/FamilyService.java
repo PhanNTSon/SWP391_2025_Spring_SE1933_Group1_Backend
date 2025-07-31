@@ -1,6 +1,7 @@
 package com.se1933g01.steamclonebackend.service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -12,12 +13,15 @@ import com.se1933g01.steamclonebackend.dto.MediaDTO;
 import com.se1933g01.steamclonebackend.dto.family.FamilyGameDTO;
 import com.se1933g01.steamclonebackend.dto.family.FamilyInfoDTO;
 import com.se1933g01.steamclonebackend.dto.family.FamilyMemberDTO;
+import com.se1933g01.steamclonebackend.dto.family.ShareGamesDTO;
 import com.se1933g01.steamclonebackend.dto.family.SubscriptionPlanDTO;
-import com.se1933g01.steamclonebackend.dto.user.FriendDTO;
 import com.se1933g01.steamclonebackend.entity.community.family.Family;
+import com.se1933g01.steamclonebackend.entity.community.family.FamilyLibrary;
+import com.se1933g01.steamclonebackend.entity.community.family.FamilyLibraryId;
 import com.se1933g01.steamclonebackend.entity.community.family.FamilyMember;
 import com.se1933g01.steamclonebackend.entity.community.family.FamilyMemberId;
 import com.se1933g01.steamclonebackend.entity.community.family.SubscriptionPlan;
+import com.se1933g01.steamclonebackend.entity.game.Game;
 import com.se1933g01.steamclonebackend.entity.user.User;
 import com.se1933g01.steamclonebackend.repository.FamilyInvitationRepo;
 import com.se1933g01.steamclonebackend.repository.FamilyLibraryRepo;
@@ -68,19 +72,28 @@ public class FamilyService {
 
         // 4. Build DTO
         boolean isOwner = family.getOwner().getUserId().equals(userId);
-        List<FamilyMemberDTO> members = family.getMembers()
-                .stream()
-                .map(m -> new FamilyMemberDTO(m.getUser().getUserId(), m.getUser().getUsername(),
-                        m.getUser().getAvatarUrl(), m.isOwner()))
-                .collect(Collectors.toList());
+        List<FamilyMemberDTO> members = new ArrayList<>();
+        for (FamilyMember m : family.getMembers()) {
+            User u = m.getUser();
+            members.add(new FamilyMemberDTO(u.getUserId(), u.getUsername(), u.getAvatarUrl(), m.isOwner()));
+        }
+
         boolean isPlayable = family.getExpDate().isAfter(LocalDate.now());
-        List<FamilyGameDTO> games = family.getSharedGames()
-                .stream()
-                .map(g -> new FamilyGameDTO(g.getGame().getGameId(), g.getGame().getName(), g.getGame().getGameUrl(),
-                        isPlayable,
-                        g.getGame().getMedia().stream().map(m -> new MediaDTO(m.getMediaId(), m.getUrl(), m.getType()))
-                                .toList()))
-                .collect(Collectors.toList());
+
+        List<FamilyGameDTO> games = new ArrayList<>();
+        for (FamilyLibrary lib : family.getSharedGames()) {
+            Game game = lib.getGame();
+            FamilyGameDTO gameDTO = FamilyGameDTO.builder()
+                    .id(game.getGameId())
+                    .name(game.getName())
+                    .gameUrl(game.getGameUrl())
+                    .isPlayable(isPlayable)
+                    .media(game.getMedia().stream().map(m -> new MediaDTO(m.getMediaId(), m.getUrl(), m.getType()))
+                            .toList())
+                    .build();
+
+            games.add(gameDTO);
+        }
 
         // 5. Trả về
         return FamilyInfoDTO.builder()
@@ -158,4 +171,58 @@ public class FamilyService {
                 .build();
     }
 
+    @Transactional
+    public FamilyInfoDTO shareGames(ShareGamesDTO dto, Long userId) {
+        Optional<Family> optOwned = familyRepo.findByOwner(userId);
+        Family family;
+
+        if (optOwned.isPresent()) {
+            family = optOwned.get();
+        } else {
+            throw new IllegalStateException("User is not the owner of any family.");
+        }
+
+        // 2. Lấy danh sách game từ DTO
+        List<Long> gameIds = dto.getGameIds();
+        List<Game> gamesToShare = entityManager.createQuery("SELECT g FROM Game g WHERE g.gameId IN :ids", Game.class)
+                .setParameter("ids", gameIds)
+                .getResultList();
+
+        // 3. Tạo FamilyLibrary cho mỗi game
+        for (Game game : gamesToShare) {
+            FamilyLibrary libraryEntry = new FamilyLibrary();
+            FamilyLibraryId libraryId = new FamilyLibraryId(family.getFamilyId(), game.getGameId());
+            libraryEntry.setId(libraryId);
+            libraryEntry.setFamily(family);
+            libraryEntry.setGame(game);
+            entityManager.persist(libraryEntry);
+        }
+
+        // 4. Trả về thông tin gia đình đã cập nhật
+        return getFamily(userId);
+    }
+
+    @Transactional
+    public FamilyInfoDTO removeGameFromLibrary(ShareGamesDTO dto, Long userId){
+        Optional<Family> optOwned = familyRepo.findByOwner(userId);
+        Family family;
+
+        if (optOwned.isPresent()) {
+            family = optOwned.get();
+        } else {
+            throw new IllegalStateException("User is not the owner of any family.");
+        }
+
+        // 2. Lấy danh sách game từ DTO
+        List<Long> gameIds = dto.getGameIds();
+
+        // 3. Xoá FamilyLibrary cho mỗi game
+        for (Long gameId : gameIds) {
+            FamilyLibraryId libraryId = new FamilyLibraryId(family.getFamilyId(), gameId);
+            familyLibraryRepo.delete(entityManager.getReference(FamilyLibrary.class, libraryId));
+        }
+
+        // 4. Trả về thông tin gia đình đã cập nhật
+        return getFamily(userId);
+    }
 }

@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 import com.se1933g01.steamclonebackend.dto.TagDTO;
 import com.se1933g01.steamclonebackend.service.TagService;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * @author TS Huy

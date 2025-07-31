@@ -19,7 +19,6 @@ import com.se1933g01.steamclonebackend.entity.user.CustomUserDetail;
 import com.se1933g01.steamclonebackend.entity.user.Role;
 import com.se1933g01.steamclonebackend.entity.user.User;
 import com.se1933g01.steamclonebackend.repository.UserRepo;
-import com.se1933g01.steamclonebackend.service.AuthService;
 import com.se1933g01.steamclonebackend.utils.JwtUtil;
 
 public class AuthServiceTest {

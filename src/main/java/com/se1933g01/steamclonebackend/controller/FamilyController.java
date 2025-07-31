@@ -1,16 +1,16 @@
 package com.se1933g01.steamclonebackend.controller;
 
-import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.se1933g01.steamclonebackend.dto.ApiRespDTO;
 import com.se1933g01.steamclonebackend.dto.family.FamilyInfoDTO;
+import com.se1933g01.steamclonebackend.dto.family.ShareGamesDTO;
 import com.se1933g01.steamclonebackend.dto.family.SubscriptionPlanDTO;
 import com.se1933g01.steamclonebackend.entity.user.CustomUserDetail;
 import com.se1933g01.steamclonebackend.service.FamilyService;
@@ -40,4 +40,20 @@ public class FamilyController {
                         familyService.subscribePlan(plan, me.getUser().getUserId())));
     }
 
+    @PostMapping("/library/share")
+    public ResponseEntity<ApiRespDTO<?>> shareGames(@RequestBody ShareGamesDTO dto, @AuthenticationPrincipal CustomUserDetail me) {
+        
+        return ResponseEntity.ok()
+                .body(new ApiRespDTO<FamilyInfoDTO>(true, "SHARE_GAMES_SUCCESS", "Games shared successfully",
+                        familyService.shareGames(dto, me.getUser().getUserId())));
+    }
+
+    @PostMapping("/library/remove")
+    public ResponseEntity<ApiRespDTO<?>> removeGameFromLibrary(@RequestBody ShareGamesDTO dto,
+            @AuthenticationPrincipal CustomUserDetail me) {
+        return ResponseEntity.ok()
+                .body(new ApiRespDTO<FamilyInfoDTO>(true, "REMOVE_GAME_SUCCESS", "Game removed successfully",
+                        familyService.removeGameFromLibrary(dto, me.getUser().getUserId())));
+    }
+    
 }

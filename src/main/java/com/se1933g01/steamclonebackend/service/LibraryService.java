@@ -1,6 +1,5 @@
 package com.se1933g01.steamclonebackend.service;
 
-import com.google.api.client.util.DateTime;
 import com.se1933g01.steamclonebackend.dto.GameDetailDTO;
 import com.se1933g01.steamclonebackend.dto.MediaDTO;
 import com.se1933g01.steamclonebackend.dto.PublisherBasicDTO;
@@ -12,7 +11,6 @@ import com.se1933g01.steamclonebackend.repository.LibraryRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
