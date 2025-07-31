@@ -1,5 +1,6 @@
 package com.se1933g01.steamclonebackend.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -47,6 +48,7 @@ public class FamilyService {
     private final SimpMessagingTemplate simp;
 
     private final String FAMILY_INVITATION_CHANNEL = "/queue/family/invitation";
+    private final String SOCKET_WALLET_BALANCE_CHANNEL = "/queue/wallet.balance";
 
     public FamilyService(FamilyRepo familyRepo, FamilyInvitationRepo familyInvitationRepo,
             FamilyMemberRepo familyMemberRepo, FamilyLibraryRepo familyLibraryRepo, EntityManager entityManager,
@@ -192,6 +194,16 @@ public class FamilyService {
 
         entityManager.persist(subEntity);
 
+        // Subtract owner money
+        User owner = entityManager.getReference(User.class, userId);
+        if (owner.getWalletBalance().compareTo(subEntity.getPrice()) <= 0) {
+            throw new IllegalStateException("Not enough money to subscribe to this plan.");
+        }
+        owner.setWalletBalance(owner.getWalletBalance().subtract(subEntity.getPrice()));
+        entityManager.persist(owner);
+        simp.convertAndSendToUser(owner.getUsername(), SOCKET_WALLET_BALANCE_CHANNEL, owner.getWalletBalance());
+
+
         return FamilyInfoDTO.builder()
                 .familyId(family.getFamilyId())
                 .ownerId(family.getOwner().getUserId())
@@ -199,6 +211,14 @@ public class FamilyService {
                 .isOwner(true)
                 .members(Collections.emptyList())
                 .games(Collections.emptyList())
+                .subscriptionPlan(SubscriptionPlanDTO.builder()
+                        .planId(subEntity.getPlanId())
+                        .planName(subEntity.getPlanName())
+                        .duration(subEntity.getDurationInDays())
+                        .price(subEntity.getPrice())
+                        .startAt(subEntity.getStartAt())
+                        .endAt(subEntity.getEndAt())
+                        .build())
                 .build();
     }
 
@@ -393,7 +413,7 @@ public class FamilyService {
     }
 
     @Transactional
-    public FamilyInvitationDTO acceptInvitation(Long inviteId, Long userId) {
+    public void acceptInvitation(Long inviteId, Long userId) {
         // 1. Lấy lời mời
         FamilyInvitation invitation = familyInvitationRepo.findById(inviteId)
                 .orElseThrow(() -> new IllegalStateException("Invitation not found."));
@@ -420,15 +440,6 @@ public class FamilyService {
         familyInvitationRepo.deleteAll(familyInvitationRepo.findAll().stream()
                 .filter(inv -> inv.getReceiver().getUserId().equals(userId))
                 .collect(Collectors.toList()));
-
-        // 5. Trả về thông tin lời mời đã chấp nhận
-        return FamilyInvitationDTO.builder()
-                .inviteId(invitation.getInviteID())
-                .senderId(invitation.getInvitor().getUserId())
-                .receiverId(invitation.getReceiver().getUserId())
-                .createdAt(invitation.getCreatedAt())
-                .expiresAt(invitation.getExpiresAt())
-                .build();
 
     }
 
@@ -525,5 +536,57 @@ public class FamilyService {
 
         // 5. Xoá FamilyMember
         familyMemberRepo.delete(member);
+    }
+
+    @Transactional
+    public void removeFamilyMember(List<Long> memberIds, Long userId) {
+        // 1. Tìm FamilyMember của người dùng
+        List<FamilyMember> members = familyMemberRepo.findAllByUserIds(memberIds);
+        if (members.isEmpty()) {
+            throw new IllegalStateException("No members found in any family.");
+        }
+        // 2. Kiểm tra xem người dùng có quyền xoá thành viên này không
+        Optional<Family> familyOpt = familyRepo.findByOwner(userId);
+        if (familyOpt.isEmpty() || !members.get(0).getFamily().getFamilyId().equals(familyOpt.get().getFamilyId())) {
+            throw new IllegalStateException("You do not have permission to remove these members.");
+        }
+        // 3. Xoá FamilyMember
+        for (FamilyMember member : members) {
+            // 3.1. Nếu là chủ sở hữu, không thể xoá
+            if (member.isOwner()) {
+                throw new IllegalStateException("You cannot remove the owner of the family.");
+            }
+            // 3.2. Kiểm tra xem có phải là thành viên của gia đình không
+            if (!familyMemberRepo.findByFamilyAndUser(member.getFamily().getFamilyId(), member.getUser().getUserId())
+                    .isPresent()) {
+                throw new IllegalStateException("Member is not part of the family.");
+            }
+            // 3.3. Xoá FamilyMember
+            familyMemberRepo.delete(member);
+        }
+    }
+
+    @Transactional
+    public void deleteFamily(Long userId) {
+        // 1. Tìm Family của người dùng
+        Optional<Family> familyOpt = familyRepo.findByOwner(userId);
+        if (familyOpt.isEmpty()) {
+            throw new IllegalStateException("You do not own any family.");
+        }
+        Family family = familyOpt.get();
+        // 2. Xoá tất cả FamilyMember
+        familyMemberRepo.deleteAll(family.getMembers());
+        // 3. Xoá tất cả FamilyLibrary
+        familyLibraryRepo.deleteAll(family.getSharedGames());
+        // 4. Xoá SubscriptionPlan
+        subscriptionPlanRepo.deleteAll(subscriptionPlanRepo.findAll().stream()
+                .filter(plan -> plan.getFamilyId().equals(family.getFamilyId()))
+                .collect(Collectors.toList()));
+        // 5. Xoá Family
+        familyRepo.delete(family);
+        // 6. Xoá tất cả lời mời liên quan đến gia đình này
+        familyInvitationRepo.deleteAll(familyInvitationRepo.findAll().stream()
+                .filter(inv -> inv.getFamily().getFamilyId().equals(family.getFamilyId()))
+                .collect(Collectors.toList()));
     }
 }

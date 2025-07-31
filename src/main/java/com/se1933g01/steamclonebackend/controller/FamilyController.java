@@ -108,10 +108,12 @@ public class FamilyController {
         @PostMapping("/invitation/accept/{inviteId}")
         public ResponseEntity<ApiRespDTO<?>> acceptInvitation(@PathVariable Long inviteId,
                         @AuthenticationPrincipal CustomUserDetail me) {
+                familyService.acceptInvitation(inviteId, me.getUser().getUserId());
+
                 return ResponseEntity.ok()
-                                .body(new ApiRespDTO<FamilyInvitationDTO>(true, "INVITATION_ACCEPTED",
+                                .body(new ApiRespDTO<FamilyInfoDTO>(true, "INVITATION_ACCEPTED",
                                                 "Invitation accepted successfully",
-                                                familyService.acceptInvitation(inviteId, me.getUser().getUserId())));
+                                                familyService.getFamily(me.getUser().getUserId())));
         }
 
         @PostMapping("/invitation/reject/{inviteId}")
@@ -158,4 +160,20 @@ public class FamilyController {
                                                 "Family member removed successfully", null));
         }
 
+        @PostMapping("/remove-member")
+        public ResponseEntity<ApiRespDTO<?>> removeFamilyMembers(@RequestBody List<Long> memberIds,
+                        @AuthenticationPrincipal CustomUserDetail me) {
+                familyService.removeFamilyMember(memberIds, me.getUser().getUserId());
+                return ResponseEntity.ok()
+                                .body(new ApiRespDTO<>(true, "REMOVE_MEMBER_SUCCESS",
+                                                "Family member removed successfully", null));
+        }
+
+        @DeleteMapping("/delete")
+        public ResponseEntity<ApiRespDTO<?>> deleteFamily(@AuthenticationPrincipal CustomUserDetail me) {
+                familyService.deleteFamily(me.getUser().getUserId());
+                return ResponseEntity.ok()
+                                .body(new ApiRespDTO<>(true, "DELETE_FAMILY_SUCCESS",
+                                                "Family deleted successfully", null));
+        }
 }
