@@ -616,4 +616,30 @@ public class FamilyService {
                 .filter(inv -> inv.getFamily().getFamilyId().equals(family.getFamilyId()))
                 .collect(Collectors.toList()));
     }
+
+    public List<SubscriptionPlanDTO> getSubscriptionHistory(Long userId){
+        // 1. Tìm Family của người dùng
+        Optional<Family> optOwned = familyRepo.findByOwner(userId);
+        if (optOwned.isEmpty()) {
+            return Collections.emptyList();
+        }
+        Family family = optOwned.get();
+        
+        // 2. Lấy tất cả SubscriptionPlan của gia đình này
+        // và sắp xếp theo ngày bắt đầu giảm dần
+        List<SubscriptionPlan> plans = subscriptionPlanRepo.findAll().stream()
+                .filter(plan -> plan.getFamilyId().equals(family.getFamilyId()))
+                .sorted((a, b) -> b.getStartAt().compareTo(a.getStartAt()))
+                .collect(Collectors.toList());
+        return plans.stream()
+                .map(plan -> SubscriptionPlanDTO.builder()
+                        .planId(plan.getPlanId())
+                        .planName(plan.getPlanName())
+                        .duration(plan.getDurationInDays())
+                        .price(plan.getPrice())
+                        .startAt(plan.getStartAt())
+                        .endAt(plan.getEndAt())
+                        .build())
+                .collect(Collectors.toList());
+    }
 }

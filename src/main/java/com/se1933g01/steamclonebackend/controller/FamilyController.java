@@ -134,7 +134,7 @@ public class FamilyController {
                                                 "Invitation deleted successfully", null));
         }
 
-        @DeleteMapping("/leave")
+        @PostMapping("/leave")
         public ResponseEntity<ApiRespDTO<?>> leaveFamily(@AuthenticationPrincipal CustomUserDetail me) {
                 familyService.leaveFamily(me.getUser().getUserId());
                 return ResponseEntity.ok()
@@ -175,5 +175,13 @@ public class FamilyController {
                 return ResponseEntity.ok()
                                 .body(new ApiRespDTO<>(true, "DELETE_FAMILY_SUCCESS",
                                                 "Family deleted successfully", null));
+        }
+
+        @GetMapping("/subscription-history")
+        public ResponseEntity<ApiRespDTO<?>> getSubscriptionHistory(@AuthenticationPrincipal CustomUserDetail me) {
+                List<SubscriptionPlanDTO> history = familyService.getSubscriptionHistory(me.getUser().getUserId());
+                return ResponseEntity.ok()
+                                .body(new ApiRespDTO<>(true, "GET_SUBSCRIPTION_HISTORY_SUCCESS",
+                                                "Subscription history retrieved successfully", history));
         }
 }
