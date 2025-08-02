@@ -1,22 +1,27 @@
 package com.se1933g01.steamclonebackend.dto.family;
 
-import java.util.List;
 
-import com.se1933g01.steamclonebackend.dto.MediaDTO;
+import com.se1933g01.steamclonebackend.dto.user.LibraryGameDTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 @Builder
-public class FamilyGameDTO {
-    private Long id;
-    private String name;
-    private String gameUrl;
+public class FamilyGameDTO extends LibraryGameDTO{
     private Boolean isPlayable;
-    private List<MediaDTO> media;
+
+    public FamilyGameDTO(LibraryGameDTO libraryGameDTO, Boolean isPlayable) {
+        this.setGameDetail(libraryGameDTO.getGameDetail());
+        this.setDateAdded(libraryGameDTO.getDateAdded());
+        this.setPlaytimeInMillis(libraryGameDTO.getPlaytimeInMillis());
+        this.setLastTimePlayed(libraryGameDTO.getLastTimePlayed());
+        this.isPlayable = isPlayable;
+    }
 }

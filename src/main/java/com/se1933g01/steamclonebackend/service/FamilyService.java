@@ -19,6 +19,7 @@ import com.se1933g01.steamclonebackend.dto.family.FamilyInvitationDTO;
 import com.se1933g01.steamclonebackend.dto.family.FamilyMemberDTO;
 import com.se1933g01.steamclonebackend.dto.family.ShareGamesDTO;
 import com.se1933g01.steamclonebackend.dto.family.SubscriptionPlanDTO;
+import com.se1933g01.steamclonebackend.dto.user.LibraryGameDTO;
 import com.se1933g01.steamclonebackend.entity.community.family.Family;
 import com.se1933g01.steamclonebackend.entity.community.family.FamilyInvitation;
 import com.se1933g01.steamclonebackend.entity.community.family.FamilyLibrary;
@@ -27,11 +28,13 @@ import com.se1933g01.steamclonebackend.entity.community.family.FamilyMember;
 import com.se1933g01.steamclonebackend.entity.community.family.FamilyMemberId;
 import com.se1933g01.steamclonebackend.entity.community.family.SubscriptionPlan;
 import com.se1933g01.steamclonebackend.entity.game.Game;
+import com.se1933g01.steamclonebackend.entity.user.Library;
 import com.se1933g01.steamclonebackend.entity.user.User;
 import com.se1933g01.steamclonebackend.repository.FamilyInvitationRepo;
 import com.se1933g01.steamclonebackend.repository.FamilyLibraryRepo;
 import com.se1933g01.steamclonebackend.repository.FamilyMemberRepo;
 import com.se1933g01.steamclonebackend.repository.FamilyRepo;
+import com.se1933g01.steamclonebackend.repository.LibraryRepository;
 import com.se1933g01.steamclonebackend.repository.SubscriptionPlanRepo;
 
 import jakarta.persistence.EntityManager;
@@ -46,6 +49,8 @@ public class FamilyService {
     private final FamilyLibraryRepo familyLibraryRepo;
     private final EntityManager entityManager;
     private final SubscriptionPlanRepo subscriptionPlanRepo;
+    private final LibraryRepository libraryRepository;
+    private final LibraryService libraryService;
     private final SimpMessagingTemplate simp;
 
     private final String FAMILY_INVITATION_CHANNEL = "/queue/family/invitation";
@@ -53,13 +58,16 @@ public class FamilyService {
 
     public FamilyService(FamilyRepo familyRepo, FamilyInvitationRepo familyInvitationRepo,
             FamilyMemberRepo familyMemberRepo, FamilyLibraryRepo familyLibraryRepo, EntityManager entityManager,
-            SubscriptionPlanRepo subscriptionPlanRepo, SimpMessagingTemplate simp) {
+            SubscriptionPlanRepo subscriptionPlanRepo, LibraryRepository libraryRepository,
+            LibraryService libraryService, SimpMessagingTemplate simp) {
         this.familyRepo = familyRepo;
         this.familyInvitationRepo = familyInvitationRepo;
         this.familyMemberRepo = familyMemberRepo;
         this.familyLibraryRepo = familyLibraryRepo;
         this.entityManager = entityManager;
         this.subscriptionPlanRepo = subscriptionPlanRepo;
+        this.libraryRepository = libraryRepository;
+        this.libraryService = libraryService;
         this.simp = simp;
     }
 
@@ -124,19 +132,22 @@ public class FamilyService {
         List<FamilyGameDTO> games = new ArrayList<>();
         for (FamilyLibrary lib : family.getSharedGames()) {
             Game game = lib.getGame();
+            User owner = lib.getFamily().getOwner();
 
             BigDecimal gamePrice = game.getPrice(); // cần đảm bảo field này tồn tại
 
             boolean isPlayable = (maxAllowedPrice == null) || (gamePrice.compareTo(maxAllowedPrice) <= 0);
 
-            FamilyGameDTO gameDTO = FamilyGameDTO.builder()
-                    .id(game.getGameId())
-                    .name(game.getName())
-                    .gameUrl(game.getGameUrl())
-                    .isPlayable(isPlayable)
-                    .media(game.getMedia().stream().map(m -> new MediaDTO(m.getMediaId(), m.getUrl(), m.getType()))
-                            .toList())
-                    .build();
+            Library libraryEntry = libraryRepository.findById_UserIdAndId_GameId(owner.getUserId(), game.getGameId())
+                    .orElse(null);
+
+            if (libraryEntry == null) {
+                continue; // nếu không tìm thấy, bỏ qua game này
+            }
+
+            LibraryGameDTO libraryGameDTO = libraryService.mapLibraryEntryToDto(libraryEntry);
+
+            FamilyGameDTO gameDTO = new FamilyGameDTO(libraryGameDTO, isPlayable);
 
             games.add(gameDTO);
         }
@@ -617,14 +628,14 @@ public class FamilyService {
                 .collect(Collectors.toList()));
     }
 
-    public List<SubscriptionPlanDTO> getSubscriptionHistory(Long userId){
+    public List<SubscriptionPlanDTO> getSubscriptionHistory(Long userId) {
         // 1. Tìm Family của người dùng
         Optional<Family> optOwned = familyRepo.findByOwner(userId);
         if (optOwned.isEmpty()) {
             return Collections.emptyList();
         }
         Family family = optOwned.get();
-        
+
         // 2. Lấy tất cả SubscriptionPlan của gia đình này
         // và sắp xếp theo ngày bắt đầu giảm dần
         List<SubscriptionPlan> plans = subscriptionPlanRepo.findAll().stream()
