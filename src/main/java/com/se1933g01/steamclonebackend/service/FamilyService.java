@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
-import com.se1933g01.steamclonebackend.dto.MediaDTO;
 import com.se1933g01.steamclonebackend.dto.family.FamilyGameDTO;
 import com.se1933g01.steamclonebackend.dto.family.FamilyInfoDTO;
 import com.se1933g01.steamclonebackend.dto.family.FamilyInvitationDTO;

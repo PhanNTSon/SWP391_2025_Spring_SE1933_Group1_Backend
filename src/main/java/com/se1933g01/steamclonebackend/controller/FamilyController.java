@@ -16,12 +16,10 @@ import com.se1933g01.steamclonebackend.dto.family.FamilyInfoDTO;
 import com.se1933g01.steamclonebackend.dto.family.FamilyInvitationDTO;
 import com.se1933g01.steamclonebackend.dto.family.ShareGamesDTO;
 import com.se1933g01.steamclonebackend.dto.family.SubscriptionPlanDTO;
-import com.se1933g01.steamclonebackend.entity.game.Game;
 import com.se1933g01.steamclonebackend.entity.user.CustomUserDetail;
 import com.se1933g01.steamclonebackend.service.FamilyService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequestMapping("/api/family")
