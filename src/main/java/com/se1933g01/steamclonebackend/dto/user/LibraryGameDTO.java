@@ -14,5 +14,4 @@ public class LibraryGameDTO {
     private LocalDateTime dateAdded;
     private Long playtimeInMillis;
     private LocalDateTime lastTimePlayed;
-
 }

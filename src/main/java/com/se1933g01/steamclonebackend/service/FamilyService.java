@@ -38,6 +38,7 @@ import com.se1933g01.steamclonebackend.repository.LibraryRepository;
 import com.se1933g01.steamclonebackend.repository.SubscriptionPlanRepo;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
 @Service
@@ -163,6 +164,48 @@ public class FamilyService {
                 .subscriptionPlan(subscriptionPlan)
                 .build();
 
+    }
+
+    /**
+     * 
+     * @param userId
+     * @param gameId
+     * @author kerri
+     */
+    public FamilyGameDTO getGameInLibrary(Long userId, Long gameId) {
+        Library libraryEntry = libraryRepository.findById_UserIdAndId_GameId(userId, gameId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Not found game " + gameId + " in library of user " + userId));
+
+        LibraryGameDTO libraryGameDTO = libraryService.mapLibraryEntryToDto(libraryEntry);
+
+        // Get user's family and subscription plan to determine if game is playable
+        Optional<FamilyMember> memberOpt = familyMemberRepo.findByUserId(userId);
+        if (memberOpt.isEmpty()) {
+            return new FamilyGameDTO(libraryGameDTO, false);
+        }
+
+        Family family = memberOpt.get().getFamily();
+        Optional<SubscriptionPlan> latestPlanOpt = subscriptionPlanRepo
+                .findTopByFamilyIdOrderByStartAtDesc(family.getFamilyId());
+
+        if (latestPlanOpt.isEmpty() || latestPlanOpt.get().getEndAt().isBefore(LocalDateTime.now())) {
+            return new FamilyGameDTO(libraryGameDTO, false);
+        }
+
+        String planName = latestPlanOpt.get().getPlanName().toLowerCase();
+        BigDecimal maxAllowedPrice = switch (planName) {
+            case "bronze" -> new BigDecimal("5");
+            case "silver" -> new BigDecimal("10");
+            case "gold" -> new BigDecimal("15");
+            case "platinum" -> null; // unlimited
+            default -> BigDecimal.ZERO;
+        };
+
+        Game game = libraryEntry.getGame();
+        boolean isPlayable = (maxAllowedPrice == null) || (game.getPrice().compareTo(maxAllowedPrice) <= 0);
+
+        return new FamilyGameDTO(libraryGameDTO, isPlayable);
     }
 
     @Transactional

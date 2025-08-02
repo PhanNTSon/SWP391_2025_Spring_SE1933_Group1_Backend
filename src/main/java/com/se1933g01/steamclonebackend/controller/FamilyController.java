@@ -11,14 +11,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.se1933g01.steamclonebackend.dto.ApiRespDTO;
+import com.se1933g01.steamclonebackend.dto.family.FamilyGameDTO;
 import com.se1933g01.steamclonebackend.dto.family.FamilyInfoDTO;
 import com.se1933g01.steamclonebackend.dto.family.FamilyInvitationDTO;
 import com.se1933g01.steamclonebackend.dto.family.ShareGamesDTO;
 import com.se1933g01.steamclonebackend.dto.family.SubscriptionPlanDTO;
+import com.se1933g01.steamclonebackend.entity.game.Game;
 import com.se1933g01.steamclonebackend.entity.user.CustomUserDetail;
 import com.se1933g01.steamclonebackend.service.FamilyService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequestMapping("/api/family")
@@ -49,6 +52,14 @@ public class FamilyController {
                                 .body(new ApiRespDTO<FamilyInfoDTO>(true, "SUBSCRIBE_SUCCESS",
                                                 "Subscription successful",
                                                 familyService.subscribePlan(plan, me.getUser().getUserId())));
+        }
+
+        @GetMapping("/library/{gameId}")
+        public ResponseEntity<FamilyGameDTO> getGameInLibrary(@PathVariable Long gameId,
+                        @AuthenticationPrincipal CustomUserDetail me) {
+                FamilyInfoDTO family = familyService.getFamily(me.getUser().getUserId());
+                FamilyGameDTO game = familyService.getGameInLibrary(family.getOwnerId(), gameId);
+                return ResponseEntity.ok().body(game);
         }
 
         @PostMapping("/library/share")
