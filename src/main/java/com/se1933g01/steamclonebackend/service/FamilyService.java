@@ -287,6 +287,8 @@ public class FamilyService {
             entityManager.persist(libraryEntry);
         }
 
+        entityManager.flush();
+
         // 4. Trả về thông tin gia đình đã cập nhật
         return getFamily(userId);
     }
@@ -310,6 +312,8 @@ public class FamilyService {
             FamilyLibraryId libraryId = new FamilyLibraryId(family.getFamilyId(), gameId);
             familyLibraryRepo.delete(entityManager.getReference(FamilyLibrary.class, libraryId));
         }
+
+        entityManager.flush();
 
         // 4. Trả về thông tin gia đình đã cập nhật
         return getFamily(userId);
