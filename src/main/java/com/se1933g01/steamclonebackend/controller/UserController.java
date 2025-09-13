@@ -346,6 +346,15 @@ public class UserController {
         }
     }
 
+    @GetMapping("/library/recent")
+    public ResponseEntity<Page<LibraryGameDTO>> showRecentLibrary(
+            @AuthenticationPrincipal CustomUserDetail principal,
+            Pageable pageable) {
+        Page<LibraryGameDTO> libraryPage = libraryService.showLibrary(principal.getUser().getUserId(), pageable);
+        return ResponseEntity.ok(libraryPage);
+    }
+    
+
     /* author: bathanh */
     // api check if game is in cart or not
     @GetMapping("/cart/contain/{gameId}")

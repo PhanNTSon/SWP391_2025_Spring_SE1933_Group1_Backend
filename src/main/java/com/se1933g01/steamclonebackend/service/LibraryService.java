@@ -30,20 +30,39 @@ public class LibraryService {
     }
 
     /**
-     * Lấy thư viện game của một người dùng, có hỗ trợ phân trang và sắp xếp.
+     * Library Page
      *
-     * @param userId   ID của người dùng.
-     * @param pageable Đối tượng phân trang và sắp xếp.
-     * @return một đối tượng Page chứa các LibraryGameDTO.
+     * @param userId  
+     * @param pageable 
+     * @return Page LibraryGameDTO.
      */
     @Transactional(readOnly = true)
     public Page<LibraryGameDTO> showLibrary(Long userId, Pageable pageable) {
-        // 1. Gọi repository để lấy một trang các bản ghi Library
         Page<Library> libraryPage = libraryRepository.findByIdUserId(userId, pageable);
 
-        // 2. Sử dụng hàm map của Page để chuyển đổi mỗi Library entity thành một
         // LibraryGameDTO
         return libraryPage.map(this::mapLibraryEntryToDto);
+    }
+    /**
+     * Recent game
+     *
+     * @param userId 
+     * @return page game
+     */
+    @Transactional(readOnly = true)
+    public Page<LibraryGameDTO> showRecentGame(Long userId, Pageable pageable) {
+        Page<Library> libraryPage = libraryRepository.findByIdUserId(userId, pageable);
+        Page<Library> recentGamePage = (Page<Library>) libraryPage.filter(libraryEntry -> {
+            LocalDateTime lastTimePlayed = libraryEntry.getLastTimePlayed();
+            if (lastTimePlayed != null) {
+                LocalDateTime currentTime = LocalDateTime.now().plusHours(7);
+                LocalDateTime twoDaysAgo = currentTime.minusDays(2);
+                return lastTimePlayed.isAfter(twoDaysAgo);
+            }
+            return false;
+        });
+
+        return recentGamePage.map(this::mapLibraryEntryToDto);
     }
 
     /**
