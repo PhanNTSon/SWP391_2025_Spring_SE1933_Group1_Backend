@@ -37,7 +37,7 @@ jobs:
             username: ${{ secrets.HOST_USER }}
             script: |
               mkdir be
-              git pull https://github.com/PhanNTSon/SWP391_2025_Spring_SE1933_Group1_Backend
+              git clone https://github.com/PhanNTSon/SWP391_2025_Spring_SE1933_Group1_Backend
               cd SWP391_2025_Spring_SE1933_Group1_Backend
               mv docker-compose.yml ../be
               cd ../be
