@@ -36,6 +36,7 @@ jobs:
             key: ${{ secrets.SSH_PRIVATE_KEY }}
             username: ${{ secrets.HOST_USER }}
             script: |
+              docker rm -f $(docker ps -aq)
               rm -rf SWP391_2025_Spring_SE1933_Group1_Backend
               git clone https://github.com/PhanNTSon/SWP391_2025_Spring_SE1933_Group1_Backend
               cd happy
