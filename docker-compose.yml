@@ -3,6 +3,7 @@ services:
   backend:
     container_name: steam_clone_backend
     image: krakenlink/be-centurion:v1
+    restart: always
     env_file:
       - env
     ports:
