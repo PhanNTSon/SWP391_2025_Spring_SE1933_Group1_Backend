@@ -8,4 +8,35 @@ services:
       - env
     ports:
       - "8080:8080"
+    networks:
+      - combine
+
+
+  frontend:
+    container_name: viteapp
+    image: krakenlink/vite-app:v1
+    restart: always
+    networks:
+      - combine
+
+  nginx:
+    image: nginx:alpine
+    container_name: gate
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - combine
+
+  networks:
+    combine:
+      driver: bridge
 
