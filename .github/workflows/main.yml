@@ -36,7 +36,7 @@ jobs:
             key: ${{ secrets.SSH_PRIVATE_KEY }}
             username: ${{ secrets.HOST_USER }}
             script: |
-              mkdir be
+              rm -rf SWP391_2025_Spring_SE1933_Group1_Backend
               git clone https://github.com/PhanNTSon/SWP391_2025_Spring_SE1933_Group1_Backend
               cd SWP391_2025_Spring_SE1933_Group1_Backend
               mv docker-compose.yml ../happy
