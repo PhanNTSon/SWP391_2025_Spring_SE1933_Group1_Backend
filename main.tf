@@ -12,7 +12,7 @@ data "google_compute_image" "image" {
   family = "ubuntu-2404-lts-amd64"
 }
 resource "google_compute_instance" "address" {
-  name = "Centurion"
+  name = "centurion"
   machine_type = "e2-micro"
   boot_disk {
     initialize_params {
