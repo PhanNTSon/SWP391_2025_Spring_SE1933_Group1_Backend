@@ -9,6 +9,7 @@ terraform {
   }
 }
 data "google_compute_image" "image" {
+  project = "ubuntu-os-cloud"
   family = "ubuntu-2404-lts-amd64"
 }
 resource "google_compute_instance" "address" {
