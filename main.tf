@@ -1,5 +1,5 @@
 provider "google" {
-  project     = "ppjg"
+  project     = "ppjg-ppjg-236308"
   region      = "us-central1"
 }
 terraform {
