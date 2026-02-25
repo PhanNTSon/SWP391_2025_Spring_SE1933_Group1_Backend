@@ -22,4 +22,24 @@ jobs:
                 push: true
                 tags: krakenlink/centurionbe:v1
 
+    deploy:
+        runs-on: ubuntu-24.04
+        steps:
+            - name: ssh-gcp
+              uses: appleboy/ssh-action@v1.0.3
+              with:
+                host: ${{ secrets.HOST_IP }}
+                key: ${{ secrets.SSH_PRIVATE_KEY }}
+                username: ${{ secrets.HOST_USER }}
+                script: |
+                  docker rm -f $(docker ps -aq) 
+                  cd ~
+                  rm -rf SWP391_2025_Spring_SE1933_Group1_Backend
+                  git clone https://github.com/PhanNTSon/SWP391_2025_Spring_SE1933_Group1_Backend
+                  cd SWP391_2025_Spring_SE1933_Group1_Backend
+                  docker compose pull
+                  docker compose up -d
+                  docker image prune -f
+                
+
     
