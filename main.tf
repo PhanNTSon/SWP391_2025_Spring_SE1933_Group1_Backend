@@ -18,7 +18,7 @@ resource "google_compute_instance" "address" {
   zone = "us-central1-a"
   boot_disk {
     initialize_params {
-      image = data.google_compute_image.image.most_recent
+      image = data.google_compute_image.image.name
       size = 10
       type = "pd-standard"
     }
