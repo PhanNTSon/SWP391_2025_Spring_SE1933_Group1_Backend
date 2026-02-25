@@ -24,6 +24,7 @@ jobs:
 
     deploy:
         runs-on: ubuntu-24.04
+        needs: checkout
         steps:
             - name: ssh-gcp
               uses: appleboy/ssh-action@v1.0.3
