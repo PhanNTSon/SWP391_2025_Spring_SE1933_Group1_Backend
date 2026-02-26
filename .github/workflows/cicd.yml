@@ -3,7 +3,12 @@ on:
     push:
         branches:
             - main
-
+env:
+  PROJECT_ID: "ppjg-236308"
+  ZONE: "us-central1-a" # Phải khớp với zone trong Terraform
+  VM_NAME: "centurion" # Tên máy ảo bạn vừa tạo
+  # URL kho chứa Docker của bạn (Ví dụ dùng Google Container Registry)
+  IMAGE_URL: "krakenlink/centurionbe"
 jobs:
     checkout:
         runs-on: ubuntu-24.04
@@ -21,27 +26,22 @@ jobs:
                 context: .
                 push: true
                 tags: krakenlink/centurionbe:v1
-
-    deploy:
-        runs-on: ubuntu-24.04
-        needs: checkout
-        steps:
-            - name: ssh-gcp
-              uses: appleboy/ssh-action@v1.0.3
+            - name: login gcp cli
+              uses: google-github-actions/auth@v2
               with:
-                host: ${{ secrets.HOST_IP }}
-                key: ${{ secrets.SSH_PRIVATE_KEY }}
-                username: ${{ secrets.HOST_USER }}
-                script: |
-                  docker rm -f $(docker ps -aq) 
-                  cd ~
-                  rm -rf SWP391_2025_Spring_SE1933_Group1_Backend
-                  git clone https://github.com/PhanNTSon/SWP391_2025_Spring_SE1933_Group1_Backend
-                  cd SWP391_2025_Spring_SE1933_Group1_Backend
-                  cp ../.env .
-                  docker compose pull
-                  docker compose up -d
-                  docker image prune -f
+                credentials_json: ${{ secrets.GCP_SA_KEY }}
+            - name: set up gcloud cli
+              uses: google-github-actions/setup-gcloud@v2
+            - name: update vm image
+              run: |
+                gcloud compute instances update-container ${{ env.VM_NAME }} \
+                  --container-image ${{ env.IMAGE_URL }}:v1 \
+                  --zone ${{ env.ZONE }}
+
+              
+              
+
+
                 
 
     
