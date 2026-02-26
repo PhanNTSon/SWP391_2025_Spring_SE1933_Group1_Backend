@@ -5,9 +5,8 @@ on:
             - main
 env:
   PROJECT_ID: "ppjg-236308"
-  ZONE: "us-central1-a" # Phải khớp với zone trong Terraform
-  VM_NAME: "centurion" # Tên máy ảo bạn vừa tạo
-  # URL kho chứa Docker của bạn (Ví dụ dùng Google Container Registry)
+  ZONE: "us-central1-a" 
+  VM_NAME: "centurion" 
   IMAGE_URL: "krakenlink/centurionbe"
 jobs:
     checkout:
