@@ -41,7 +41,7 @@ jobs:
               run: |
                 gcloud compute instances update-container ${{ env.VM_NAME }} \
                   --container-image ${{ env.IMAGE_URL }}:v1 \
-                  --zone ${{ env.ZONE }}
+                  --zone ${{ env.ZONE }} \
                   --container-env-file=.env
 
               
