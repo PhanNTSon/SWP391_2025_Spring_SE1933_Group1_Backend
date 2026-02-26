@@ -44,6 +44,7 @@ jobs:
                 echo "$ENV" > .env
             - name: update vm image
               run: |
+                cat .env 
                 gcloud compute instances update-container ${{ env.VM_NAME }} \
                   --container-image ${{ env.IMAGE_URL }}:v1 \
                   --zone ${{ env.ZONE }} \
