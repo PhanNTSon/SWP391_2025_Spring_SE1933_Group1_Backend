@@ -48,7 +48,6 @@ jobs:
                   --container-image ${{ env.IMAGE_URL }}:v1 \
                   --zone ${{ env.ZONE }} \
                   --container-env-file=.env \
-                  --port-mappings=8080:8080:TCP
 
               
               
