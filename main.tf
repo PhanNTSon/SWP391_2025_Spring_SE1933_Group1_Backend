@@ -4,7 +4,6 @@ provider "google" {
 }
 module "gce" {
   source = "terraform-google-modules/container-vm/google"
-  version = "~> 3.0"
   container = {
     image = "nginx:latest"
   }
