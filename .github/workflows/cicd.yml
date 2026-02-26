@@ -26,6 +26,11 @@ jobs:
                 context: .
                 push: true
                 tags: krakenlink/centurionbe:v1
+
+    deploy:
+        runs-on: ubuntu-24.04
+        needs: checkout
+        steps:
             - name: login gcp cli
               uses: google-github-actions/auth@v2
               with:
