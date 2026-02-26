@@ -38,7 +38,10 @@ resource "google_compute_instance" "address" {
   }
   metadata_startup_script = file("install.sh")
   metadata = {
-    gce-container-declaration = module.gce.container_declaration
+    gce-container-declaration = module.gce.metadata_value
+  }
+  labels = {
+    container-vm = module.gce.vm_container_label
   }
   service_account {
     email = "737111970878-compute@developer.gserviceaccount.com"
