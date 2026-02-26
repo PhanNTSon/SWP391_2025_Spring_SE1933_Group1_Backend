@@ -47,7 +47,8 @@ jobs:
                 gcloud compute instances update-container ${{ env.VM_NAME }} \
                   --container-image ${{ env.IMAGE_URL }}:v1 \
                   --zone ${{ env.ZONE }} \
-                  --container-env-file=.env
+                  --container-env-file=.env \
+                  --port-mappings=8080:8080:TCP
 
               
               
