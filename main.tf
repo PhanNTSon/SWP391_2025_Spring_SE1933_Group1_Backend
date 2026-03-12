@@ -42,6 +42,7 @@ resource "google_compute_instance" "vm" {
     email = "ghaction@ppjg-236308.iam.gserviceaccount.com"
     scopes = ["https://www.googleapis.com/auth/cloud-platform"]
   }
+  tags = ["http-server", "https-server"]
 }
 resource "google_compute_network" "VPC" {
   name = "private"
