@@ -2,29 +2,29 @@ provider "google" {
   project     = "ppjg-236308"
   region      = "us-central1"
 }
-module "gce" {
-  source = "terraform-google-modules/container-vm/google"
-  container = {
-    image = "nginx:latest"
-  }
-}
+# module "gce" {
+#   source = "terraform-google-modules/container-vm/google"
+#   container = {
+#     image = "nginx:latest"
+#   }
+# }
 terraform {
   backend "gcs" {
     bucket = "terraform-state243"
     prefix = "terraform/state"
   }
 }
-# data "google_compute_image" "image" {
-#   project = "ubuntu-os-cloud"
-#   family = "ubuntu-2404-lts-amd64"
-# }
-resource "google_compute_instance" "address" {
+data "google_compute_image" "image" {
+  project = "ubuntu-os-cloud"
+  family = "ubuntu-2404-lts-amd64"
+}
+resource "google_compute_instance" "vm" {
   name = "centurion"
   machine_type = "e2-micro"
   zone = "us-central1-a"
   boot_disk {
     initialize_params {
-      image = module.gce.source_image
+      image = data.google_compute_image.image.self_link
       size = 10
       type = "pd-standard"
     }
@@ -37,15 +37,10 @@ resource "google_compute_instance" "address" {
     subnetwork = "private1"
   }
   metadata_startup_script = file("install.sh")
-  metadata = {
-    gce-container-declaration = module.gce.metadata_value
-  }
-  labels = {
-    container-vm = module.gce.vm_container_label
-  }
+
   service_account {
-    email = "737111970878-compute@developer.gserviceaccount.com"
-    scopes = [ "cloud-platform" ]
+    email = "ghaction@ppjg-236308.iam.gserviceaccount.com"
+    scopes = ["https://www.googleapis.com/auth/cloud-platform"]
   }
 }
 resource "google_compute_network" "VPC" {

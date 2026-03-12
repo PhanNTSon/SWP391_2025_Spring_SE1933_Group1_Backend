@@ -25,22 +25,22 @@ jobs:
                 context: .
                 push: true
                 tags: krakenlink/centurionbe:v1
-
-    deploy:
-        runs-on: ubuntu-24.04
-        needs: checkout
-        steps:
-            - name: login gcp cli
-              uses: google-github-actions/auth@v2
-              with:
-                credentials_json: ${{ secrets.GCP_SA_KEY }}
-            - name: set up gcloud cli
-              uses: google-github-actions/setup-gcloud@v2
-            - name: update vm image
-              run: |
-                gcloud compute instances update-container ${{ env.VM_NAME }} \
-                  --container-image ${{ env.IMAGE_URL }}:v1 \
-                  --zone ${{ env.ZONE }} \
+# khong su dung vi da cai argoCD tu dong keo image ve
+    # deploy:
+    #     runs-on: ubuntu-24.04
+    #     needs: checkout
+    #     steps:
+    #         - name: login gcp cli
+    #           uses: google-github-actions/auth@v2
+    #           with:
+    #             credentials_json: ${{ secrets.GCP_SA_KEY }}
+    #         - name: set up gcloud cli
+    #           uses: google-github-actions/setup-gcloud@v2
+    #         - name: update vm image
+    #           run: |
+    #             gcloud compute instances update-container ${{ env.VM_NAME }} \
+    #               --container-image ${{ env.IMAGE_URL }}:v1 \
+    #               --zone ${{ env.ZONE }} \
 
               
               
