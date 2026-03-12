@@ -20,7 +20,7 @@ data "google_compute_image" "image" {
 }
 resource "google_compute_instance" "vm" {
   name = "centurion"
-  machine_type = "e2-micro"
+  machine_type = "e2-medium"
   zone = "us-central1-a"
   boot_disk {
     initialize_params {
