@@ -36,18 +36,11 @@ jobs:
                 credentials_json: ${{ secrets.GCP_SA_KEY }}
             - name: set up gcloud cli
               uses: google-github-actions/setup-gcloud@v2
-            - name: create env file
-              env:
-                ENV: ${{secrets.ENV}}
-              run: |
-                echo "$ENV" > .env
             - name: update vm image
               run: |
-                cat .env 
                 gcloud compute instances update-container ${{ env.VM_NAME }} \
                   --container-image ${{ env.IMAGE_URL }}:v1 \
                   --zone ${{ env.ZONE }} \
-                  --container-env-file=.env \
 
               
               
