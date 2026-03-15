@@ -25,12 +25,25 @@ spec:
         ports:
         - containerPort: 8080
         env:
+        # 1. Đường dẫn chìa khóa (Bắt buộc)
         - name: GOOGLE_APPLICATION_CREDENTIALS
           value: "/var/secrets/google/key.json"
-        - name: SPRING_CLOUD_GCP_PROJECT_ID    # <--- THÊM BIẾN NÀY
+
+        # 2. Ép Project ID (Dòng này sếp có rồi, giữ nguyên)
+        - name: SPRING_CLOUD_GCP_PROJECT_ID
           value: "ppjg-236308"
+
+        # 3. KÍCH HOẠT SECRET MANAGER (Dòng này cực quan trọng)
         - name: SPRING_CLOUD_GCP_SECRET_MANAGER_ENABLED
           value: "true"
+
+        # 4. CHỈ ĐƯỜNG CHO THƯ VIỆN TÌM CHÌA KHÓA
+        - name: SPRING_CLOUD_GCP_CREDENTIALS_LOCATION
+          value: "file:/var/secrets/google/key.json"
+
+        # 5. ĐÈ LỆNH IMPORT (Viết ở dạng đầy đủ nhất để tránh nó tự suy luận sai)
+        - name: SPRING_CONFIG_IMPORT
+          value: "sm://projects/ppjg-236308/secrets/CENTURION_ENV"
         
         # 2. Treo cái két sắt vào trong thư mục của Pod
         volumeMounts:
