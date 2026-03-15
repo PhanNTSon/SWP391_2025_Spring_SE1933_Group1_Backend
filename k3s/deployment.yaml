@@ -27,6 +27,8 @@ spec:
         env:
         - name: GOOGLE_APPLICATION_CREDENTIALS
           value: "/var/secrets/google/key.json"
+        - name: SPRING_CLOUD_GCP_PROJECT_ID    # <--- THÊM BIẾN NÀY
+          value: "ppjg-236308"
         
         # 2. Treo cái két sắt vào trong thư mục của Pod
         volumeMounts:
