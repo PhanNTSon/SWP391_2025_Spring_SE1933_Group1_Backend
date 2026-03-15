@@ -24,3 +24,16 @@ spec:
             cpu: "1500m"
         ports:
         - containerPort: 8080
+        env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: "/var/secrets/google/key.json"
+        
+        # 2. Treo cái két sắt vào trong thư mục của Pod
+        volumeMounts:
+        - name: gcp-secret-volume
+          mountPath: "/var/secrets/google"
+          readOnly: true
+      volumes:
+      - name: gcp-secret-volume
+        secret:
+          secretName: gcp-secret
