@@ -64,7 +64,7 @@ resource "google_compute_firewall" "Firewall" {
   }
   allow {
     protocol = "tcp"
-    ports = [ "80", "443","22","31590","30000" ]
+    ports = [ "80", "443","22","31590","30000","31942" ]
   }
   source_ranges = [ "0.0.0.0/0" ]
 }
