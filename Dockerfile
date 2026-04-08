@@ -1,12 +1,10 @@
-# ======== First stage: Build JAR =========
-FROM maven:3.9.6-eclipse-temurin-21 AS build
+FROM maven:3.9.12-eclipse-temurin-21-alpine AS builder
 WORKDIR /app
 COPY . .
-RUN mvn clean package -DskipTests
+RUN mvn clean install -Dmaven.test.skip=true
 
-# ======== Second stage: Run app ==========
-FROM eclipse-temurin:21-jdk-jammy
-WORKDIR /app
-COPY --from=build /app/target/*.jar app.jar
+
+FROM eclipse-temurin:21-jre-alpine-3.23
+COPY --from=builder /app/target/*.jar app.jar
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+CMD [ "java", "-jar", "app.jar" ]

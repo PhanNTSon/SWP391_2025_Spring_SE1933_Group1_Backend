@@ -1,26 +1,16 @@
 version: '3.8'
 services:
-  postgres:
-    image: postgres:15
-    container_name: postgres_local_db
-    ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_DB: steam_clone_db
-      POSTGRES_USER: sa
-      POSTGRES_PASSWORD: sa
-    volumes:
-      - pgdata:/var/lib/postgresql/data
   backend:
-    build: .
     container_name: steam_clone_backend
+    image: krakenlink/centurionbe:v1
+    restart: always
+    env_file:
+      - .env
     ports:
       - "8080:8080"
-    depends_on:
-      - postgres
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/steam_clone_db
-      SPRING_DATASOURCE_USERNAME: sa
-      SPRING_DATASOURCE_PASSWORD: sa
-volumes:
-  pgdata:
+    networks:
+      - combine
+networks:
+    combine:
+      driver: bridge
+
