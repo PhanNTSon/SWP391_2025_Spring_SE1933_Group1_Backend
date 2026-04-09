@@ -1,3 +1,26 @@
+package com.se1933g01.steamclonebackend.service;
+
+import com.se1933g01.steamclonebackend.repository.GameRepository;
+import com.se1933g01.steamclonebackend.service.GameService;
+import com.se1933g01.steamclonebackend.model.Game;
+import com.se1933g01.steamclonebackend.model.Media;
+import com.se1933g01.steamclonebackend.model.Tag;
+import com.se1933g01.steamclonebackend.model.dto.GamePresentDTO;
+import com.se1933g01.steamclonebackend.model.dto.MediaDTO;
+import com.se1933g01.steamclonebackend.model.dto.TagDTO;
+import com.se1933g01.steamclonebackend.model.enums.MediaType;
+import java.util.List;
+import org.assertj.core.api.Assertions.assertThat;
+import org.mockito.ArgumentMatchers.any;
+import org.mockito.Mockito.verify;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 @ExtendWith(MockitoExtension.class)
 class GameServiceTest {
 
