@@ -33,7 +33,12 @@ jobs:
             - name: Run Automated Test
               run: |
                 echo load env file
-                echo "${{ secrets.ENV }}" >> $GITHUB_ENV
+                
+                echo "load env file"
+                cat <<'EOF' >> $GITHUB_ENV
+                ${{ secrets.ENV }}
+                EOF
+
                 mvn -B clean verify
 
 
