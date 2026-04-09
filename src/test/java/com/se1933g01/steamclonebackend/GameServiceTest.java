@@ -1,18 +1,8 @@
 package com.se1933g01.steamclonebackend.service;
 
+import com.se1933g01.steamclonebackend.entity.game.Game;
+import com.se1933g01.steamclonebackend.dto.GameBasicDTO;
 import com.se1933g01.steamclonebackend.repository.GameRepository;
-import com.se1933g01.steamclonebackend.service.GameService;
-import com.se1933g01.steamclonebackend.model.Game;
-import com.se1933g01.steamclonebackend.model.Media;
-import com.se1933g01.steamclonebackend.model.Tag;
-import com.se1933g01.steamclonebackend.model.dto.GamePresentDTO;
-import com.se1933g01.steamclonebackend.model.dto.MediaDTO;
-import com.se1933g01.steamclonebackend.model.dto.TagDTO;
-import com.se1933g01.steamclonebackend.model.enums.MediaType;
-import java.util.List;
-import org.assertj.core.api.Assertions.assertThat;
-import org.mockito.ArgumentMatchers.any;
-import org.mockito.Mockito.verify;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,6 +10,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.Collections;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class GameServiceTest {
@@ -31,49 +28,55 @@ class GameServiceTest {
     private GameService gameService;
 
     @Test
-void getGamesUnder5_shouldReturnMappedDTOs() {
-    // Arrange
-    Media media = new Media(1L, "http://img.png", MediaType.IMAGE);
-    Tag tag = new Tag(1L, "RPG");
+    void getAllGamesBasic_shouldReturnMappedDTOs() {
+        // Arrange: tạo dữ liệu giả (entity) trả về từ repository
+        Game game1 = new Game();
+        game1.setGameId(1L);
+        game1.setName("Game One");
+        game1.setPrice(10.0);
 
-    Game game = new Game();
-    game.setGameId(100L);
-    game.setName("Cheap Game");
-    game.setPrice(4.99);
-    game.setShortDescription("Nice game");
-    game.setMedia(List.of(media));
-    game.setTags(List.of(tag));
+        Game game2 = new Game();
+        game2.setGameId(2L);
+        game2.setName("Game Two");
+        game2.setPrice(20.0);
 
-    when(gameRepository.findTop10PriceUnder5(any(PageRequest.class)))
-            .thenReturn(List.of(game));
+        when(gameRepository.findAll()).thenReturn(List.of(game1, game2));
 
-    // Act
-    List<GamePresentDTO> result = gameService.getGamesUnder5();
+        // Act: gọi method thật của service (đây mới là "test")
+        List<GameBasicDTO> result = gameService.getAllGamesBasic();
 
-    // Assert
-    assertThat(result).hasSize(1);
+        // Assert: kiểm tra kết quả mapping
+        assertThat(result).isNotNull();
+        assertThat(result).hasSize(2);
 
-    GamePresentDTO dto = result.get(0);
-    assertThat(dto.getGameId()).isEqualTo(100L);
-    assertThat(dto.getName()).isEqualTo("Cheap Game");
-    assertThat(dto.getPrice()).isEqualTo(4.99);
-    assertThat(dto.getShortDescription()).isEqualTo("Nice game");
+        // Kiểm tra DTO 1
+        assertThat(result.get(0).getGameId()).isEqualTo(1L);
+        assertThat(result.get(0).getName()).isEqualTo("Game One");
+        // nếu GameBasicDTO có price thì mở dòng này
+        assertThat(result.get(0).getPrice()).isEqualTo(10.0);
 
-    // Media mapping
-    assertThat(dto.getMedia()).hasSize(1);
-    MediaDTO mediaDTO = dto.getMedia().get(0);
-    assertThat(mediaDTO.getMediaId()).isEqualTo(1L);
-    assertThat(mediaDTO.getUrl()).isEqualTo("http://img.png");
-    assertThat(mediaDTO.getType()).isEqualTo(MediaType.IMAGE);
+        // Kiểm tra DTO 2
+        assertThat(result.get(1).getGameId()).isEqualTo(2L);
+        assertThat(result.get(1).getName()).isEqualTo("Game Two");
+        assertThat(result.get(1).getPrice()).isEqualTo(20.0);
 
-    // Tag mapping
-    assertThat(dto.getTags()).hasSize(1);
-    TagDTO tagDTO = dto.getTags().get(0);
-    assertThat(tagDTO.getTagId()).isEqualTo(1L);
-    assertThat(tagDTO.getTagName()).isEqualTo("RPG");
+        // Verify: đảm bảo repository được gọi đúng
+        verify(gameRepository).findAll();
+    }
 
-    // Verify repository call
-    verify(gameRepository).findTop10PriceUnder5(any(PageRequest.class));
-}
+    @Test
+    void getAllGamesBasic_whenRepositoryReturnsEmpty_shouldReturnEmptyList() {
+        // Arrange
+        when(gameRepository.findAll()).thenReturn(Collections.emptyList());
 
+        // Act
+        List<GameBasicDTO> result = gameService.getAllGamesBasic();
+
+        // Assert
+        assertThat(result).isNotNull();
+        assertThat(result).isEmpty();
+
+        // Verify
+        verify(gameRepository).findAll();
+    }
 }
