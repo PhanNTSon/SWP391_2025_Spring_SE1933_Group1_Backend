@@ -32,6 +32,8 @@ jobs:
 
             - name: Run Automated Test
               run: |
+                echo load env file
+                echo "${{ secrets.ENV }}" >> $GITHUB_ENV
                 mvn -B clean verify
 
 
