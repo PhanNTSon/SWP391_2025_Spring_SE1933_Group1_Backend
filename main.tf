@@ -43,6 +43,7 @@ resource "google_compute_instance" "vm" {
     scopes = ["https://www.googleapis.com/auth/cloud-platform"]
   }
   tags = ["http-server", "https-server"]
+
 }
 resource "google_compute_network" "VPC" {
   name = "private"

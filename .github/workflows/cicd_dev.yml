@@ -1,0 +1,38 @@
+name: CI/CD Dev
+on: 
+    push:
+        branches:
+            - dev
+
+jobs:
+    checkout:
+        runs-on: ubuntu-latest
+        steps:
+            - name: checkout-code
+              uses: actions/checkout@v4
+            
+            - name: install jdk & maven
+              uses: actions/setup-java@v3
+              with:
+                java-version: 21
+                distribution: 'temurin'
+                cache: 'maven'
+
+            - name: check project structure
+              run: |
+                set -euo pipefail
+                test -f pom.xml || { echo "pom.xml not found"; exit 1; }
+                test -d src/main/java || { echo "src/main/java missing"; exit 1; }
+                test -d src/main/resources || { echo "src/main/resources missing"; exit 1; }
+                test -f src/main/resources/application.properties || {
+                  echo "application.properties missing"
+                  exit 1
+                }
+                echo "Project structure is valid"
+
+            - name: Run Automated Test
+              run: |
+                mvn -B clean verify
+
+
+               
