@@ -29,12 +29,10 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.se1933g01.steamclonebackend.dto.AddingGameRequestDTO;
 import com.se1933g01.steamclonebackend.dto.FeedbackDTO;
@@ -46,7 +44,6 @@ import com.se1933g01.steamclonebackend.entity.request.Feedback;
 import com.se1933g01.steamclonebackend.entity.request.PublisherApplyRequest;
 import com.se1933g01.steamclonebackend.entity.request.Request;
 import com.se1933g01.steamclonebackend.entity.user.Publisher;
-import com.se1933g01.steamclonebackend.entity.user.Role;
 import com.se1933g01.steamclonebackend.entity.user.User;
 import com.se1933g01.steamclonebackend.repository.AddingGameRequestRepo;
 import com.se1933g01.steamclonebackend.repository.FeedbackRepo;
@@ -58,13 +55,8 @@ import com.se1933g01.steamclonebackend.repository.RequestRepo;
 import com.se1933g01.steamclonebackend.repository.RoleRepo;
 import com.se1933g01.steamclonebackend.repository.TagRepository;
 import com.se1933g01.steamclonebackend.repository.UserRepo;
-import com.se1933g01.steamclonebackend.service.CloudinaryService;
-import com.se1933g01.steamclonebackend.service.R2StorageService;
-import com.se1933g01.steamclonebackend.service.RequestService;
 
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.persistence.PersistenceContext;
 @ExtendWith(MockitoExtension.class)
 public class RequestServiceTest {
 

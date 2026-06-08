@@ -712,7 +712,7 @@ public class CartServiceTest {
         when(libraryService.mapLibraryEntryToDto(any(Library.class))).thenReturn(mockLibraryGameDTO);
 
         // Act
-        CartDTO result = cartService.checkout(userId);
+        cartService.checkout(userId);
 
         // Assert
         verify(emailService).sendMultiGameInvoiceEmail(eq("test@example.com"), eq("1"), eq("testuser"), anyList());

@@ -47,7 +47,7 @@ public class RequestController {
     private final RequestService requestService;
     private final RequestService publisherService;
     private final CloudinaryService cloudinaryService;
-    private final UserService userService;
+    // private final UserService userService;
     private final UploadProgressTracker tracker;
     private final R2StorageService r2StorageService;
     public RequestController(
@@ -60,7 +60,7 @@ public class RequestController {
     this.requestService = requestService;
     this.publisherService = publisherService;
     this.cloudinaryService = cloudinaryService;
-    this.userService = userService;
+    // this.userService = userService;
     this.tracker = tracker;
     this.r2StorageService = r2StorageService;
 }

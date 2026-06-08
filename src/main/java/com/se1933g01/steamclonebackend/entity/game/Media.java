@@ -1,6 +1,5 @@
 package com.se1933g01.steamclonebackend.entity.game;
 
-import com.se1933g01.steamclonebackend.entity.news.News;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
