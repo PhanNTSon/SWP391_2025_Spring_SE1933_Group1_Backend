@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: centurion-be-monitor
+  namespace: monitoring      # 🔴 MẸO 1: Nhét nó vào chung phòng với Prometheus
+  labels:
+    release: prometheus      # 🔴 BẮT BUỘC để Prometheus nhận diện
+spec:
+  namespaceSelector:         # 🔴 MẸO 2: Giấy thông hành chỉ đường sang phòng App
+    matchNames:
+      - default
+  selector:
+    matchLabels:
+      app: centurion-be      # <-- Tên App của sếp
+  endpoints:
+  - port: http               # <-- Tên port trong service.yaml
+    path: /actuator/prometheus
+    interval: 15s

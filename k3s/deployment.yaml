@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: centurion-be
+spec:
+  selector:
+    matchLabels:
+      app: centurion-be-pod
+  template:
+    metadata:
+      labels:
+        app: centurion-be-pod
+    spec:
+      containers:
+      - name: centurion-be-container
+        image: krakenlink/centurionbe:v1
+        envFrom:
+        - secretRef:
+            name: centurion-config-secret
+        imagePullPolicy: Always
+        resources:
+          requests:
+            memory: "600Mi"
+            cpu: "500m"
+          limits:
+            memory: "1000Mi"
+            cpu: "1500m"
+        ports:
+        - containerPort: 8080
+        
