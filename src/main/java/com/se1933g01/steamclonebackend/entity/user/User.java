@@ -15,6 +15,8 @@ import com.se1933g01.steamclonebackend.entity.community.Friendship;
 import com.se1933g01.steamclonebackend.entity.community.GroupChat;
 import com.se1933g01.steamclonebackend.entity.community.GroupChatMember;
 import com.se1933g01.steamclonebackend.entity.community.Message;
+import com.se1933g01.steamclonebackend.entity.community.family.Family;
+import com.se1933g01.steamclonebackend.entity.community.family.FamilyMember;
 import com.se1933g01.steamclonebackend.entity.game.Game;
 import com.se1933g01.steamclonebackend.entity.game.Review;
 import com.se1933g01.steamclonebackend.entity.request.Request;
@@ -178,4 +180,9 @@ public class User {
         @OneToMany(mappedBy = "owner")
         private List<GroupChat> groupChatList;
 
+        @OneToOne(mappedBy = "owner")
+        private Family ownedFamily;
+
+        @OneToMany(mappedBy = "user")
+        private Set<FamilyMember> familyMemberships;
 }

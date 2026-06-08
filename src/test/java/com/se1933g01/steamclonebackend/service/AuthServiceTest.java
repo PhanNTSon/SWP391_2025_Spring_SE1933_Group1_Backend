@@ -8,13 +8,6 @@ import static org.mockito.Mockito.*;
 
 import java.util.Map;
 
-import com.se1933g01.steamclonebackend.entity.user.CustomUserDetail;
-import com.se1933g01.steamclonebackend.entity.user.Role;
-import com.se1933g01.steamclonebackend.entity.user.User;
-import com.se1933g01.steamclonebackend.repository.UserRepo;
-import com.se1933g01.steamclonebackend.service.AuthService;
-import com.se1933g01.steamclonebackend.utils.JwtUtil;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +15,11 @@ import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
 
 import com.se1933g01.steamclonebackend.dto.LoginDTO;
+import com.se1933g01.steamclonebackend.entity.user.CustomUserDetail;
+import com.se1933g01.steamclonebackend.entity.user.Role;
+import com.se1933g01.steamclonebackend.entity.user.User;
+import com.se1933g01.steamclonebackend.repository.UserRepo;
+import com.se1933g01.steamclonebackend.utils.JwtUtil;
 
 public class AuthServiceTest {
 

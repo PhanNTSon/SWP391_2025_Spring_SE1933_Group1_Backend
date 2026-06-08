@@ -32,7 +32,7 @@ public class Review {
     @EmbeddedId
     private ReviewKey id;
 
-    @Column(name = "ReviewContent")
+    @Column(name = "ReviewContent", columnDefinition = "TEXT")
     private String reviewContent;
 
     @Column(name = "TimeCreated")

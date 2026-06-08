@@ -287,7 +287,7 @@ public class RequestService {
     public AddingGameRequestDTO getGameDetails(Long requestId) {
         AddingGameRequest addingGameRequest = addingGameRequestRepo.findById(requestId)
                 .orElseThrow(() -> new RuntimeException("AddingGameRequest not found"));
-        int status = addingGameRequest.getRequest().getRequestState();
+        addingGameRequest.getRequest().getRequestState();
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
         AddingGameRequestDTO addingGameRequestDTO = modelMapper.map(addingGameRequest, AddingGameRequestDTO.class);
         addingGameRequestDTO.setPublisherName(addingGameRequestRepo.findPublisherNameByRequestId(requestId));

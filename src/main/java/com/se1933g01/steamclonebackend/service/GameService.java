@@ -15,7 +15,6 @@ import jakarta.persistence.EntityNotFoundException; // Hoặc exception tùy ch�
 import org.hibernate.Hibernate; // Để khởi tạo các collection lazy
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
-import org.modelmapper.spi.MatchingStrategy;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional; // QUAN TRỌNG cho lazy loading
@@ -58,16 +57,16 @@ public class GameService {
     private final AddingGameRequestRepo addingGameRequestRepo;
     private final LibraryRepository libraryRepo;
     private final NewsRepo newsRepo;
-    private final Parser parser;
-    private final HtmlRenderer renderer;
+    // private final Parser parser;
+    // private final HtmlRenderer renderer;
     public GameService(GameRepository gameRepository, ModelMapper modelMapper, AddingGameRequestRepo addingGameRequestRepo, LibraryRepository libraryRepo, NewsRepo newsRepo, Parser parser, HtmlRenderer renderer) {
         this.newsRepo = newsRepo;
         this.libraryRepo = libraryRepo;
         this.addingGameRequestRepo = addingGameRequestRepo;
         this.gameRepository = gameRepository;
         this.modelMapper = modelMapper;
-        this.parser = parser;
-        this.renderer = renderer;
+        // this.parser = parser;
+        // this.renderer = renderer;
     }
 
     public List<GamePresentDTO> getGamesUnder5() {
@@ -150,7 +149,7 @@ public class GameService {
 
     @Transactional(readOnly = true)
     public Page<GameBasicDTO> findGamesByCriteria(String searchTerm, BigDecimal maxPrice, List<Integer> tagIds,
-            List<Long> publisherIds, Pageable pageable) {
+            List<Long> publisherIds, Pageable pageable, Boolean state) {
         Specification<Game> spec = null;
 
         if (searchTerm != null) {
@@ -173,8 +172,13 @@ public class GameService {
                     : spec.and(GameSpecification.hasPublishers(publisherIds));
         }
 
-        Page<Game> gamePage = gameRepository.findAllByStateTrue(spec, pageable);
+        if (state!= null) {
+            spec = spec == null? GameSpecification.hasStateTrue(state)
+                    : spec.and(GameSpecification.hasStateTrue(state));
+        }
 
+        Page<Game> gamePage = gameRepository.findAll(spec, pageable);
+        
         return gamePage.map(game -> {
             Hibernate.initialize(game.getMedia());
             return EntityMapper.toGameBasicDTO(game);

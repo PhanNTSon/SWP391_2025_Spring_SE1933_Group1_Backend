@@ -23,21 +23,25 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "DiscussionThread")
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
+@Table(name = "DiscussionThread", schema = "public")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class DiscussionThread {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "threadId")
     private Long threadId;
 
-    @Column(nullable = false)
+    @Column(name = "title", nullable = false)
     private String title;
 
-    @Column()
+    @Column(name = "content", columnDefinition = "TEXT")
     private String content;
 
+    @Column(name = "createdAt")
     private LocalDateTime createdAt;
 
     @ManyToOne
@@ -51,4 +55,3 @@ public class DiscussionThread {
     @OneToMany(mappedBy = "thread", cascade = CascadeType.ALL)
     private List<DiscussionComment> comments = new ArrayList<>();
 }
-

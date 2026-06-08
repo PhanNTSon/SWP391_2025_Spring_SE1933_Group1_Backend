@@ -7,10 +7,12 @@ import java.util.List;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.se1933g01.steamclonebackend.entity.community.family.FamilyLibrary;
 import com.se1933g01.steamclonebackend.entity.user.Library;
 import com.se1933g01.steamclonebackend.entity.user.Publisher;
 import com.se1933g01.steamclonebackend.entity.user.User;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -116,6 +118,10 @@ public class Game {
     @OneToMany(mappedBy = "game")
     private List<Media> media;
 
+    @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<FamilyLibrary> familyLibraries ;
+
     // ================ Getter & Setter =============
     @Override
     public boolean equals(Object o) {
@@ -130,5 +136,10 @@ public class Game {
     @Override
     public int hashCode() {
         return java.util.Objects.hash(gameId);
+    }
+
+    public Game orElseThrow(Object object) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'orElseThrow'");
     }
 }

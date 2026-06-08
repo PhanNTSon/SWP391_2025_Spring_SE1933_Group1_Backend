@@ -1,19 +1,13 @@
 package com.se1933g01.steamclonebackend.service;
 
-import com.se1933g01.steamclonebackend.utils.GeminiContentModerator;
-import com.se1933g01.steamclonebackend.utils.GroupAvatarGenerator;
-
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.se1933g01.steamclonebackend.dto.BannedUserDTO;
 import com.se1933g01.steamclonebackend.dto.community.BlockDTO;
 import com.se1933g01.steamclonebackend.dto.community.GroupDTO;
 import com.se1933g01.steamclonebackend.dto.user.FriendDTO;
@@ -31,6 +25,7 @@ import com.se1933g01.steamclonebackend.repository.FriendshipRepo;
 import com.se1933g01.steamclonebackend.repository.GroupChatMemberRepo;
 import com.se1933g01.steamclonebackend.repository.GroupChatRepo;
 import com.se1933g01.steamclonebackend.repository.UserRepo;
+import com.se1933g01.steamclonebackend.utils.GroupAvatarGenerator;
 
 import java.io.IOException;
 import java.math.BigDecimal;

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.se1933g01.steamclonebackend.dto.TagDTO;
 import com.se1933g01.steamclonebackend.service.TagService;
+import org.springframework.web.bind.annotation.GetMapping;
 
 /**
  * @author TS Huy
@@ -23,18 +24,23 @@ public class TagController {
         this.tagService = tagService;
     }
 
-
     @GetMapping
     @PreAuthorize("permitAll()")
     public ResponseEntity<List<TagDTO>> getAllTags() {
         List<TagDTO> tags = tagService.getAllTags();
 
         if (tags.isEmpty()) {
-            // Nếu không có tag nào, trả về status 204 No Content
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
 
-        // Nếu có, trả về danh sách tag và status 200 OK
         return new ResponseEntity<>(tags, HttpStatus.OK);
     }
+
+    @GetMapping("/{tagId}")
+    @PreAuthorize("permitAll()")
+    public ResponseEntity<TagDTO> getTagById(@PathVariable Integer tagId) { 
+        TagDTO tag = tagService.getTagById(tagId);
+        return ResponseEntity.ok(tag);
+    }
+
 }

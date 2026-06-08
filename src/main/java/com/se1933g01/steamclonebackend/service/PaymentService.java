@@ -1,9 +1,5 @@
 package com.se1933g01.steamclonebackend.service;
 
-import com.se1933g01.steamclonebackend.config.VNPayConfig;
-import com.se1933g01.steamclonebackend.entity.user.User;
-import com.se1933g01.steamclonebackend.repository.UserRepo;
-
 import jakarta.persistence.EntityNotFoundException;
 
 import java.math.BigDecimal;
@@ -11,6 +7,10 @@ import java.util.Map;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.se1933g01.steamclonebackend.config.VNPayConfig;
+import com.se1933g01.steamclonebackend.entity.user.User;
+import com.se1933g01.steamclonebackend.repository.UserRepo;
 
 @Service
 public class PaymentService {
@@ -45,9 +45,9 @@ public class PaymentService {
                 return "{\"RspCode\":\"97\",\"Message\":\"Invalid Checksum\"}";
             }
 
-            String vnp_TxnRef = vnp_Params.get("vnp_TxnRef");
+            vnp_Params.get("vnp_TxnRef");
             String vnp_ResponseCode = vnp_Params.get("vnp_ResponseCode");
-            long vnp_Amount = Long.parseLong(vnp_Params.get("vnp_Amount")) / 100;
+            // long vnp_Amount = Long.parseLong(vnp_Params.get("vnp_Amount")) / 100;
 
             // Logic kiểm tra nghiệp vụ
             // 1. Kiểm tra xem giao dịch (vnp_TxnRef) có tồn tại trong hệ thống của bạn
