@@ -191,16 +191,7 @@
     		<version>1.43.3</version>
 		</dependency>
 
-	<dependency>
-        <groupId>com.google.apis</groupId>
-        <artifactId>google-api-services-youtube</artifactId>
-        <version>v3-rev222-1.25.0</version>
-    </dependency>
-    <dependency>
-        <groupId>com.google.http-client</groupId>
-        <artifactId>google-http-client-jackson2</artifactId>
-        <version>1.43.3</version>
-    </dependency>
+
 		<dependency>
 			<groupId>org.commonmark</groupId>
 			<artifactId>commonmark</artifactId>
@@ -212,9 +203,12 @@
 			<version>0.64.8</version>
 		</dependency>
 		<dependency>
-			<groupId>com.google.cloud</groupId>
-			<artifactId>spring-cloud-gcp-starter-secretmanager</artifactId>
-			<version>3.9.17</version>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-database-postgresql</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>io.micrometer</groupId>
@@ -260,6 +254,5 @@
 			</plugin>
 		</plugins>
 	</build>
-
 
 </project>

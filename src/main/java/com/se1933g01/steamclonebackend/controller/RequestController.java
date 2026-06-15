@@ -245,11 +245,15 @@ public class RequestController {
         @RequestParam("contentType") String contentType
     ) {
         String uploadUrl = r2StorageService.generatePresignedUploadUrl(fileName, contentType);
-        String fileId = uploadUrl.substring(
-            uploadUrl.lastIndexOf("/") + 1,
-            uploadUrl.indexOf("?")
-        );
- // Extract key from URL
+        String fileId;
+        if (uploadUrl.contains("/request/file/mock-upload/")) {
+            fileId = uploadUrl.substring(uploadUrl.lastIndexOf("/") + 1);
+        } else {
+            fileId = uploadUrl.substring(
+                uploadUrl.lastIndexOf("/") + 1,
+                uploadUrl.indexOf("?")
+            );
+        }
 
         return ResponseEntity.ok(Map.of(
             RESPONSE_MESSAGE_KEY, "Upload URL generated",
@@ -257,6 +261,20 @@ public class RequestController {
             "fileName", fileName,
             "uploadUrl", uploadUrl
         ));
+    }
+
+    @org.springframework.web.bind.annotation.PutMapping("/file/mock-upload/{fileId}")
+    @PreAuthorize("hasRole('PUBLISHER')")
+    public ResponseEntity<Map<String, String>> mockUpload(
+        @org.springframework.web.bind.annotation.PathVariable("fileId") String fileId,
+        @org.springframework.web.bind.annotation.RequestBody byte[] fileBytes
+    ) {
+        try {
+            r2StorageService.saveMockUploadedFile(fileId, fileBytes);
+            return ResponseEntity.ok(Map.of(RESPONSE_MESSAGE_KEY, "Mock upload successful"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(RESPONSE_MESSAGE_KEY, "Mock upload failed: " + e.getMessage()));
+        }
     }
 
     @GetMapping(value = "/progress", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
