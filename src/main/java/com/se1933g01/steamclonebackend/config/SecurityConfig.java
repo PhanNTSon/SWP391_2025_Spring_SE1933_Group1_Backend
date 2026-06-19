@@ -57,7 +57,11 @@ public class SecurityConfig {
                 .oauth2Login(oauth -> oauth
                         .successHandler(oauth2LoginSuccessHandler)
                         .failureHandler((request, response, exception) -> response
-                                .sendRedirect(frontendUrl + "/oauth2/error")));
+                                .sendRedirect(frontendUrl + "/oauth2/error")))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .anyRequest().permitAll()
+                );
 
         return http.build(); // by Loc Phan
     }

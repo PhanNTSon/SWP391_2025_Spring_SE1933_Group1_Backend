@@ -162,3 +162,58 @@ Nếu bạn thay đổi file `V1__Create_Schema.sql` hoặc làm hỏng dữ li�
 1. Đảm bảo cấu hình `spring.flyway.clean-disabled=false`
 2. Chạy ứng dụng một lần hoặc sử dụng plugin Flyway.
 *(Ứng dụng hiện tại đã được cấu hình bean `FlywayCleanConfig` sẽ tự động dọn dẹp và tạo lại schema mỗi khi startup để hỗ trợ quá trình phát triển schema. Ghi chú: Nhớ gỡ bỏ logic này trong `FlywayCleanConfig.java` trước khi deploy ra Production).*
+
+---
+
+## 5. Tài Liệu Hướng Dẫn Tích Hợp OpenAPI / Swagger UI
+
+Dự án đã tích hợp thư viện **Springdoc OpenAPI Starter** để tự động tạo tài liệu API tương tác trực quan.
+
+### 5.1. Cách Truy Cập Tài Liệu API
+Khi ứng dụng backend đang chạy (ví dụ trên cổng `8080`), bạn có thể truy cập bằng trình duyệt theo các địa chỉ sau:
+- **Giao diện Swagger UI (Khuyên dùng)**: `http://localhost:8080/swagger-ui/index.html`
+  - *Tại đây, bạn có thể xem chi tiết danh sách Controller, tham số API, kiểu dữ liệu gửi lên/trả về và chạy thử trực tiếp (Try it out).*
+- **Định dạng OpenAPI JSON**: `http://localhost:8080/v3/api-docs`
+  - *Được sử dụng cho các công cụ Client Code Generator hoặc import trực tiếp vào Postman.*
+
+### 5.2. Hướng Dẫn Cấu Hình Spring Security
+Mặc định, Spring Security sẽ chặn các đường dẫn Swagger. Hãy đảm bảo bạn cấu hình cho phép truy cập công khai trong lớp cấu hình Security (ví dụ `SecurityConfig.java` hoặc tương đương):
+
+```java
+@Bean
+public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http
+        .authorizeHttpRequests(auth -> auth
+            // Cho phép truy cập công khai các đường dẫn Swagger UI và OpenAPI Docs
+            .requestMatchers(
+                "/v3/api-docs/**",
+                "/swagger-ui/**",
+                "/swagger-ui.html"
+            ).permitAll()
+            .anyRequest().authenticated()
+        );
+    return http.build();
+}
+```
+
+### 5.3. Các Annotation Hữu Ích Để Viết API Docs
+Để viết tài liệu rõ ràng, hãy thêm các annotation của `io.swagger.v3.oas.annotations` vào Controller của bạn:
+- `@Tag(name = "Tên Nhóm API", description = "Mô tả nhóm API")`: Đặt ở cấp Class Controller.
+- `@Operation(summary = "Mô tả ngắn", description = "Mô tả chi tiết")`: Đặt ở cấp phương thức (API Method).
+- `@ApiResponse(responseCode = "200", description = "Thành công")`: Định nghĩa kiểu dữ liệu trả về cho client.
+
+*Ví dụ:*
+```java
+@RestController
+@RequestMapping("/api/games")
+@Tag(name = "Game Controller", description = "Quản lý danh sách game của Steam Clone")
+public class GameController {
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Lấy chi tiết game", description = "Trả về thông tin chi tiết của một trò chơi theo ID")
+    public ResponseEntity<GameDto> getGameById(@PathVariable Long id) {
+        // ...
+    }
+}
+```
+

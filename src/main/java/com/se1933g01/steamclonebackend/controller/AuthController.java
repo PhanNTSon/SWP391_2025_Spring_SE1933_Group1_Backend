@@ -24,8 +24,12 @@ import com.se1933g01.steamclonebackend.service.EmailVerificationService;
 /**
  * @author Loc Phan
  */
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Authentication", description = "Các API liên quan đến Đăng nhập, Đăng ký và Xác thực người dùng")
 public class AuthController {
 
     @Autowired
@@ -35,6 +39,7 @@ public class AuthController {
 
     @PostMapping("/register")
     @PreAuthorize("permitAll()")
+    @Operation(summary = "Đăng ký tài khoản mới", description = "Tạo một tài khoản người dùng mới vào hệ thống")
     public ResponseEntity<String> register(@RequestBody RegisterRequestDTO request) {
         authService.register(request);
         return ResponseEntity.ok("Registration successful!");
@@ -49,6 +54,7 @@ public class AuthController {
 
     @PostMapping("/login")
     @PreAuthorize("permitAll()")
+    @Operation(summary = "Đăng nhập", description = "Xác thực thông tin và trả về chuỗi JWT Token")
     public ResponseEntity<?> login(@RequestBody LoginDTO request) {
         return authService.login(request);
     }
