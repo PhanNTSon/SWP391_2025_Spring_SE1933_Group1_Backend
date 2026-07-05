@@ -26,9 +26,12 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     public UserDetails loadUserByUsername(String username)
             throws UsernameNotFoundException {
 
-        User user = userService.getUser(username);
-
-        return new CustomUserDetail(user);
+        try {
+            User user = userService.getUser(username);
+            return new CustomUserDetail(user);
+        } catch (RuntimeException e) {
+            throw new UsernameNotFoundException("User not found", e);
+        }
     }
 
 }
