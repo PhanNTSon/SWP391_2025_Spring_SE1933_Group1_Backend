@@ -39,6 +39,11 @@ public class YouTubeService {
      * @return true nếu hợp lệ, false nếu không.
      */
     public boolean isVideoValid(String videoId) {
+        if (apiKey == null || apiKey.trim().isEmpty() || "mock".equalsIgnoreCase(apiKey) || apiKey.startsWith("AIzaSyDummy")) {
+            System.out.println("WARNING: YouTube API Key is not configured or mock. Skipping video validation and assuming valid.");
+            return true;
+        }
+
         try {
             YouTube youtube = new YouTube.Builder(
                     GoogleNetHttpTransport.newTrustedTransport(),

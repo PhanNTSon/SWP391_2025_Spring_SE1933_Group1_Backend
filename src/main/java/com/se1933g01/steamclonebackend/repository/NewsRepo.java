@@ -2,7 +2,6 @@ package com.se1933g01.steamclonebackend.repository;
 
 import com.se1933g01.steamclonebackend.entity.news.News;
 
-import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

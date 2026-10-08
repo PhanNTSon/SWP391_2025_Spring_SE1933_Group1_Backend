@@ -8,7 +8,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import com.se1933g01.steamclonebackend.config.VNPayConfig;
 import com.se1933g01.steamclonebackend.entity.user.CustomUserDetail;
 import com.se1933g01.steamclonebackend.service.PaymentService;
 
@@ -16,7 +15,6 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -97,35 +95,18 @@ public class PaymentController {
         String vnp_CreateDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
 
-        // Phần tạo hash và query giữ nguyên
-        List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
-        Collections.sort(fieldNames);
-        StringBuilder hashData = new StringBuilder();
-        StringBuilder query = new StringBuilder();
-        Iterator<String> itr = fieldNames.iterator();
-        while (itr.hasNext()) {
-            String fieldName = itr.next();
-            String fieldValue = vnp_Params.get(fieldName);
-            if ((fieldValue != null) && (fieldValue.length() > 0)) {
-                hashData.append(fieldName);
-                hashData.append('=');
-                hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
-                query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.toString()));
-                query.append('=');
-                query.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
-                if (itr.hasNext()) {
-                    query.append('&');
-                    hashData.append('&');
-                }
-            }
-        }
-        String queryUrl = query.toString();
-        String vnp_SecureHash = VNPayConfig.hmacSHA512(hashSecret, hashData.toString());
-        queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
-        String paymentUrl = vnpayUrl + "?" + queryUrl;
+        // Simulated bypass: Redirect directly to frontend's returnUrl with success params
+        String simulatedReturnUrl = returnUrl +
+                "?vnp_ResponseCode=00" +
+                "&vnp_TransactionStatus=00" +
+                "&vnp_Amount=" + amountForVNPay +
+                "&vnp_BankCode=" + (bankCode != null ? bankCode : "NCB") +
+                "&vnp_OrderInfo=" + URLEncoder.encode("Nap " + amountUsd + " USD vao vi cho user: " + principal.getUser().getUserId(), "UTF-8") +
+                "&vnp_PayDate=" + vnp_CreateDate +
+                "&vnp_TransactionNo=" + vnp_TxnRef;
 
-        logger.info("Generated VNPay URL for {} USD ({} VND): {}", amountUsd, amountVND, paymentUrl);
+        logger.info("Generated Simulated VNPay URL for {} USD ({} VND): {}", amountUsd, amountVND, simulatedReturnUrl);
 
-        return ResponseEntity.ok(Map.of("paymentUrl", paymentUrl));
+        return ResponseEntity.ok(Map.of("paymentUrl", simulatedReturnUrl));
     }
 }

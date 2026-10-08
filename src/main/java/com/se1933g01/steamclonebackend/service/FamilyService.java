@@ -53,7 +53,7 @@ public class FamilyService {
     private final LibraryService libraryService;
     private final SimpMessagingTemplate simp;
 
-    private final String FAMILY_INVITATION_CHANNEL = "/queue/family/invitation";
+    // private final String FAMILY_INVITATION_CHANNEL = "/queue/family/invitation";
     private final String SOCKET_WALLET_BALANCE_CHANNEL = "/queue/wallet.balance";
 
     public FamilyService(FamilyRepo familyRepo, FamilyInvitationRepo familyInvitationRepo,
@@ -71,9 +71,9 @@ public class FamilyService {
         this.simp = simp;
     }
 
-    private void sendToUser(String username, Object message) {
-        simp.convertAndSendToUser(username, FAMILY_INVITATION_CHANNEL, message);
-    }
+    // private void sendToUser(String username, Object message) {
+    //     simp.convertAndSendToUser(username, FAMILY_INVITATION_CHANNEL, message);
+    // }
 
     public FamilyInfoDTO getFamily(Long userId) {
         Optional<Family> optOwned = familyRepo.findByOwner(userId);

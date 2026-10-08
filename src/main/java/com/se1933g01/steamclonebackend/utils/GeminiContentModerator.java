@@ -18,6 +18,11 @@ public class GeminiContentModerator {
   private String API_KEY;
 
   public boolean isViolating(String inputText) {
+    if (API_KEY == null || API_KEY.trim().isEmpty() || "mock".equalsIgnoreCase(API_KEY) || API_KEY.startsWith("AIzaSyDummy")) {
+        System.out.println("WARNING: Gemini API Key is not configured or mock. Skipping remote content moderation and assuming content is safe.");
+        return false;
+    }
+
     try {
       if (inputText == null || inputText.isBlank())
         return false;
