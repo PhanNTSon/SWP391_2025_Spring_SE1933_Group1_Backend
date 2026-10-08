@@ -5,12 +5,14 @@ import java.util.List;
 import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 import com.se1933g01.steamclonebackend.entity.game.Game;
 
+import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.mail.javamail.MimeMessageHelper;
 
@@ -34,13 +36,8 @@ public class EmailService {
             message.setSubject(subject);
             message.setText("Your OTP code is: " + otp + "\nIt will expire in 10 minutes.");
             mailSender.send(message);
-        } catch (Exception e) {
-            System.err.println("Error while sending email: " + e.getMessage());
-            System.out.println("\n================ LOCAL EMAIL MOCK ================");
-            System.out.println("To: " + email);
-            System.out.println("Subject: " + subject);
-            System.out.println("Content: Your OTP code is: " + otp);
-            System.out.println("==================================================\n");
+        } catch (MailException e) {
+            throw new IllegalStateException("Unable to send OTP email to " + email, e);
         }
     }
 
@@ -51,13 +48,8 @@ public class EmailService {
             message.setSubject(subject);
             message.setText(text);
             mailSender.send(message);
-        } catch (Exception e) {
-            System.err.println("Error while sending email: " + e.getMessage());
-            System.out.println("\n================ LOCAL EMAIL MOCK ================");
-            System.out.println("To: " + to);
-            System.out.println("Subject: " + subject);
-            System.out.println("Content: " + text);
-            System.out.println("==================================================\n");
+        } catch (MailException e) {
+            throw new IllegalStateException("Unable to send email to " + to, e);
         }
     }
 
@@ -71,13 +63,8 @@ public class EmailService {
             helper.setText(htmlContent, true);
 
             mailSender.send(message);
-        } catch (Exception e) {
-            System.err.println("Error while sending HTML email: " + e.getMessage());
-            System.out.println("\n================ LOCAL HTML EMAIL MOCK ================");
-            System.out.println("To: " + to);
-            System.out.println("Subject: " + subject);
-            System.out.println("Content (HTML preview disabled for console)");
-            System.out.println("=======================================================\n");
+        } catch (MailException | MessagingException e) {
+            throw new IllegalStateException("Unable to send HTML email to " + to, e);
         }
     }
 
